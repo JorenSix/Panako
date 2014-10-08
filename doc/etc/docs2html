@@ -1,0 +1,30 @@
+#!/opt/ruby-2.1.2/bin/ruby
+require 'rubygems'
+require 'RedCloth'
+
+#read file
+def r(file)
+  file = File.open(file, "r")
+  contents = file.read
+  file.close
+  return contents
+end
+
+#read redcloth file
+def rr(file)
+	RedCloth.new(r(file)).to_html
+end
+
+def render
+	template = r("template.html")
+	docs = rr("../docs.textile")
+	html = template.gsub("__content__",docs)
+	File.open("../index.html", 'w') {|f| f.write(html) }
+end
+
+while true
+  render
+  sleep 1
+end
+
+render

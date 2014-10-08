@@ -1,0 +1,12 @@
+.classpath
+.project
+.settings
+bin/
+build/*.jar
+build/Panako-*
+doc/javadoc
+config.properties
+dbs
+
+*_db*
+

@@ -1,0 +1,32 @@
+#!/bin/bash
+
+############################################################
+#
+#   2014.01.31 - Panako startup bash script.
+# 	It assumes that a working JVM is present on the system.
+#	Please consult the manual for more info. 
+#
+############################################################
+
+#The directory where panako files are stored
+PANAKO_DIR="/opt/panako"
+
+#Some parameters for the JVM to improve performance
+PANAKO_JVM_OPTIONS="-server -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -Xms256m -Xmx256m"
+
+#The configuration file to configure logging
+LOG_CONFIGURATION="$PANAKO_DIR/logging.properties"
+
+#The main Panako jar file location
+PANAKO_JAR="$PANAKO_DIR/panako.jar"
+
+#The standard error stream is redirected here
+PANAKO_STD_ERROR="$PANAKO_DIR/log/panako_sub.log"
+
+#show an error message if the jar file is not found.
+if [ -f $PANAKO_JAR ];
+then
+   java $PANAKO_JVM_OPTS -Djava.util.logging.config.file=$LOG_CONFIGURATION -jar $PANAKO_JAR "$@" 2>> $PANAKO_STD_ERROR
+else
+   echo "The Panako jar file could not be found at $PANAKO_JAR. Please configure Panako correctly."
+fi
