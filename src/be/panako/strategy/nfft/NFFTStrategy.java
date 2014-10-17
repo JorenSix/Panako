@@ -194,6 +194,12 @@ public class NFFTStrategy extends Strategy {
 	public boolean isStorageAvailable() {
 		return NFFTMapDBStorage.getInstance() != null;
 	}
+	
+	public void sync(String reference, String[] others){
+		new NFFTStreamSync(reference, others).synchronize();
+	
+		
+	}
 
 	@Override
 	public void printStorageStatistics() {

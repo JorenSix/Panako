@@ -119,6 +119,7 @@ public class Panako {
 		applicationList.add(new Play());
 		applicationList.add(new Browser());
 		applicationList.add(new Monitor());
+		applicationList.add(new Sync());
 		for (final Application application : applicationList) {
 			applications.put(application.name(), application);
 			applicationTrie.insert(application.name());
@@ -195,8 +196,9 @@ public class Panako {
 				System.out.println("Description");
 				System.out.println("\t" + app.description());				
 			}else{
+				Panako.currentApplication = app;
 				if(app.needsStorage()){
-					Panako.currentApplication = app;
+					
 					boolean storageIsAvailable = Strategy.getInstance().isStorageAvailable();
 					if(storageIsAvailable){
 						actuallyReallyStartApplication(app,applicationArguments);

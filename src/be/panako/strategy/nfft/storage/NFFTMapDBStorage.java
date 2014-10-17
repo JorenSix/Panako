@@ -110,7 +110,7 @@ public class NFFTMapDBStorage {
 		
 		// If the current application writes to the storage of if a new database has to be created
 		// create the stores.
-		if (Panako.getCurrentApplication().writesToStorage() || !dbFile.exists()) {
+		if (Panako.getCurrentApplication().writesToStorage() && !dbFile.exists()) {
 			// Check for and create a lock.
 			checkAndCreateLock(dbFile);
 			db = DBMaker.newFileDB(dbFile)
@@ -130,7 +130,7 @@ public class NFFTMapDBStorage {
 			
 			// Create or get an atomic long
 			secondsCounter = db.getAtomicLong("seconds_counter");
-		} else {
+		} else if(Panako.getCurrentApplication().needsStorage()){
 			// read only
 			db = DBMaker.newFileDB(dbFile)
 					.closeOnJvmShutdown() // close the database automatically
@@ -140,6 +140,12 @@ public class NFFTMapDBStorage {
 			audioNameStore = db.getTreeMap(audioStore);
 			fftFingerprintStore = db.getTreeSet(fftStore);
 			secondsCounter = db.getAtomicLong("seconds_counter");
+		}else{
+			// no database is needed
+			secondsCounter = null;
+			audioNameStore = null;
+			fftFingerprintStore = null;
+			db = null;
 		}
 	}
 
