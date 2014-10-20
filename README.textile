@@ -16,7 +16,8 @@ h2. Overview
 ## "Query for Matches":#query
 ## "Print Storage Statistics":#stats
 ## "Print Configuration":#configuration
-# "Audio Formats and Conversions":#audioformats
+## "Synchronize Media Files":#sync
+# "Reproduce the ISMIR Paper Results":#ismir
 
 h2(#why). Why Panako?
 
@@ -138,6 +139,43 @@ h3(#browser). Browse Fingerprints - **@@panako browser@**
 Shows a swing user interface with a spectrogram and dectected event points and fingerprints. It can be used
 to check the effect of configuration parameters on fingerprint detection and to optimize configuration.
 
+
+
+h3(#sync). Synchronize media files - **@@panako sync@**
+
+This operation extracts fingerprints from a reference media file and returns how much time offset there is to other files with similar audio. This is practical to synchronize video streams with similar audio or recordings of the same performance from several microphones.
+
+The synchonize option uses a two stage algorithm. First fingerprints are extracted from the media files. With these it is checked if the media files contain similar audio. If they do, a rough offset is determined (e.g. with 32ms accuracy). Subsequently crosscovariance of one audio frame is used to improve the offset estimation. This offset is returned.
+
+bc. panako sync reference.avi other.mkv other.mp3
+
+h2(#ismir). Reproduce the ISMIR Paper Results
+
+The directory @doc/Reproducibility" contains scripts to reproduce the result found in the 
+Panako ISMIR paper. The scripts follow this procedure:
+
+1) The Jamendo dataset is downloaded.
+2) The fingerprints are extracted and stored for each file in the data set.o download an openly available dataset
+3) Query files are created from the Jamendo data set.
+4) Panako is queried for each query file, results are logged
+5) Results are parsed.
+
+
+h3. Requirements
+
+
+To run the scripts, a UNIX like system with following utilities is required:
+
+* wget: an utility to download files
+* "SoX":http://sox.sourceforge.net/, inlcuding support for MP3 and GSM encoding.
+* bash: the bash shell
+* "ruby":https://www.ruby-lang.org/en/
+* unzip: to unzip the metadata file.
+
+Also the panako software is needed. Please see above to install the Panako.
+The configuration used during the test is also included in the @doc/Reproducibility@ directory.
+
+If all requirements are met, running the test is done using @bash run_experiment.bash@
 
 
  
