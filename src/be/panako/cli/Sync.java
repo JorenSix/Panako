@@ -32,9 +32,10 @@ public class Sync extends Application{
 			strat.sync(reference, others);			
 		}else{
 			System.err.println("Currently only NFFT supports the sync operation!");
-		}
-				
+		}		
 	}
+	
+	
 
 	@Override
 	public String description() {
