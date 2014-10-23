@@ -17,14 +17,10 @@ end
 
 def render
 	template = r("template.html")
-	docs = rr("../docs.textile")
+	docs = rr("../../README.textile")
 	html = template.gsub("__content__",docs)
 	File.open("../index.html", 'w') {|f| f.write(html) }
 end
 
-while true
-  render
-  sleep 1
-end
 
 render

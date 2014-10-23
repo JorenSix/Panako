@@ -40,7 +40,7 @@ Alternative open source music identification systems are "audfprint":http://www.
 
 h2(#getting_started). Getting started
 
-To download the latest Panako version, "git":http://git-scm.com/ needs to be installed on your system. Once downloaded the contents looks like this:  
+To download the latest Panako version, @wget@ needs to be installed on your system. Once downloaded the contents looks like this:  
 
 * @src@ contains the Java source files.
 * @lib@ contains the dependencies (JAR-files).
@@ -51,8 +51,9 @@ To compile Panako, the JDK 7 or later is required. See the "installation instruc
 
 Panako uses the "Apache Ant":https://ant.apache.org/ build system. Install it on your system. Once ant and the other components are installed correctly the following commands should get you started:
 
-bc. git clone https://JorenSix@github.com/JorenSix/Panako.git
-cd Panako
+
+bc. wget http://panako.be/releases/panako-latest/Panako-latest-src.zip
+unzip Panako-latest-src.zip
 cd build
 ant #Builds the core Panako library
 ant install #Installs Panako in the /opt/panako directory
@@ -151,7 +152,7 @@ bc. panako sync reference.avi other.mkv other.mp3
 
 h2(#ismir). Reproduce the ISMIR Paper Results
 
-The directory @doc/Reproducibility" contains scripts to reproduce the result found in the 
+The directory @doc/Reproducibility@ contains scripts to reproduce the result found in the 
 Panako ISMIR paper. The scripts follow this procedure:
 
 1) The Jamendo dataset is downloaded.
@@ -169,8 +170,8 @@ To run the scripts, a UNIX like system with following utilities is required:
 * wget: an utility to download files
 * "SoX":http://sox.sourceforge.net/, inlcuding support for MP3 and GSM encoding.
 * bash: the bash shell
-* "ruby":https://www.ruby-lang.org/en/
-* unzip: to unzip the metadata file.
+* "Ruby":https://www.ruby-lang.org/en/: The ruby programming language runtime environment.
+* Unzip: to unzip the metadata file.
 
 Also the panako software is needed. Please see above to install the Panako.
 The configuration used during the test is also included in the @doc/Reproducibility@ directory.

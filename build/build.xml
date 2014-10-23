@@ -35,7 +35,6 @@
 			noindex="false" 
 			nonavbar="false"
 			notree="false"
-			 
 			source="1.7" 
 			sourcepath="../src" 
 			splitindex="true" 
@@ -44,7 +43,7 @@
 	</target>
 	
 	<!-- Creates index.html with info about panako in ../doc/ directory -->
-	<target name="doc"> 
+	<target name="doc" depends="javadoc"> 
     	<exec dir="../doc/etc" executable="./docs2html"/>
     </target>
 
@@ -88,31 +87,23 @@
 	
 
 	<!-- builds a release: all examples, documentation and library in the correct folders-->
-	<target name="release" depends="doc,javadoc,panako">
+	<target name="release" depends="doc,javadoc">
 		
 	    <mkdir dir="Panako-${version}"/>
-	    <mkdir dir="Panako-${version}/release"/>
-	    
-	    <move file="panako-${version}.jar" tofile="Panako-${version}/release/panako.jar"/>
-		<move file="../doc/index.html" tofile="Panako-${version}/readme.html"/>
-		
-		<copy file="../doc/panako" tofile="Panako-${version}/release/panako"/>
-	    <copy file="../config.properties" tofile="Panako-${version}/release/config.properties"/>
-	    <copy file="logging.properties" tofile="Panako-${version}/release/logging.properties"/>
-		<copy file="../license.txt" tofile="Panako-${version}/LICENSE"/>
+	  	<move file="../doc/index.html" tofile="Panako-${version}/readme.html"/>
 		
 		<copy  todir="Panako-${version}/doc/">
 			<fileset dir="../doc/javadoc"/>
 		</copy>
 		
-		 <zip destfile="Panako-${version}/Panako-${version}.zip">
+		 <zip destfile="Panako-${version}/Panako-${version}-src.zip">
 		 	<zipfileset dir="../src" prefix="src/"/>
 		 	<zipfileset dir="../lib" prefix="lib/"/>
 		 	<zipfileset dir="../build" prefix="build/" >
-		 		<exclude name="**/Panako-${version}/**"/>
+		 		<exclude name="**/Panako-*/**"/>
 		 	</zipfileset>
 		 	
-		 	<zipfileset dir="Panako-${version}/release" prefix="panako/"/>
+		 	<zipfileset dir="../doc" prefix="doc/" ></zipfileset>
 		 		
 		 	<zipfileset dir="Panako-${version}/" includes="readme.html"/>
 		 	<zipfileset dir="Panako-${version}/" includes="LICENSE"/>
