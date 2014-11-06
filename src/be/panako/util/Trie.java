@@ -45,7 +45,7 @@ import java.util.Map.Entry;
 
 /**
  * A trie that can be used for auto completion
- * @author Marcus McCurdy <marcus.mccurdy@gmail.com>
+ * @author Marcus McCurdy (marcus.mccurdy@gmail.com)
  */
 public class Trie {
 

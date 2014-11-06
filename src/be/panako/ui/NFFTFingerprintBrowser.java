@@ -272,7 +272,7 @@ public class NFFTFingerprintBrowser extends JFrame{
 			w.start();
 			
 			final AudioDispatcher d = AudioDispatcherFactory.fromPipe(audioFile, samplerate, size, overlap);
-			final NFFTEventPointProcessor eventPointProcessor = new NFFTEventPointProcessor(size);
+			final NFFTEventPointProcessor eventPointProcessor = new NFFTEventPointProcessor(size,overlap,samplerate);
 			
 			d.addAudioProcessor(eventPointProcessor);
 			d.addAudioProcessor(new AudioProcessor() {
@@ -345,7 +345,7 @@ public class NFFTFingerprintBrowser extends JFrame{
 			w.start();
 			
 			final AudioDispatcher d = AudioDispatcherFactory.fromPipe(audioFile, samplerate, size, overlap);
-			final NFFTEventPointProcessor eventPointProcessor = new NFFTEventPointProcessor(size);
+			final NFFTEventPointProcessor eventPointProcessor = new NFFTEventPointProcessor(size,overlap,samplerate);
 			d.addAudioProcessor(eventPointProcessor);
 			d.addAudioProcessor(new AudioProcessor() {
 				@Override

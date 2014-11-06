@@ -49,7 +49,7 @@ import be.panako.util.LemireMinMaxFilter;
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
 import be.tarsos.dsp.util.fft.FFT;
-import be.tarsos.dsp.util.fft.HannWindow;
+import be.tarsos.dsp.util.fft.HammingWindow;
 
 public class NFFTEventPointProcessor implements AudioProcessor {
 
@@ -59,11 +59,33 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 	//objects in the processing loop, at the expense of a bit of
 	//complexity
 	private float[][] magnitudes;
+	/**
+	 * The phase info of the current frame.
+	 */
+	private final float[][] phases;
+	
 	private int magnitudesIndex=0;
 	
 	private final ArrayDeque<float[]> previousFrames;
+	private final ArrayDeque<float[]> previousPhase;
 	private final ArrayDeque<float[]> previousMinFrames;
 	private final ArrayDeque<float[]> previousMaxFrames;
+	
+	/**
+	 * The sample rate of the signal.
+	 */
+	private final int sampleRate;
+	
+	
+	/**
+	 * Cached calculations for the frequency calculation
+	 */
+	private final double dt;
+	private final double cbin;
+	private final double inv_2pi;
+	private final double inv_deltat;
+	private final double inv_2pideltat;
+	
 	
 	private final List<NFFTEventPoint> eventPoints = new ArrayList<>();
 	private final Set<NFFTFingerprint> fingerprints = new HashSet<>();
@@ -80,17 +102,19 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 	private final float[] minHorizontal;
 	
 	
-	public NFFTEventPointProcessor(int size){
-		this(size,15,3);
+	public NFFTEventPointProcessor(int size,int overlap,int sampleRate){
+		this(size,overlap,sampleRate,15,3);
 	}
 	
-	public NFFTEventPointProcessor(int size, int maxFilterWindowSize,int minFilterWindowSize){
-		fft = new FFT(size, new HannWindow());
+	public NFFTEventPointProcessor(int size,int overlap,int sampleRate, int maxFilterWindowSize,int minFilterWindowSize){
+		fft = new FFT(size, new HammingWindow());
 		
 		magnitudesIndex=0;
 		magnitudes = new float[maxFilterWindowSize/2 + minFilterWindowSize/2][size/2];
+		phases = new float[maxFilterWindowSize/2 + minFilterWindowSize/2][size/2];
 		
 		previousFrames = new ArrayDeque<>();
+		previousPhase = new ArrayDeque<>();
 		previousMaxFrames = new ArrayDeque<>();
 		previousMinFrames = new ArrayDeque<>();
 		
@@ -102,6 +126,15 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 		
 		this.maxFilterWindowSize = maxFilterWindowSize;
 		this.minFilterWindowSize = minFilterWindowSize;
+		
+		dt = (size - overlap) / (double) sampleRate;
+		cbin = (double) (dt * sampleRate / (double) size);
+
+		inv_2pi = (double) (1.0 / (2.0 * Math.PI));
+		inv_deltat = (double) (1.0 / dt);
+		inv_2pideltat = (double) (inv_deltat * inv_2pi);
+
+		this.sampleRate = sampleRate;
 	}
 	
 	@Override
@@ -113,7 +146,7 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 		fft.forwardTransform(buffer);
 		
 		//store the magnitudes (moduli) in magnitudes
-		fft.modulus(buffer, magnitudes[magnitudesIndex]);
+		fft.powerAndPhaseFromFFT(buffer, magnitudes[magnitudesIndex],phases[magnitudesIndex]);
 		
 		//calculate the natural logarithm
 		//log();
@@ -128,6 +161,8 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 		
 		//store the frame magnitudes
 		previousFrames.addLast(magnitudes[magnitudesIndex]);
+		//store the frame phase info
+		previousPhase.addLast(phases[magnitudesIndex]);
 		
 		//find the horziontal minima and maxima
 		if(previousMaxFrames.size()==maxFilterWindowSize){
@@ -145,6 +180,7 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 		//previousmaxframes
 		if(previousFrames.size() == maxFilterWindowSize/2 + minFilterWindowSize/2  ){
 			previousFrames.removeFirst();
+			previousPhase.removeFirst();
 		}
 		
 		//magnitude index counter
@@ -189,6 +225,13 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 		
 		float[] frame = previousFrames.getFirst();
 		
+		Iterator<float[]> it = previousPhase.iterator();
+		float[] currentPhase = it.next();
+		float[] previousPhase = null;
+		if(it.hasNext()){
+			previousPhase = it.next();
+		}
+		
 		float frameMaxVal=0;
 		int timeInFrames = t-maxFilterWindowSize/2;
 		
@@ -220,13 +263,42 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 				if(currentValLog > minEnergyForPoint * framMaxValLog &&
 						ratio > minRatioThreshold  && 
 						ratio < maxRatioThreshold){
-					eventPoints.add(new NFFTEventPoint(timeInFrames, i, currentVal,minVal/maxVal) );
+					//now calculate detailed frequency information using fft:
+					float frequencyEstimate = getFrequencyForBin(i, currentPhase,previousPhase);//in Hz
+					eventPoints.add(new NFFTEventPoint(timeInFrames, i, frequencyEstimate, currentVal,minVal/maxVal) );
 				}
 			}
 					
 		}
 	}
 	
+	/**
+	 * Calculates a frequency for a bin using phase info, if available.
+	 * @param binIndex The FFT bin index.
+	 * @return a frequency, in Hz, calculated using available phase info.
+	 */
+	private float getFrequencyForBin(int binIndex, float[] currentPhase,
+			float[] previousPhase2) {
+		final float frequencyInHertz;
+		// use the phase delta information to get a more precise
+		// frequency estimate
+		// if the phase of the previous frame is available.
+		// See
+		// * Moore 1976
+		// "The use of phase vocoder in computer music applications"
+		// * Sethares et al. 2009 - Spectral Tools for Dynamic
+		// Tonality and Audio Morphing
+		// * Laroche and Dolson 1999
+		if (previousPhase2!=null) {
+			float phaseDelta =  previousPhase2[binIndex] - currentPhase[binIndex];
+			long k = Math.round(cbin * binIndex - inv_2pi * phaseDelta);
+			frequencyInHertz = (float) (inv_2pideltat * phaseDelta  + inv_deltat * k);
+			System.out.println(frequencyInHertz);
+		} else {
+			frequencyInHertz = (float) fft.binToHz(binIndex, sampleRate);
+		}
+		return frequencyInHertz;
+	}
 	
 
 	@Override

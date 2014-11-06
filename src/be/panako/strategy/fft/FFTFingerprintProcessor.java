@@ -72,9 +72,7 @@ public class FFTFingerprintProcessor implements AudioProcessor {
 
 	public int samplesProcessed;
 	
-	/**
 
-	 */
 	public FFTFingerprintProcessor(int numberOfFingerprintsPerSecond,int divideSteps){
 		samplesProcessed = 0;
 		this.numberOfFingerprintsPerSecond = numberOfFingerprintsPerSecond;

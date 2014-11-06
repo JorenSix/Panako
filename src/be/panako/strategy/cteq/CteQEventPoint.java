@@ -69,6 +69,7 @@ public class CteQEventPoint {
 	 * @param t The time expressed using an analysis frame index.
 	 * @param f The frequency expressed using the bin number in the constant Q transform.
 	 * @param energy The energy value of the element.
+	 * @param contrast How much contrast there is between this point and the surrounding environment
 	 */
 	public CteQEventPoint(int t,int f,float energy,float contrast){
 		this.t = t;

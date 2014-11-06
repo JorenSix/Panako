@@ -141,10 +141,6 @@ public final class FileUtils {
 	 * @param name
 	 *            The name of the file to create.
 	 */
-	/**
-	 * @param contents
-	 * @param name
-	 */
 	public static void writeFile(final String contents, final String name) {
 		writeFile(contents, name, false);
 	}
@@ -370,7 +366,7 @@ public final class FileUtils {
 	/**
 	 * Returns the filename without path and without extension.
 	 * 
-	 * @param fileName
+	 * @param fileName The name of the file.
 	 * @return the file name without extension and path
 	 */
 	public static String basename(final String fileName) {
@@ -489,7 +485,7 @@ public final class FileUtils {
 	 * Returns an identifier for a resource.
 	 * It is either based on the hashCode of a string or on the name of the resource.
 	 * If a resource is called e.g. <code>1855.mp3</code>, the number part is used as identifier.
-	 * @param resource
+	 * @param resource The resource to get an identifier for.
 	 * @return an identifier.
 	 */
 	public static int getIdentifier(String resource) {

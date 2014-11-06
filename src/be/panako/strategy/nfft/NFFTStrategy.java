@@ -73,7 +73,7 @@ public class NFFTStrategy extends Strategy {
 		int overlap = size - Config.getInt(Key.NFFT_STEP_SIZE);
 		
 		AudioDispatcher d = AudioDispatcherFactory.fromPipe(resource, samplerate, size, overlap);
-		final NFFTEventPointProcessor minMaxProcessor = new NFFTEventPointProcessor(size);
+		final NFFTEventPointProcessor minMaxProcessor = new NFFTEventPointProcessor(size,overlap,samplerate);
 		d.addAudioProcessor(minMaxProcessor);
 		d.run();
 		Set<NFFTFingerprint> fingerprints = minMaxProcessor.getFingerprints();

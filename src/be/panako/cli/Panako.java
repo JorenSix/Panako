@@ -293,7 +293,8 @@ public class Panako {
 	}
 
 	/**
-	 * @param args
+	 * Starts the Panako application. It is the main (and only) entry point.
+	 * @param args The command line arguments
 	 */
 	public static void main(String[] args) {
 		//Initialize Panako
