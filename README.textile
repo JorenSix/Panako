@@ -1,11 +1,13 @@
 h1. Panako - Acoustic Fingerprinting
 
 
-Panako is an "acoustic fingerprinting":https://en.wikipedia.org/wiki/Acoustic_fingerprint system. The system is able to extract fingerprints from an audio stream, and either store those fingerprints in a database, or find a match between the extracted fingerprints and stored fingerprints.  Several acoustic fingerprinting algorithms are implemented within Panako. The main algorithm, the Panako algorithm, has the feature that audio queries can be identified reliably and quickly even if they has been sped up, time stretched or pitch shifted with respect to the reference audio. The main focus of Panako is to serve as a demonstration of the Panako algorithm. Other acoustic fingerprinting schemes are implemented to serve as a baseline for comparison.
+Panako is an "acoustic fingerprinting":https://en.wikipedia.org/wiki/Acoustic_fingerprint system. The system is able to extract fingerprints from an audio stream, and either store those fingerprints in a database, or find a match between the extracted fingerprints and stored fingerprints.  Several acoustic fingerprinting algorithms are implemented within Panako. The main algorithm, the Panako algorithm, has the feature that audio queries can be identified reliably and quickly even if they has been sped up, time stretched or pitch shifted with respect to the reference audio. The main focus of Panako is to serve as a demonstration of the Panako algorithm. Other acoustic fingerprinting schemes are implemented to serve as a baseline for comparison. More information can be found in the "article about Panako":http://www.terasoft.com.tw/conf/ismir2014/proceedings/T048_122_Paper.pdf.
+
+Please be aware of the patents "US7627477 B2":https://www.google.com/patents/US7627477 and "US6990453":https://www.google.com/patents/US6990453 and "perhaps others":http://www.shazam.com/music/web/productfeatures.html?id=1284. They describe techniques used in some algorithms implemented within Panako. The patents limit the use of some algorithms  under various conditions and for several regions. Please make sure to consult your intellectual property rights specialist if you are in doubt about these restrictions. If these restrictions apply, respect the patent holders rights. The first aim of Panako is to serve as a research platform to experiment with and improve fingerprinting algorithms.
 
 This document covers installation, usage and configuration of Panako.
 
-Panako is licensed under the "GNU Affero General Public License":https://www.gnu.org/licenses/agpl-3.0.html.
+The Panako source code is licensed under the "GNU Affero General Public License":https://www.gnu.org/licenses/agpl-3.0.html.
 
 h2. Overview
 
@@ -17,6 +19,8 @@ h2. Overview
 ## "Print Storage Statistics":#stats
 ## "Print Configuration":#configuration
 ## "Synchronize Media Files":#sync
+# "Further reading":#read
+# "Credits":#credits
 # "Reproduce the ISMIR Paper Results":#ismir
 
 h2(#why). Why Panako?
@@ -54,7 +58,7 @@ Panako uses the "Apache Ant":https://ant.apache.org/ build system. Install it on
 
 bc. wget http://panako.be/releases/panako-latest/Panako-latest-src.zip
 unzip Panako-latest-src.zip
-cd build
+cd Panako/build
 ant #Builds the core Panako library
 ant install #Installs Panako in the /opt/panako directory
 ant doc #Creates the documentation in Panako/doc
@@ -150,10 +154,38 @@ The synchonize option uses a two stage algorithm. First fingerprints are extract
 
 bc. panako sync reference.avi other.mkv other.mp3
 
+h2(#read). Further Reading
+
+Some relevant reading material about acoustic fingerprinting. 
+
+* Cano, Pedro and Batlle, Eloi and Kalker, Ton and Haitsma, Jaap __A Review of Audio Fingerprinting__ (2005)
+* Arzt, Andreas and Bock, Sebastian and Widmer, Gerhard __Fast Identification of Piece and Score Position via Symbolic Fingerprinting__ (2012)
+* Fenet, Sebastien and Richard, Gael and Grenier, Yves __A Scalable Audio Fingerprint Method with Robustness to Pitch-Shifting__ (2011)
+* Wang, Avery L. __An Industrial-Strength Audio Search Algorithm__ (2003)
+* Ellis, Dan and Whitman, Brian and Porter, Alastair __Echoprint - An Open Music Identification Service__ (2011)
+* Joren Six and Olmo Cornelis __A Robust Audio Fingerprinter Based on Pitch Class Histograms - Applications for Ethnic Music Archives__ (2012)
+* Reinhard Sonnleitner and Gerhard Widmer __Quad-based Audio Fingerprinting Robust To Time And Frequency Scaling__ (2014)
+
+h2(#credits). Credits
+
+The Panako software was developed at "IPEM, Ghent University":http://www.ipem.ugent.be/ by Joren Six.
+
+Some parts of Panako were inspired by the "Robust Landmark-Based Audio Fingerprinting Matlab implementation by Dan Ellis":http://www.ee.columbia.edu/~dpwe/resources/matlab/fingerprint/.
+
+If you use Panako for research purposes, please cite the following work:
+
+bc. @inproceedings{six2014panako,
+  author      = {Joren Six and Marc Leman},
+  title       = {{Panako - A Scalable Acoustic Fingerprinting System Handling Time-Scale and Pitch Modification}},
+  booktitle   = {{Proceedings of the 15th ISMIR Conference (ISMIR 2014)}}, 
+  year        =  2014
+}
+
+
 h2(#ismir). Reproduce the ISMIR Paper Results
 
 The directory @doc/Reproducibility@ contains scripts to reproduce the result found in the 
-Panako ISMIR paper. The scripts follow this procedure:
+"Panako ISMIR 2014 paper":http://www.terasoft.com.tw/conf/ismir2014/proceedings/T048_122_Paper.pdf. The scripts follow this procedure:
 
 1) The Jamendo dataset is downloaded.
 2) The fingerprints are extracted and stored for each file in the data set.o download an openly available dataset
