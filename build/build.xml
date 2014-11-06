@@ -91,22 +91,22 @@
 		
 	    <mkdir dir="Panako-${version}"/>
 	  	<move file="../doc/index.html" tofile="Panako-${version}/readme.html"/>
+		<copy file="../license.txt" tofile="Panako-${version}/LICENSE"/>
 		
 		<copy  todir="Panako-${version}/doc/">
 			<fileset dir="../doc/javadoc"/>
 		</copy>
 		
 		 <zip destfile="Panako-${version}/Panako-${version}-src.zip">
-		 	<zipfileset dir="../src" prefix="src/"/>
-		 	<zipfileset dir="../lib" prefix="lib/"/>
-		 	<zipfileset dir="../build" prefix="build/" >
+		 	<zipfileset dir="../src" prefix="Panako/src/"/>
+		 	<zipfileset dir="../lib" prefix="Panako/lib/"/>
+		 	<zipfileset dir="../build" prefix="Panako/build/" >
 		 		<exclude name="**/Panako-*/**"/>
 		 	</zipfileset>
 		 	
-		 	<zipfileset dir="../doc" prefix="doc/" ></zipfileset>
-		 		
-		 	<zipfileset dir="Panako-${version}/" includes="readme.html"/>
-		 	<zipfileset dir="Panako-${version}/" includes="LICENSE"/>
+		 	<zipfileset dir="../doc" prefix="Panako/doc/" ></zipfileset>
+		 	<zipfileset dir="Panako-${version}" includes="readme.html" fullpath="Panako/readme.html"/>
+		 	<zipfileset dir="Panako-${version}" includes="LICENSE" fullpath="Panako/LICENSE"/>
 		 </zip>
 	</target>
 	
