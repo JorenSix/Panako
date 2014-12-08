@@ -109,7 +109,7 @@ public class NCteQFingerprintHit{
 	 */
 	public int frequencyRatio(){
 		int frequencyDelta = queryFrequency - matchFrequency;
-		float frequencyDeltaInCents = 1200 / Config.getFloat(Key.CTEQ_BINS_PER_OCTAVE) * frequencyDelta;
+		float frequencyDeltaInCents = 1200 / Config.getFloat(Key.NCTEQ_BINS_PER_OCTAVE) * frequencyDelta;
 		//e ^ (c ln(2)/1200)  converts a value c to a ratio
 		return Math.round((float) Math.pow(Math.E, frequencyDeltaInCents * ln2DividedBy1200) * 100);
 	}
@@ -128,7 +128,7 @@ public class NCteQFingerprintHit{
 	public int frequencyDifferenceInCents(){
 		int frequencyDelta = queryFrequency - matchFrequency;
 		//assuming 36 bins per octave!
-		return Math.round(1200 / Config.getFloat(Key.CTEQ_BINS_PER_OCTAVE) * frequencyDelta);
+		return Math.round(1200 / Config.getFloat(Key.NCTEQ_BINS_PER_OCTAVE) * frequencyDelta);
 	}
 	
 	public double detailedTimeRatio(){
@@ -138,7 +138,7 @@ public class NCteQFingerprintHit{
 	public double detailedFrequencyRatio(){
 		int frequencyDelta = queryFrequency - matchFrequency;
 		//assuming 36 bins per octave!
-		float frequencyDeltaInCents = 1200 / Config.getFloat(Key.CTEQ_BINS_PER_OCTAVE) * frequencyDelta;
+		float frequencyDeltaInCents = 1200 / Config.getFloat(Key.NCTEQ_BINS_PER_OCTAVE) * frequencyDelta;
 		//e ^ (c ln(2)/1200)  converts a value c to a ratio
 		return Math.pow(Math.E, frequencyDeltaInCents * ln2DividedBy1200) * 100;
 	}

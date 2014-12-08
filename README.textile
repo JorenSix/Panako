@@ -19,6 +19,7 @@ h2. Overview
 ## "Print Storage Statistics":#stats
 ## "Print Configuration":#configuration
 ## "Synchronize Media Files":#sync
+## "Compare Media Files":#compare
 # "Further reading":#read
 # "Credits":#credits
 # "Reproduce the ISMIR Paper Results":#ismir
@@ -37,9 +38,9 @@ Analogue physical media such as wax cylinders, wire recordings, magnetic tapes a
 
 Next to accidental speed changes, deliberate speed manipulations are sometimes introduced during radio broadcasts: occasionally songs are played a bit faster to fit into a timeslot. During a DJ-set speed changes are almost always present. To correctly identify audio in these cases as well, a music search algorithm robust against pitch shifting, time stretching and speed changes is desired.
 
-The Panako algorithm allows such changes while maintaining other desired features as scalability, robustness and reliability. Next to two versions of the Panako algorithm (internally identified as CTEQ and NCTEQ), two versions of the algorithm described in "An Industrial-Strength Audio Search Algorithm":http://www.ee.columbia.edu/~dpwe/papers/Wang03-shazam.pdf are implemented (internally identified as FFT and NFFT). Also the algorithm in "A Robust Audio Fingerprinter Based on Pitch Class Histograms - Applications for Ethnic Music Archives":http://0110.be/files/attachments/415/2012.01.20.fingerprinter.submitted.pdf is available. To make comparisons between fingerprinting systems easy, researchers are kindly invited to contribute algorithms to the Panako project.
+The Panako algorithm allows such changes while maintaining other desired features as scalability, robustness and reliability. Next to two versions of the Panako algorithm (internally identified as CTEQ and NCTEQ), two versions of the algorithm described in "An Industrial-Strength Audio Search Algorithm":http://www.ee.columbia.edu/~dpwe/papers/Wang03-shazam.pdf are implemented (internally identified as FFT and NFFT). Also the algorithm in "A Robust Audio Fingerprinter Based on Pitch Class Histograms - Applications for Ethnic Music Archives":http://0110.be/files/attachments/415/2012.01.20.fingerprinter.submitted.pdf is available. To make comparisons between fingerprinting systems easy, researchers are kindly invited to contribute algorithms to the Panako project. 
 
-Alternative open source music identification systems are "audfprint":http://www.ee.columbia.edu/~dpwe/resources/matlab/audfprint/ and "echoprint":http://echoprint.me/.
+Alternative open source music identification systems are "audfprint":http://www.ee.columbia.edu/~dpwe/resources/matlab/audfprint/ and "echoprint":http://echoprint.me/. Alternative systems with similar features are described in "US7627477 B2":https://www.google.com/patents/US7627477 and in  "__Quad-based Audio Fingerprinting Robust To Time And Frequency Scaling__ (2014)":http://www.dafx14.fau.de/papers/dafx14_reinhard_sonnleitner_quad_based_audio_fingerpr.pdf by Reinhard Sonnleitner and Gerhard Widmer.
 
 
 h2(#getting_started). Getting started
@@ -49,14 +50,14 @@ To download the latest Panako version, @wget@ needs to be installed on your syst
 * @src@ contains the Java source files.
 * @lib@ contains the dependencies (JAR-files).
 * @build@ contains an ant build file to compile Panako and the documentation. Use @ant release@ to build the source and compile Panako.
-* @doc@ contains "documentation for the source files":/doc, generated with @javadoc@.
+* @doc@ contains "documentation for the source files":doc/, generated with @javadoc@.
 
 To compile Panako, the JDK 7 or later is required. See the "installation instructions":http://java.com/en/download/help/index_installing.xml on the Java website, for installation on your operating system. See for example how to "install Java 7 on Debian 7":http://d.stavrovski.net/blog/post/installing-oracle-java-7-on-debian-wheezy.
 
 Panako uses the "Apache Ant":https://ant.apache.org/ build system. Install it on your system. Once ant and the other components are installed correctly the following commands should get you started:
 
 
-bc. wget http://panako.be/releases/panako-latest/Panako-latest-src.zip
+bc. wget http://panako.be/releases/Panako-latest/Panako-latest-src.zip
 unzip Panako-latest-src.zip
 cd Panako/build
 ant #Builds the core Panako library
@@ -120,7 +121,7 @@ bc. panako stats # print stats once
 panako stats 20 # print stats every 20s 
 
 
-h3(#configuration). Print Configuration - **@@panako config@**
+h3(#configuration). Print Configuration - **@panako config@**
 
 The @config@ subapplication prints the configuration currently in use.
 
@@ -139,20 +140,40 @@ bc. panako store file.mp3 CHECK_FOR_DUPLICATES=FALSE
 The configuration values provided as a command line argument have priority over the ones in the configuration file. If there is no value configured a default is used automatically. To find out which configuration options are available and their respective functions, consult the documented example configuration file @doc/config.properties@.. 
 
 
-h3(#browser). Browse Fingerprints - **@@panako browser@**
+h3(#browser). Browse Fingerprints - **@panako browser@**
 
 Shows a swing user interface with a spectrogram and dectected event points and fingerprints. It can be used
 to check the effect of configuration parameters on fingerprint detection and to optimize configuration.
 
-
-
-h3(#sync). Synchronize media files - **@@panako sync@**
+h3(#sync). Synchronize media files - **@panako sync@**
 
 This operation extracts fingerprints from a reference media file and returns how much time offset there is to other files with similar audio. This is practical to synchronize video streams with similar audio or recordings of the same performance from several microphones.
 
 The synchonize option uses a two stage algorithm. First fingerprints are extracted from the media files. With these it is checked if the media files contain similar audio. If they do, a rough offset is determined (e.g. with 32ms accuracy). Subsequently crosscovariance of one audio frame is used to improve the offset estimation. This offset is returned.
 
 bc. panako sync reference.avi other.mkv other.mp3
+
+h3(#compare). Compare the structure of media files - **@panako compare@**
+
+This operation extracts fingerprints from a reference media file and searches for the fingerprints in another media file. The aim is to identify the parts of audio that are present in both input files. If only one audio file is given, a self similarity matrix is constructed. Using the matrix it becomes clear when the exact same audio is repeated within the same song. It can be used to automatically detect where cuts have been made in a long original album edit to end up with a shorter radio edit of the same song. Another use case is musical structure analysis, this works especially well in electronic music. To call the application:
+
+bc. panako compare audio.wav > self_similarity.csv
+bc. panako compare original_edit.wav radio_edit.wav > cuts_where.csv
+
+The output is a CSV file with millisecond values. When only one file is given, the diagonal is detected in a self similarity matrix and the output could look like below, if there is a repetiion of the audio between 3s-3.5s at 90-90.5s. The data is easy to visualize in a spreadsheet application.
+
+bc. 10,10
+15,15
+20,20
+...
+3000,3000,90000
+3010,3010,90010
+3500,3500,90500
+...
+4000,4000
+4010,4010
+...
+
 
 h2(#read). Further Reading
 

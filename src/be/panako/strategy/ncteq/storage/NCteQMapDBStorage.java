@@ -106,10 +106,10 @@ public class NCteQMapDBStorage {
 
 	public NCteQMapDBStorage() {
 		File dbFile = null;
-		minimumMatchesThreshold = Config.getInt(Key.CTEQ_MINIMUM_MATCHES_THRESHOLD);
-		minimumAlignedMatchesThreshold = Config.getInt(Key.CTEQ_MINIMUM_ALIGNED_MATCHES_THRESHOLD);
+		minimumMatchesThreshold = Config.getInt(Key.NCTEQ_MINIMUM_MATCHES_THRESHOLD);
+		minimumAlignedMatchesThreshold = Config.getInt(Key.NCTEQ_MINIMUM_ALIGNED_MATCHES_THRESHOLD);
 		
-		String mapDBDatabase = Config.get(Key.CTEQ_MAPDB_DATABASE);
+		String mapDBDatabase = Config.get(Key.NCTEQ_MAPDB_DATABASE);
 		dbFile = new File(mapDBDatabase);
 
 		if (Panako.getCurrentApplication().writesToStorage()) {

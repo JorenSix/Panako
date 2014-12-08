@@ -220,18 +220,4 @@ public class NFFTStreamSync {
 		}
 		return covariance;
 	}
-	
-	public static void main(String... args){
-		float[] reference = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,1,2,3,4,5};
-		float[] target = {0,0,0,12,13,14,15,16,17,18,19,-20,1,2,5,4,5,4,5,6,7,8,9,10,11};
-		System.out.println(reference.length);
-		System.out.println(target.length);
-		
-		int bestLag = new NFFTStreamSync(null,null).bestCrossCovarianceLag(reference, target);
-		for(int i = 0 ; i < reference.length; i++){
-			System.out.println(reference[i] + " " +target[(i+bestLag)%target.length]);
-		}
-		
-	}
-
 }

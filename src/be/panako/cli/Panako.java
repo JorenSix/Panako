@@ -69,6 +69,11 @@ public class Panako {
 	private final static Logger LOG = Logger.getLogger(Panako.class.getName());
 	
 	/**
+	 * A static string describing the default microphone. It is used in the monitor command.
+	 */
+	public final static String DEFAULT_MICROPHONE = "DEFAULT_MICROPHONE";
+	
+	/**
 	 * A map of applications, maps the name of the application to the instance.
 	 */
 	private final transient Map<String, Application> applications;
@@ -120,6 +125,7 @@ public class Panako {
 		applicationList.add(new Browser());
 		applicationList.add(new Monitor());
 		applicationList.add(new Sync());
+		applicationList.add(new Compare());
 		for (final Application application : applicationList) {
 			applications.put(application.name(), application);
 			applicationTrie.insert(application.name());

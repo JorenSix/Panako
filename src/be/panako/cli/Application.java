@@ -48,7 +48,7 @@ import be.panako.util.Key;
 
 
 /**
- * Application is the base class of CLI applications.
+ * Application is the abstract base class of applications with a command line interface.
  */
 public abstract class Application {	
 	private final static Logger LOG = Logger.getLogger(Application.class.getName());
@@ -163,6 +163,12 @@ public abstract class Application {
 		return actualValue;
 	}
 	
+	/**
+	 * Checks if an argument is present in a list of arguments.
+	 * @param argument The argument to check for.
+	 * @param strings The given arguments.
+	 * @return True if the argument is in the given list. Case is ignored. False otherwise.
+	 */
 	protected boolean hasArgument(String argument, String... strings){
 		boolean hasArgument = false;
 		for(String arg:strings){
@@ -201,5 +207,8 @@ public abstract class Application {
 		return value;
 	}
 
+	/**
+	 * @return true if this application writes to storage.
+	 */
 	public abstract boolean writesToStorage() ;
 }

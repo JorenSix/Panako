@@ -38,11 +38,9 @@ package be.panako.strategy.nfft;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TreeMap;
 
 import be.panako.util.LemireMinMaxFilter;
@@ -88,7 +86,7 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 	
 	
 	private final List<NFFTEventPoint> eventPoints = new ArrayList<>();
-	private final Set<NFFTFingerprint> fingerprints = new HashSet<>();
+	private final List<NFFTFingerprint> fingerprints = new ArrayList<>();
 
 	private int t = 0;
 	
@@ -293,7 +291,7 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 			float phaseDelta =  previousPhase2[binIndex] - currentPhase[binIndex];
 			long k = Math.round(cbin * binIndex - inv_2pi * phaseDelta);
 			frequencyInHertz = (float) (inv_2pideltat * phaseDelta  + inv_deltat * k);
-			System.out.println(frequencyInHertz);
+			//System.out.println(frequencyInHertz);
 		} else {
 			frequencyInHertz = (float) fft.binToHz(binIndex, sampleRate);
 		}
@@ -306,7 +304,7 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 		packEventPointsIntoFingerprints();
 	}
 	
-	public Set<NFFTFingerprint> getFingerprints(){
+	public List<NFFTFingerprint> getFingerprints(){
 		return fingerprints;
 	}
 	

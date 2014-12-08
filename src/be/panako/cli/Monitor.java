@@ -46,7 +46,11 @@ public class Monitor extends Application implements QueryResultHandler {
 	
 	@Override
 	public void run(String... args) {
-		inputResource = AudioResourceUtils.sanitizeResource(args[0]);
+		if (args.length > 0){
+			inputResource = AudioResourceUtils.sanitizeResource(args[0]);
+		}else if (args.length == 0){
+			inputResource = Panako.DEFAULT_MICROPHONE;
+		}
 		Strategy strategy = Strategy.getInstance();
 		Panako.printQueryResultHeader();
 		strategy.monitor(inputResource,1, this);

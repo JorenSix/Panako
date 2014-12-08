@@ -42,7 +42,7 @@ public class NCteQHashFunction  {
 	private final int shift;
 	
 	public NCteQHashFunction(){
-		shift = Config.getInt(Key.CTEQ_EVENT_POINT_FREQUENCY_DELTA_MAX) * Config.getInt(Key.CTEQ_BINS_PER_OCTAVE)/1200;	
+		shift = Config.getInt(Key.NCTEQ_EVENT_POINT_FREQUENCY_DELTA_MAX) * Config.getInt(Key.NCTEQ_BINS_PER_OCTAVE)/1200;	
 	}
 
 

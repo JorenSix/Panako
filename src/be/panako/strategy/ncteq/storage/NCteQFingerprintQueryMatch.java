@@ -52,8 +52,8 @@ public class NCteQFingerprintQueryMatch{
 	
 	public double getStartTime(){
 		
-		double sampleRate = Config.getInt(Key.CTEQ_SAMPLE_RATE);
-		int hopSize = Config.getInt(Key.CTEQ_STEP_SIZE);
+		double sampleRate = Config.getInt(Key.NCTEQ_SAMPLE_RATE);
+		int hopSize = Config.getInt(Key.NCTEQ_STEP_SIZE);
 		//The FFT hop size in milliseconds
 		double hopSizeS = hopSize/sampleRate;//in seconds
 		return mostPopularOffset * hopSizeS;//also in seconds

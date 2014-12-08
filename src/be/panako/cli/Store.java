@@ -70,7 +70,9 @@ public class Store extends Application {
 		System.out.println("Audiofile;Audio duration;Fingerprinting duration;ratio");
 		for(File file: files){
 			counter++;
-			executor.submit(new StoreTask(file, counter, files.size()));
+			//executor.submit(new StoreTask(file, counter, files.size()));
+			StoreTask task = new StoreTask(file, counter, files.size());
+			task.run();
 		}
 	
 	

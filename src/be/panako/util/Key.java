@@ -199,8 +199,6 @@ public enum Key{
 	CTEQ_MINIMUM_ALIGNED_MATCHES_THRESHOLD(3), 
 	
 	
-	
-
 	FFT_SAMPLE_RATE(11025),
 	
 	FFT_SIZE(512),
@@ -219,7 +217,6 @@ public enum Key{
 	
 	
 	PCH_FILES("dbs/pch"),
-	
 	PCH_SAMPLE_RATE(22050),
 	PCH_OVERLAP(1024),
 	PCH_SIZE(2048), 
@@ -231,7 +228,84 @@ public enum Key{
 	NFFT_MAPDB_DATABASE("nfft_panako_db"),
 	NFFT_SAMPLE_RATE(8000),	
 	NFFT_SIZE(512),
-	NFFT_STEP_SIZE(256)
+	NFFT_STEP_SIZE(256),
+	
+	
+	
+	/**
+	 * The name of the MapDB database location.
+	 */
+	NCTEQ_MAPDB_DATABASE("cteq_panako_db"),
+	/**
+	 * The expected sample rate for the constant q transform.
+	 */
+	NCTEQ_SAMPLE_RATE(44100),
+	/**
+	 * Step size in samples for the constant q transform.
+	 */
+	NCTEQ_STEP_SIZE(1536),
+	/**
+	 * The minimum pitch, in absolute cents 3383cents is about +-77 Hz.
+	 */
+	NCTEQ_MIN_FREQ(3700),
+	/**
+	 * The maximum pitch, in absolute cents. 11533 cents is about +-6392.63 Hz.
+	 */
+	NCTEQ_MAX_FREQ(12200),
+	/**
+	 * The number of bins per octave for the constant q transform
+	 */
+	NCTEQ_BINS_PER_OCTAVE(36),
+	/**
+	 * The maximum number of event points generated for each second of analyzed
+	 * audio to store in the database (Hz).
+	 */
+	NCTEQ_EVENT_POINTS_PER_SECOND_FOR_STORAGE(8),
+	/**
+	 * The number of event points per audio second for queries (Hz)
+	 */
+	NCTEQ_EVENT_POINTS_PER_SECOND_FOR_QUERY(8),
+	/**
+	 * The maximum delta between two frequency components in one 
+	 * fingerprint, in cents
+	 */
+	NCTEQ_EVENT_POINT_FREQUENCY_DELTA_MAX(1066),
+	/**
+	 * Defines how much fingerprints can be connected to one 
+	 * event point in the spectrum. Increasing this factor improves 
+	 * retrieval rate but limits performance and storage needs.
+	 */
+	NCTEQ_EVENT_POINT_BRANCHING_FOR_STORAGE(1),
+	/**
+	 * The branching factor for a query needs to be higher to make sure
+	 * matches are found, but not too high, so no unneeded hash collisions
+	 * are found.
+	 */
+	NCTEQ_EVENT_POINT_BRANCHING_FOR_QUERY(4),
+	/**
+	 * The maximum number of hash collisions allowed in storage. It is a
+	 * trade-off between recall and response time. More hash collisions
+	 * means a larger search time, but more hits. Allowing more collisions
+	 * also increases disk space.
+	 */
+	 NCTEQ_MAX_HASH_COLLISIONS(1000),
+	 
+	/**
+	 * The minimum number of fingerprints that 
+	 * need to match between a query and the reference audio. 
+	 * The aim is to remove random fingerprint matches.
+	 * If this is set too high, some real matches may be discarded. 
+	 * Set it too low, and the matching algorithm will spend a lot of time 
+	 * checking random matches.  
+	 */
+	NCTEQ_MINIMUM_MATCHES_THRESHOLD(4),
+	/**
+	 * The matching algorithm detects a real match if at least this number of fingerprints align. 
+	 * If it is set too low, false positives may appear. If it is set too high some real matches
+	 * may be ignored. 
+	 */
+	NCTEQ_MINIMUM_ALIGNED_MATCHES_THRESHOLD(3)
+	
 	;
 	
 	String defaultValue;

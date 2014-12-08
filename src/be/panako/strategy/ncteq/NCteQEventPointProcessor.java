@@ -90,7 +90,7 @@ public class NCteQEventPointProcessor implements AudioProcessor{
 	
 	//How far can a pair of event points be separated
 	private double maxEventPointDeltaT = 2.0;// seconds
-	private double maxEventPointDeltaF = Config.getInt(Key.CTEQ_EVENT_POINT_FREQUENCY_DELTA_MAX);// cents
+	private double maxEventPointDeltaF = Config.getInt(Key.NCTEQ_EVENT_POINT_FREQUENCY_DELTA_MAX);// cents
 	private int maxEventPointDeltaTInSteps ;
 	private int maxEventPointDeltaFInBins;
 	
@@ -209,7 +209,7 @@ public class NCteQEventPointProcessor implements AudioProcessor{
 		float[] frame = previousFrames.getFirst();
 		
 		float frameMaxVal=0;
-		int timeInFrames = t - maxFilterWindowSize/2 + constantQ.getFFTlength()/Config.getInt(Key.CTEQ_STEP_SIZE) + constantQ.getFFTlength()/(3*Config.getInt(Key.CTEQ_STEP_SIZE))  ;
+		int timeInFrames = t - maxFilterWindowSize/2 + constantQ.getFFTlength()/Config.getInt(Key.NCTEQ_STEP_SIZE) + constantQ.getFFTlength()/(3*Config.getInt(Key.NCTEQ_STEP_SIZE))  ;
 		
 		//An event point is only valid if the ratio between min and max is larger than 20%
 		//This eliminates points where the minimum is close to silence.

@@ -47,7 +47,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 import javax.swing.JButton;
@@ -384,7 +383,7 @@ public class NFFTFingerprintBrowser extends JFrame{
 					System.out.println("Done. Found " + numberOfEqualEventPoints + " matching event points, or " + numberOfEqualEventPoints/duration + " per second or " + numberOfEqualEventPoints/ ((float) Math.max(otherEventPoints.size(), referenceEventPoints.size())) + " % .");
 					
 					
-					Set<NFFTFingerprint> otherFingerprints = eventPointProcessor.getFingerprints();
+					List<NFFTFingerprint> otherFingerprints = eventPointProcessor.getFingerprints();
 					HashMap<Integer, Integer> counter = new HashMap<>();
 					for(NFFTFingerprint otherPrint : otherFingerprints){
 						for(NFFTFingerprint thisPrint : referenceFingerprints){
