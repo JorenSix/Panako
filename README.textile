@@ -59,6 +59,7 @@ Panako uses the "Apache Ant":https://ant.apache.org/ build system. Install it on
 
 bc. wget http://panako.be/releases/Panako-latest/Panako-latest-src.zip
 unzip Panako-latest-src.zip
+#sudo apt-get install default-jdk ant libav-tools# Optionally install JDK, ant libav-tools (on Ubuntu).
 cd Panako/build
 ant #Builds the core Panako library
 ant install #Installs Panako in the /opt/panako directory

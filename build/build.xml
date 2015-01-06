@@ -112,8 +112,12 @@
 	
 	<!-- Installs the panako jar file to /opt/panako -->
 	<target name="install" depends="panako">
+		 <!-- Copy the panako execute script -->
 		 <copy file="../doc/panako" tofile="/opt/panako/panako"/>
-	     <move file="panako-${version}.jar" tofile="/opt/panako/panako.jar"/>
+		 <!-- Create the log directory -->
+		 <mkdir dir="/opt/panako/panako/log"/>
+		 <!-- Copy the logging configuration and the main jar file -->
+	     <copy file="panako-${version}.jar" tofile="/opt/panako/panako.jar"/>
 	     <copy file="logging.properties" tofile="/opt/panako/logging.properties"/>
 	</target>
 </project>
