@@ -304,7 +304,13 @@ public enum Key{
 	 * If it is set too low, false positives may appear. If it is set too high some real matches
 	 * may be ignored. 
 	 */
-	NCTEQ_MINIMUM_ALIGNED_MATCHES_THRESHOLD(3)
+	NCTEQ_MINIMUM_ALIGNED_MATCHES_THRESHOLD(3), 
+	
+	
+	/**
+	 * The synchronization algorithm only considers the match as valid if this number of aligning matches are found.
+	 */
+	SYNC_MIN_ALIGNED_MATCHES(7)
 	
 	;
 	

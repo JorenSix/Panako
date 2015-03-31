@@ -2,7 +2,7 @@
 <project default="panako" name="Create the Panako JAR-file">
 
 	<!-- Configuration -->
-	<property name="version" value="1.3" />
+	<property name="version" value="1.4" />
 	
 	<!-- Run the ant timestamp task -->
 	<tstamp />
@@ -27,7 +27,7 @@
 	<target name="javadoc">
 		<javadoc access="public" 
 			author="true" 
-			classpath="${junit_jar}:../lib/TarsosDSP-2.0.jar:../lib/json-2.0.jar:../lib/commons-exec-1.1.jar:../lib/mapdb-1.0.6.jar" 
+			classpath="${junit_jar}:../lib/TarsosDSP-2.2.jar:../lib/json-2.0.jar:../lib/commons-exec-1.3.jar:../lib/mapdb-1.0.7.jar" 
 			destdir="../doc/javadoc"
 			doctitle="Panako ${version}-${DSTAMP}" 
 			nodeprecated="false" 
@@ -61,16 +61,16 @@
 			</manifest>
 			
 			<!-- mapdb jar files -->
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb-1.0.6.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb-1.0.7.jar"/>
 			
 			<!-- JSON lib -->
 			<zipfileset excludes="META-INF/**" src="../lib/json-2.0.jar"/>
 			
 			<!-- Execute scripts -->
-			<zipfileset excludes="META-INF/**" src="../lib/commons-exec-1.1.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/commons-exec-1.3.jar"/>
 			
 			<!-- DSP library -->
-			<zipfileset excludes="META-INF/**" src="../lib/TarsosDSP-2.0.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/TarsosDSP-2.2.jar"/>
     		
 			<!-- exclude everything except src dir -->
 			<fileset dir="../bin">
@@ -113,9 +113,9 @@
 	<!-- Installs the panako jar file to /opt/panako -->
 	<target name="install" depends="panako">
 		 <!-- Copy the panako execute script -->
-		 <copy file="../doc/panako" tofile="/opt/panako/panako"/>
+		 <copy file="../doc/panako" tofile="/opt/panako"/>
 		 <!-- Create the log directory -->
-		 <mkdir dir="/opt/panako/panako/log"/>
+		 <mkdir dir="/opt/panako/log"/>
 		 <!-- Copy the logging configuration and the main jar file -->
 	     <copy file="panako-${version}.jar" tofile="/opt/panako/panako.jar"/>
 	     <copy file="logging.properties" tofile="/opt/panako/logging.properties"/>

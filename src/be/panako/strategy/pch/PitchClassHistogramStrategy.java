@@ -104,7 +104,8 @@ public class PitchClassHistogramStrategy extends Strategy {
 				pch[roundedCentValue] += 1;
 			}
 		}
-		return d.durationInSeconds();
+		return -10;
+		//return d.durationInSeconds();
 	}
 	
 	private void storePch(int identifier, String description,int[] pch){

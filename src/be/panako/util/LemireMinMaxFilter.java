@@ -183,6 +183,12 @@ public class LemireMinMaxFilter {
 		
 		filter.filter(data);
 		System.out.println("mvl: " + filter.maxVal.length + " dl: " + data.length);
+		
+		
+		for(float value : data){
+			System.out.println(value);
+		}
+		
 		System.out.println();
 		for(float value : filter.maxVal){
 			System.out.println(value);

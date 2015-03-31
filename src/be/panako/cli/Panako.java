@@ -82,7 +82,7 @@ public class Panako {
 	 */
 	private final Trie applicationTrie;
 	
-	private static Application currentApplication;
+	public static Application currentApplication;
 	
 	public static Application getCurrentApplication(){
 		return currentApplication;
@@ -126,6 +126,7 @@ public class Panako {
 		applicationList.add(new Monitor());
 		applicationList.add(new Sync());
 		applicationList.add(new Compare());
+		applicationList.add(new Syncsink());
 		for (final Application application : applicationList) {
 			applications.put(application.name(), application);
 			applicationTrie.insert(application.name());

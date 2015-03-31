@@ -70,9 +70,6 @@ public class NFFTFingerprint {
 	public NFFTFingerprint(NFFTEventPoint l1, NFFTEventPoint l2){
 		this(l1.t,l1.f,l2.t,l2.f);
 	}
-
-	
-	
 	
 	/**
 	 * Calculate a hash representing this fingerprint.

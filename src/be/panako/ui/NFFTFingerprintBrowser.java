@@ -172,7 +172,7 @@ public class NFFTFingerprintBrowser extends JFrame{
 						if (centsStartingPoint >= cs.getMin(Axis.Y)
 								&& centsStartingPoint <= cs.getMax(Axis.Y)) {
 						
-							int greyValue = 255 - (int) (magnitudes[i]* 255);
+							int greyValue = 255 - (int) (magnitudes[i] * 4 * 255);
 							greyValue = Math.max(0, greyValue);
 							color = new Color(greyValue, greyValue, greyValue);
 							graphics.setColor(color);
