@@ -4,7 +4,12 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,8 +53,9 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 	private final CoordinateSystem cs;
 	private final LinkedPanel linkedPanel;
 	private int streamIndex = 0;
-	private List<File> streamFiles;
-	private List<NFFTSyncMatch> matches;
+	private final List<File> streamFiles;
+	private final List<NFFTSyncMatch> matches;
+	private final List<StreamLayer> streamLayers;
 	private float maxDuration;
 	
 	
@@ -94,12 +100,12 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 		linkedPanel.addLayer(new BackgroundLayer(cs));
 		linkedPanel.addLayer(new TimeAxisLayer(cs));
 		linkedPanel.addLayer(new SelectionLayer(cs));
-		
 
 		linkedPanel.getViewPort().addViewPortChangedListener(this);
 		
 		matches = new ArrayList<NFFTSyncMatch>();
 		
+		this.streamLayers = new ArrayList<StreamLayer>();
 		this.streamFiles = new ArrayList<File>();
 		this.add(linkedPanel,BorderLayout.CENTER);
 		this.add(createButtonPanel(),BorderLayout.SOUTH);
@@ -119,7 +125,6 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 				chooser.setDialogTitle("Choose video, audio or data file with embedded audio.");
 			    int returnVal = chooser.showOpenDialog(SyncSinkFrame.this);
 			    if(returnVal == JFileChooser.APPROVE_OPTION) {
-			    	
 			    	openFile(chooser.getSelectedFile());
 			    }	
 			}
@@ -131,26 +136,7 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 		syncButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				//float referenceFileDuration = getMediaDuration(streamFiles.get(0).getAbsolutePath());
-				for(int i = 1 ; i < streamFiles.size() ; i++){
-					//float otherFileDuration = getMediaDuration(streamFiles.get(i).getAbsolutePath());
-					
-					NFFTSyncMatch match = matches.get(i-1);
-					float[] matchInfo = match.getMatch(0);
-					
-					float guessedStartTimeOfStream = (matchInfo[0] - matchInfo[2]);
-					if(guessedStartTimeOfStream >= 0){
-						//generate silence
-						String command = "/opt/ffmpeg/ffmpeg -f lavfi -i aevalsrc=0:d="+guessedStartTimeOfStream+" -i  " + streamFiles.get(i) +  "  -filter_complex \"[0:0] [1:0] concat=n=2:v=0:a=1 [a]\" -map [a] synced.wav";
-						System.out.println(command);
-					}else{
-						//cut the first part away
-						String startString = String.format("%.3f", -1 * guessedStartTimeOfStream);
-						
-						String command = "/opt/ffmpeg/fmpeg -ss " + startString + " -i " + streamFiles.get(i) +  " synced.wav";
-						System.out.println(command);
-					}
-				}
+				synchronizeMedia();
 			}
 		});
 		
@@ -158,13 +144,58 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 		JCheckBox outputOptions = new JCheckBox("Output only guaranteed synchronized files?");
 		outputOptions.setToolTipText("If not checked then the assumption is that the offset stays the same for the whole file");
 		
-		audioSource.add(outputOptions);
-		
+		audioSource.add(outputOptions);		
 		audioSource.add(syncButton);
-		
-		
-		
 		return audioSource;
+	}
+	
+	private void synchronizeMedia(){
+		//float referenceFileDuration = getMediaDuration(streamFiles.get(0).getAbsolutePath());
+		for(int i = 1 ; i < streamFiles.size() ; i++){
+			//float otherFileDuration = getMediaDuration(streamFiles.get(i).getAbsolutePath());
+			
+			NFFTSyncMatch match = matches.get(i-1);
+			float[] matchInfo = match.getMatch(0);
+			
+			boolean isVideo = streamFiles.get(i).getName().matches("(?i).*(avi|mp4|mkv|mpeg)");
+			
+			float guessedStartTimeOfStream = (matchInfo[0] - matchInfo[2]);
+			String command;
+			if(guessedStartTimeOfStream >= 0){
+				//generate silence
+				
+				if(isVideo){
+					//String syncedmediaFile = "synced_" + streamFiles.get(i).getName();
+					command = "command to add black frames here";
+				}else{
+					String syncedmediaFile = "synced_" + streamFiles.get(i).getName();
+					command = "/opt/ffmpeg/ffmpeg -f lavfi -i aevalsrc=0:d="+guessedStartTimeOfStream+" -i  " + streamFiles.get(i) +  "  -filter_complex \"[0:0] [1:0] concat=n=2:v=0:a=1 [a]\" -map [a] \"" + syncedmediaFile + "\"";
+				}
+				
+			}else{
+				//cut the first part away
+				String startString = String.format("%.3f", -1 * guessedStartTimeOfStream);
+				String syncedmediaFile = "synced_" + streamFiles.get(i).getName();
+				if(isVideo){
+					
+					command = "/opt/ffmpeg/fmpeg -ss " + startString + " -i " + streamFiles.get(i) +  " \"" + syncedmediaFile + "\"";
+				}else{
+					command = "/opt/ffmpeg/fmpeg -ss " + startString + " -i " + streamFiles.get(i) +  " \"" + syncedmediaFile + "\"";
+				}
+			}
+			
+			for(File dataFile : streamLayers.get(i).getDataFiles()){
+				File shiftedCSVFile = new File("synced_" + dataFile.getName());
+				try {
+					modifyCSVFile(dataFile, shiftedCSVFile, guessedStartTimeOfStream);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			
+			System.out.println(command);
+		}
 	}
 	
 	public void openFile(File file){
@@ -173,6 +204,7 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
     	 	streamFiles.add(file);
     		float duration = getMediaDuration(file.getAbsolutePath());
     		StreamLayer refLayer = new StreamLayer(cs,streamIndex,colorMap[streamIndex],fileName,true,duration*1000);
+    		
 			refLayer.addInterval(0, duration*1000,0,0);
 			maxDuration = duration;
 			
@@ -188,6 +220,7 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 			linkedPanel.getViewPort().zoomToSelection();
 			
 			linkedPanel.addLayer(refLayer);
+			streamLayers.add(refLayer);
 			
     	}else{
     		streamFiles.add(file);
@@ -216,12 +249,9 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
     			float stopTimeInRef = matchInfo[1];
     			otherLayer.addInterval(startTimeInRef*1000,stopTimeInRef*1000,matchInfo[2]*1000,matchInfo[3]*1000);
     		}
-    		
-    		
-    		
 			linkedPanel.addLayer(otherLayer);
+			streamLayers.add(otherLayer);
 			linkedPanel.getViewPort().zoomToSelection();
-			
     	}
     	streamIndex++;
 	}
@@ -245,6 +275,34 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 		});
 		adp.run();
 		return (float) duration;
+	}
+	
+	
+	public void modifyCSVFile(File csvFile,File shiftedCSVFile,double shift) throws IOException{
+		
+		if (!csvFile.exists()) {
+			throw new IllegalArgumentException("File '" + csvFile + "' does not exist");
+		}
+		
+		FileReader fileReader = new FileReader(csvFile);
+		BufferedReader in = new BufferedReader(fileReader);
+		
+		FileWriter fileWriter = new FileWriter(shiftedCSVFile);
+		BufferedWriter out = new BufferedWriter(fileWriter);
+		
+		String inputLine = in.readLine();	
+		while (inputLine != null) {
+			final String[] row = inputLine.split(",");
+			if (!inputLine.trim().isEmpty() && row.length > 1) {
+				double timeInSeconds = Double.valueOf(row[0]);
+				double shiftedTime = timeInSeconds + shift;
+				String outputLine = String.format("%.4f" , shiftedTime)  + inputLine.substring(row[0].length(), inputLine.length()) + System.lineSeparator();
+				out.write(outputLine);
+			}
+			inputLine = in.readLine();
+		}
+		out.close();
+		in.close();
 	}
 	
 	private NFFTSyncMatch sync(){
