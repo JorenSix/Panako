@@ -67,21 +67,16 @@ public class Config {
 	 * Hidden default constructor. Reads the configured values, or stores the defaults. 
 	 */
 	public Config(){
-		
-		//if on android
-		if(onAndroid()){
-			configrationFileName = new File("/sdcard/config.properties").getAbsolutePath();
-		}else{
-			String path = Config.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-			String decodedPath = "";
-			try {
-				decodedPath = URLDecoder.decode(path, "UTF-8");
-			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			configrationFileName = new File(new File(decodedPath).getParent(),"config.properties").getAbsolutePath();
-		}		
+		String path = Config.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+		String decodedPath = "";
+		try {
+			decodedPath = URLDecoder.decode(path, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		configrationFileName = new File(new File(decodedPath).getParent(),"config.properties").getAbsolutePath();
+			
 		configrationStore = new HashMap<Key, String>();
 		if(!FileUtils.exists(configrationFileName)){
 			writeDefaultConfigration();
@@ -122,6 +117,24 @@ public class Config {
 	    }
 	}
 	
+	/**
+	 * Write the current configuration values to disk.
+	 */
+	public void saveCurrentConfigration(){
+		Properties prop = new Properties();
+		try {
+			//Set the default properties value.
+			for(Key key : Key.values()){
+				prop.setProperty(key.name(), Config.get(key));
+			}
+			//Save the properties to the configuration file.
+			prop.store(new FileOutputStream(configrationFileName), null);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+	    }
+	}
+	
+	
 	private static Config instance;
 	public static Config getInstance(){
 		if(instance == null){
@@ -155,16 +168,9 @@ public class Config {
 		return get(key).equalsIgnoreCase("true");
 	}
 	
-	/**
-	 * Check if Panako is running on Android.
-	 * @return True if the virtual machine is Dalvik.
-	 */
-	public boolean onAndroid(){
-		return System.getProperty("java.vm.name").equalsIgnoreCase("Dalvik");
-	}
-	
 	public static void set(Key key, String value) {
 		HashMap<Key,String> store = getInstance().configrationStore;
 		store.put(key, value);
+		
 	}
 }

@@ -1,27 +1,32 @@
 package be.panako.ui.syncsink;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Graphics2D;
 import java.awt.color.ColorSpace;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.geom.Point2D;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 
+import be.panako.util.Config;
+import be.panako.util.Key;
 import be.tarsos.dsp.ui.Axis;
 import be.tarsos.dsp.ui.CoordinateSystem;
 import be.tarsos.dsp.ui.layers.Layer;
 import be.tarsos.dsp.ui.layers.LayerUtilities;
 
-public class StreamLayer implements Layer, MouseListener{
+public class StreamLayer implements Layer, MouseListener,MouseMotionListener{
 	
 	private final int index;
 	private final Color color;
-	private final String description;
+	private String description;
 	private final boolean isReference;
 	private final CoordinateSystem cs;
 	private final List<Float> startTimes;//in ms
@@ -98,11 +103,7 @@ public class StreamLayer implements Layer, MouseListener{
 			
 			float verticalTextPosition = verticalOffsetOffset + heightOfABlock/2.0f;
 			LayerUtilities.drawString(graphics, description, (stopTime+startTime)/2.0f, verticalTextPosition , true, true, null);
-		}
-		
-		
-	
-		
+		}		
 	}
 	
 	private Color getBackgroundColor(){
@@ -130,13 +131,17 @@ public class StreamLayer implements Layer, MouseListener{
 			int startTime = Math.round(guessedStartTimeOfStream);
 			int stopTime = Math.round(guessedStartTimeOfStream+streamDuration);
 			if(pointInUnits.getX() >= startTime && pointInUnits.getX() <= stopTime && pointInUnits.getY() >= startHeight &&  pointInUnits.getY() <= stopHeight){
-				System.out.println("Click in layer " + index);
-				JFileChooser chooser = new JFileChooser();
+				//System.out.println("Click in layer " + index);
+				JFileChooser chooser =  new JFileChooser(new File(Config.get(Key.SYNC_PREV_DIR)));
 				chooser.setDialogTitle("Choose corresponding data file.");
 			    int returnVal = chooser.showOpenDialog(null);
 			    if(returnVal == JFileChooser.APPROVE_OPTION) {
 			    	File file = chooser.getSelectedFile();
-			    	this.dataFiles.add(file);	
+			    	Config.set(Key.SYNC_PREV_DIR, chooser.getSelectedFile().getPath());
+			    	Config.getInstance().saveCurrentConfigration();
+			    	this.dataFiles.add(file);
+			    	this.description = description + " + " + file.getName();
+			    	graphics.dispose();
 			    }
 			}
 		}
@@ -157,12 +162,36 @@ public class StreamLayer implements Layer, MouseListener{
 
 	@Override
 	public void mouseEntered(MouseEvent e) {
+		
+		
 	}
 
 	@Override
 	public void mouseExited(MouseEvent e) {
 	}
 
+	@Override
+	public void mouseDragged(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
 
-
-}
+	@Override
+	public void mouseMoved(MouseEvent e) {
+		if(graphics!=null){
+			float spacer = LayerUtilities.pixelsToUnits(graphics, 20, false);
+			float heightOfABlock = LayerUtilities.pixelsToUnits(graphics, 30, false);		
+			int verticalOffsetOffset = -1 * (Math.round((index + 1) * spacer + index * heightOfABlock));
+			int startHeight = verticalOffsetOffset ;
+			int stopHeight = verticalOffsetOffset + Math.round(heightOfABlock); 
+	
+			Point2D pointInUnits = LayerUtilities.pixelsToUnits(graphics, e.getX(), e.getY());
+			int startTime = Math.round(guessedStartTimeOfStream);
+			int stopTime = Math.round(guessedStartTimeOfStream+streamDuration);
+			if(pointInUnits.getX() >= startTime && pointInUnits.getX() <= stopTime && pointInUnits.getY() >= startHeight &&  pointInUnits.getY() <= stopHeight){
+				((JComponent)(e.getSource())).setCursor(new Cursor(Cursor.HAND_CURSOR));
+				e.consume();
+			}
+		}
+	}
+	}

@@ -1,7 +1,9 @@
 package be.panako.ui.syncsink;
 
+
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -12,13 +14,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.swing.JButton;
-import javax.swing.JCheckBox;
 import javax.swing.JComponent;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
 
 import be.panako.strategy.Strategy;
 import be.panako.strategy.nfft.NFFTStrategy;
@@ -43,21 +46,20 @@ import be.tarsos.dsp.ui.layers.TimeAxisLayer;
 import be.tarsos.dsp.ui.layers.ZoomMouseListenerLayer;
 
 
-
 public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 	
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
+	private final static Logger LOG =  Logger.getLogger(SyncSinkFrame.class.getName());
 	private final CoordinateSystem cs;
 	private final LinkedPanel linkedPanel;
-	private int streamIndex = 0;
+	private JLabel statusBar;
 	private final List<File> streamFiles;
 	private final List<NFFTSyncMatch> matches;
 	private final List<StreamLayer> streamLayers;
+	private final ResetCursorLayer resetCursorLayer = new ResetCursorLayer();
 	private float maxDuration;
 	
+	private JButton syncButton;
 	
 	private final Color[] colorMap =    {   
 			new Color(0xFFFFB300), //Vivid Yellow
@@ -87,20 +89,20 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 	
 	public SyncSinkFrame(){
 		super("SyncSink");
+		
+		
 		this.setLayout(new BorderLayout());
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		cs = new CoordinateSystem(AxisUnit.OCCURENCES, 0, 1000);
 		
 		linkedPanel = new LinkedPanel(cs);
-		
 		linkedPanel.addLayer(new BackgroundLayer(cs));
 		linkedPanel.addLayer(new ZoomMouseListenerLayer());
 		linkedPanel.addLayer(new DragMouseListenerLayer(cs));
 		linkedPanel.addLayer(new BackgroundLayer(cs));
 		linkedPanel.addLayer(new TimeAxisLayer(cs));
 		linkedPanel.addLayer(new SelectionLayer(cs));
-
 		linkedPanel.getViewPort().addViewPortChangedListener(this);
 		
 		matches = new ArrayList<NFFTSyncMatch>();
@@ -108,31 +110,34 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 		this.streamLayers = new ArrayList<StreamLayer>();
 		this.streamFiles = new ArrayList<File>();
 		this.add(linkedPanel,BorderLayout.CENTER);
-		this.add(createButtonPanel(),BorderLayout.SOUTH);
+		this.add(createStatusBarPanel(),BorderLayout.SOUTH);
+		
+		new FileDrop(null, linkedPanel, /*dragBorder,*/ new FileDrop.Listener(){   
+			public void filesDropped( java.io.File[] files ){   
+				for( int i = 0; i < files.length; i++) {   
+					final File fileToAdd = files[i];
+					new Thread(new Runnable(){
+						@Override
+						public void run() {
+							statusBar.setText("Adding " + fileToAdd.getPath()  + "...");
+		                	openFile(fileToAdd,streamFiles.size());
+		                	statusBar.setText("Added " + fileToAdd.getPath()  + ".");
+						}}).start();
+					try {
+						Thread.sleep(60);
+					} catch (InterruptedException e) {
+					}
+                }
+			}
+        });
 	}
 	
-	private JComponent createButtonPanel(){
-		
-		JPanel audioSource = new JPanel();
-		
-		JButton addButton = new JButton("Add...");
-		
-		addButton.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				JFileChooser chooser = new JFileChooser();
-				chooser.setDialogTitle("Choose video, audio or data file with embedded audio.");
-			    int returnVal = chooser.showOpenDialog(SyncSinkFrame.this);
-			    if(returnVal == JFileChooser.APPROVE_OPTION) {
-			    	openFile(chooser.getSelectedFile());
-			    }	
-			}
-		});
-		
-		audioSource.add(addButton);
-		
-		JButton syncButton = new JButton("Sync!");
+	private JComponent createStatusBarPanel(){
+		statusBar = new JLabel("Use drag and drop to synchronize audio and video files. Start with the reference file.");
+		statusBar.setEnabled(false);
+		syncButton = new JButton("Sync!");
+		syncButton.setEnabled(false);
+		syncButton.setMargin(new Insets(2,2,2,2));
 		syncButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -140,13 +145,12 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 			}
 		});
 		
+		JPanel buttonPanel = new JPanel(new BorderLayout());
+		buttonPanel.setBorder(new EmptyBorder(5, 5, 5, 10));
+		buttonPanel.add(statusBar,BorderLayout.CENTER);
+		buttonPanel.add(syncButton,BorderLayout.EAST);
 		
-		JCheckBox outputOptions = new JCheckBox("Output only guaranteed synchronized files?");
-		outputOptions.setToolTipText("If not checked then the assumption is that the offset stays the same for the whole file");
-		
-		audioSource.add(outputOptions);		
-		audioSource.add(syncButton);
-		return audioSource;
+		return buttonPanel;
 	}
 	
 	private void synchronizeMedia(){
@@ -189,7 +193,6 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 				try {
 					modifyCSVFile(dataFile, shiftedCSVFile, guessedStartTimeOfStream);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -198,11 +201,13 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 		}
 	}
 	
-	public void openFile(File file){
+	public void openFile(File file,int streamIndex){
 		String fileName = file.getName();
+		LOG.info("Opening file: " + file.getName());
 		if(streamIndex==0){
     	 	streamFiles.add(file);
     		float duration = getMediaDuration(file.getAbsolutePath());
+    		
     		StreamLayer refLayer = new StreamLayer(cs,streamIndex,colorMap[streamIndex],fileName,true,duration*1000);
     		
 			refLayer.addInterval(0, duration*1000,0,0);
@@ -221,10 +226,11 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 			
 			linkedPanel.addLayer(refLayer);
 			streamLayers.add(refLayer);
-			
+			linkedPanel.removeLayer(resetCursorLayer);
+			linkedPanel.addLayer(resetCursorLayer);
     	}else{
     		streamFiles.add(file);
-    		NFFTSyncMatch match = sync();
+    		NFFTSyncMatch match = sync(streamIndex);
     		
     		matches.add(match);
     		
@@ -248,19 +254,24 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
     			float startTimeInRef = matchInfo[0];
     			float stopTimeInRef = matchInfo[1];
     			otherLayer.addInterval(startTimeInRef*1000,stopTimeInRef*1000,matchInfo[2]*1000,matchInfo[3]*1000);
+    			LOG.info(String.format("Determined offset with reference of %.04f ",startTimeInRef));
     		}
 			linkedPanel.addLayer(otherLayer);
 			streamLayers.add(otherLayer);
 			linkedPanel.getViewPort().zoomToSelection();
+			syncButton.setEnabled(true);
+			
+			linkedPanel.removeLayer(resetCursorLayer);
+			linkedPanel.addLayer(resetCursorLayer);
     	}
     	streamIndex++;
 	}
-	
-	double duration = 0;
+
 	private float getMediaDuration(String absoluteFileName){
 		
 		AudioDispatcher adp = AudioDispatcherFactory.fromPipe(absoluteFileName, 44100, 1024, 0);
-		
+		//bit hackish...
+		final double[] duration = {0.0};
 		adp.addAudioProcessor(new AudioProcessor() {
 			
 			@Override
@@ -269,12 +280,13 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 			
 			@Override
 			public boolean process(AudioEvent audioEvent) {
-				duration = audioEvent.getTimeStamp();
+				duration[0] = audioEvent.getTimeStamp();
 				return true;
 			}
 		});
 		adp.run();
-		return (float) duration;
+		LOG.info(String.format("Duration of file %s is %.02fs",absoluteFileName,duration[0]));
+		return (float) duration[0];
 	}
 	
 	
@@ -305,7 +317,7 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 		in.close();
 	}
 	
-	private NFFTSyncMatch sync(){
+	private NFFTSyncMatch sync(int streamIndex){
 		Config.set(Key.valueOf("NFFT_SAMPLE_RATE"),"8000");
 		Config.set(Key.valueOf("NFFT_SIZE"),"512");
 		Config.set(Key.valueOf("NFFT_STEP_SIZE"),"128");
