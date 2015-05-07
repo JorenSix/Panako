@@ -33,72 +33,62 @@
 ****************************************************************************/
 
 
-package be.panako.cli;
 
-import java.lang.reflect.InvocationTargetException;
+package be.panako.strategy.ifft.storage;
 
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
 
-import be.panako.ui.CteQFingerprintBrowser;
-import be.panako.ui.FFTFingerprintBrowser;
-import be.panako.ui.IFFTFingerprintBrowser;
-import be.panako.ui.NCteQFingerprintBrowser;
-import be.panako.ui.NFFTFingerprintBrowser;
-import be.panako.util.Config;
-import be.panako.util.Key;
+/**
+ * Describes a landmark hit in the store.
+ * @author Joren Six
+ */
+public class IFFTFingerprintHit {
+	
+	/**
+	 * The audio identifier
+	 */
+	public int identifier;
+	
+	/**
+	 * Time in blocks in the original, matched audio.
+	 */
+	public int matchTime;
+	
+	/**
+	 * Difference in time between the original, matched audio and the query. Expressed in blocks.
+	 */
+	public int timeDifference;	
+	
+	/**
+	 * Time in blocks in the query.
+	 */
+	public int queryTime;
+	
+	
+	
+	public boolean equals(Object other){
+	    if (other == null){
+	    	return false;
+	    }
+	    if (other == this){
+	    	return true;
+	    }
+	    if (!(other instanceof IFFTFingerprintHit)){
+	    	return false;
+	    }
+	    IFFTFingerprintHit otherFingerprintHit = (IFFTFingerprintHit) other;
+	    return otherFingerprintHit.identifier == this.identifier 
+	    		&& otherFingerprintHit.matchTime == this.matchTime 
+	    		&& otherFingerprintHit.queryTime == otherFingerprintHit.queryTime;
 
-public class Browser extends Application {
-
-	@Override
-	public void run(String... args) {
-		try {
-			SwingUtilities.invokeAndWait(new Runnable() {
-				@Override
-				public void run() {
-					JFrame frame = null; 
-					if(Config.get(Key.STRATEGY).equals("FFT")){
-						frame = new FFTFingerprintBrowser();
-					}else if(Config.get(Key.STRATEGY).equals("CTEQ")) {
-						frame = new CteQFingerprintBrowser();
-					} else if(Config.get(Key.STRATEGY).equals("NFFT")) {
-						frame = new NFFTFingerprintBrowser();
-					}else if(Config.get(Key.STRATEGY).equals("NCTEQ")) {
-						frame = new NCteQFingerprintBrowser();
-					}else if(Config.get(Key.STRATEGY).equals("IFFT")) {
-						frame = new IFFTFingerprintBrowser();
-					}
-					frame.pack();
-					frame.setSize(800,550);
-					frame.setLocationRelativeTo(null);
-					frame.setVisible(true);
-				}
-			});
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}		
 	}
-
-	@Override
-	public String description() {
-		return "Starts the fingerprinter browser";
+	
+	
+	/*
+	 * It is the same fingerprint hit if query time, match time and identifier are the same.
+	 */
+	/*public int hashCode(){
+		return (identifier | matchTime << 20 |  queryTime << 24 );
 	}
-
-	@Override
-	public String synopsis() {
-		return "browser";
-	}
-
-	@Override
-	public boolean needsStorage() {
-		return false;
-	}
-
-	@Override
-	public boolean writesToStorage() {
-		return false;
-	}
-
+	*/
+	
 }

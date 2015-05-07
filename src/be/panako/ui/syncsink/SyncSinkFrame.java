@@ -16,19 +16,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 
 import be.panako.strategy.Strategy;
 import be.panako.strategy.nfft.NFFTStrategy;
 import be.panako.strategy.nfft.NFFTStreamSync;
 import be.panako.strategy.nfft.NFFTSyncMatch;
-import be.panako.util.Config;
-import be.panako.util.Key;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
@@ -60,6 +60,7 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 	private float maxDuration;
 	
 	private JButton syncButton;
+	private JButton clearButton;
 	
 	private final Color[] colorMap =    {   
 			new Color(0xFFFFB300), //Vivid Yellow
@@ -135,6 +136,9 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 	private JComponent createStatusBarPanel(){
 		statusBar = new JLabel("Use drag and drop to synchronize audio and video files. Start with the reference file.");
 		statusBar.setEnabled(false);
+		Border paddingBorder = BorderFactory.createEmptyBorder(0,10,0,0);
+		statusBar.setBorder(paddingBorder);
+		
 		syncButton = new JButton("Sync!");
 		syncButton.setEnabled(false);
 		syncButton.setMargin(new Insets(2,2,2,2));
@@ -145,10 +149,21 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 			}
 		});
 		
+		clearButton = new JButton("Clear");
+		clearButton.setEnabled(false);
+		clearButton.setMargin(new Insets(2,2,2,2));
+		clearButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				clear();
+			}
+		});
+		
 		JPanel buttonPanel = new JPanel(new BorderLayout());
 		buttonPanel.setBorder(new EmptyBorder(5, 5, 5, 10));
 		buttonPanel.add(statusBar,BorderLayout.CENTER);
 		buttonPanel.add(syncButton,BorderLayout.EAST);
+		buttonPanel.add(clearButton,BorderLayout.WEST);
 		
 		return buttonPanel;
 	}
@@ -228,6 +243,7 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 			streamLayers.add(refLayer);
 			linkedPanel.removeLayer(resetCursorLayer);
 			linkedPanel.addLayer(resetCursorLayer);
+			clearButton.setEnabled(true);
     	}else{
     		streamFiles.add(file);
     		NFFTSyncMatch match = sync(streamIndex);
@@ -247,7 +263,7 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
     		cs.setStartPoint(-2000, 30);
 			cs.setEndPoint(1000*maxDuration+2000,-500);				
     	
-    		StreamLayer otherLayer = new StreamLayer(cs,streamIndex,colorMap[streamIndex],fileName,false,duration*1000);
+    		StreamLayer otherLayer = new StreamLayer(cs,streamIndex,colorMap[streamIndex%colorMap.length],fileName,false,duration*1000);
     		
     		for(int i = 0 ; i < match.getNumberOfMatches();i++){
     			float[] matchInfo = match.getMatch(i);
@@ -265,6 +281,19 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 			linkedPanel.addLayer(resetCursorLayer);
     	}
     	streamIndex++;
+	}
+	
+	private void clear(){
+		for(StreamLayer layerToRemove : streamLayers){
+			linkedPanel.removeLayer(layerToRemove);
+		}
+		streamLayers.clear();
+		streamFiles.clear();
+		clearButton.setEnabled(false);
+		syncButton.setEnabled(false);
+		matches.clear();
+		this.statusBar.setText("Use drag and drop to synchronize audio and video files. Start with the reference file.");
+		this.repaint();
 	}
 
 	private float getMediaDuration(String absoluteFileName){
@@ -318,12 +347,6 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 	}
 	
 	private NFFTSyncMatch sync(int streamIndex){
-		Config.set(Key.valueOf("NFFT_SAMPLE_RATE"),"8000");
-		Config.set(Key.valueOf("NFFT_SIZE"),"512");
-		Config.set(Key.valueOf("NFFT_STEP_SIZE"),"128");
-		Config.set(Key.valueOf("STRATEGY"),"NFFT");
-		Config.set(Key.valueOf("SYNC_MIN_ALIGNED_MATCHES"),"6");
-		
 		Strategy strategy = Strategy.getInstance();
 		NFFTStrategy strat = (NFFTStrategy) strategy;
 		String reference = streamFiles.get(0).getAbsolutePath();

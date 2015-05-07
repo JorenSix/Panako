@@ -230,8 +230,29 @@ public enum Key{
 	NFFT_SIZE(512),
 	NFFT_STEP_SIZE(256),
 	
-	
-	
+	/**
+	 * //An event point is only valid if the ratio between min and max is larger than 20%
+	*	//This eliminates points where the minimum is close to silence.
+	 */
+	NFFT_EVENT_POINT_MIN_ENERGY_RATIO_THRESHOLD(0.20f),
+		//
+	/**
+	 * An event point is only valid if the ratio between min and max is smaller than 90%
+	 * This eliminates points in a region of equal energy (no contrast between min and max).
+	 */
+	NFFT_EVENT_POINT_MAX_ENERGY_RATIO_THRESHOLD(0.90f),
+
+	/**
+	 * An event point is only valid if it contains at least 10% 
+	 * of the maximum energy bin in the frame.
+	 * This eliminates low energy points.
+	 */
+	NFFT_EVENT_POINT_MIN_ENERGY(0.1f),
+	/**
+	 * The maximum number of fingerpints per event points (fan-out).
+	 */
+	NFFT_MAX_FINGERPRINTS_PER_EVENT_POINT(2),
+		
 	/**
 	 * The name of the MapDB database location.
 	 */
@@ -304,7 +325,16 @@ public enum Key{
 	 * If it is set too low, false positives may appear. If it is set too high some real matches
 	 * may be ignored. 
 	 */
-	NCTEQ_MINIMUM_ALIGNED_MATCHES_THRESHOLD(3), 
+	NCTEQ_MINIMUM_ALIGNED_MATCHES_THRESHOLD(3),
+	
+	
+	/**
+	 * The name of the MapDB database location.
+	 */
+	IFFT_MAPDB_DATABASE("nfft_panako_db"),
+	IFFT_SAMPLE_RATE(8000),	
+	IFFT_SIZE(512),
+	IFFT_STEP_SIZE(256),
 	
 	
 	/**
@@ -323,6 +353,9 @@ public enum Key{
 		this.defaultValue = defaultValue;
 	}
 	private Key(int defaultValue){
+		this(String.valueOf(defaultValue));
+	}
+	private Key(float defaultValue){
 		this(String.valueOf(defaultValue));
 	}
 	public String getDefaultValue() {

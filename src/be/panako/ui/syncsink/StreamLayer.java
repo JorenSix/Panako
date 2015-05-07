@@ -84,6 +84,10 @@ public class StreamLayer implements Layer, MouseListener,MouseMotionListener{
 			graphics.setColor(backgroundColor);
 			//graphics.fillRect(startTime, verticalOffsetOffset, stopTime-startTime, Math.round(heightOfABlock));
 			graphics.drawRect(startTime, verticalOffsetOffset, stopTime-startTime, Math.round(heightOfABlock));
+			
+			graphics.setColor(color);
+			float verticalTextPosition = verticalOffsetOffset + heightOfABlock/2.0f;
+			LayerUtilities.drawString(graphics, description, (stopTime+startTime)/2.0f, verticalTextPosition , true, true, null);
 		}
 		
 		
@@ -100,10 +104,17 @@ public class StreamLayer implements Layer, MouseListener,MouseMotionListener{
 			//a block 
 			graphics.setColor(color);
 			graphics.drawRect(startTime, verticalOffsetOffset, stopTime-startTime, Math.round(heightOfABlock));
-			
-			float verticalTextPosition = verticalOffsetOffset + heightOfABlock/2.0f;
-			LayerUtilities.drawString(graphics, description, (stopTime+startTime)/2.0f, verticalTextPosition , true, true, null);
-		}		
+		}
+		
+		int startTime = Math.round(guessedStartTimeOfStream);
+		int stopTime = Math.round(guessedStartTimeOfStream+streamDuration);
+
+		
+		graphics.setColor(color);
+		float verticalTextPosition = verticalOffsetOffset + heightOfABlock/2.0f;
+		LayerUtilities.drawString(graphics, description, (stopTime+startTime)/2.0f, verticalTextPosition , true, true, null);
+
+	
 	}
 	
 	private Color getBackgroundColor(){

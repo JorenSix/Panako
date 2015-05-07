@@ -33,72 +33,8 @@
 ****************************************************************************/
 
 
-package be.panako.cli;
 
-import java.lang.reflect.InvocationTargetException;
-
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
-
-import be.panako.ui.CteQFingerprintBrowser;
-import be.panako.ui.FFTFingerprintBrowser;
-import be.panako.ui.IFFTFingerprintBrowser;
-import be.panako.ui.NCteQFingerprintBrowser;
-import be.panako.ui.NFFTFingerprintBrowser;
-import be.panako.util.Config;
-import be.panako.util.Key;
-
-public class Browser extends Application {
-
-	@Override
-	public void run(String... args) {
-		try {
-			SwingUtilities.invokeAndWait(new Runnable() {
-				@Override
-				public void run() {
-					JFrame frame = null; 
-					if(Config.get(Key.STRATEGY).equals("FFT")){
-						frame = new FFTFingerprintBrowser();
-					}else if(Config.get(Key.STRATEGY).equals("CTEQ")) {
-						frame = new CteQFingerprintBrowser();
-					} else if(Config.get(Key.STRATEGY).equals("NFFT")) {
-						frame = new NFFTFingerprintBrowser();
-					}else if(Config.get(Key.STRATEGY).equals("NCTEQ")) {
-						frame = new NCteQFingerprintBrowser();
-					}else if(Config.get(Key.STRATEGY).equals("IFFT")) {
-						frame = new IFFTFingerprintBrowser();
-					}
-					frame.pack();
-					frame.setSize(800,550);
-					frame.setLocationRelativeTo(null);
-					frame.setVisible(true);
-				}
-			});
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}		
-	}
-
-	@Override
-	public String description() {
-		return "Starts the fingerprinter browser";
-	}
-
-	@Override
-	public String synopsis() {
-		return "browser";
-	}
-
-	@Override
-	public boolean needsStorage() {
-		return false;
-	}
-
-	@Override
-	public boolean writesToStorage() {
-		return false;
-	}
-
-}
+/**
+ * Defines the interface to a key-value-store.
+ */
+package be.panako.strategy.ifft.storage;

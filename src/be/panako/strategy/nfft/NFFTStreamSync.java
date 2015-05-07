@@ -32,7 +32,7 @@ public class NFFTStreamSync {
 		
 		AudioDispatcher d = AudioDispatcherFactory.fromPipe(resource, samplerate, size, overlap);
 		//d.skip(millisecondsSkipped/1000.0f);
-		final NFFTEventPointProcessor minMaxProcessor = new NFFTEventPointProcessor(size,9,3);
+		final NFFTEventPointProcessor minMaxProcessor = new NFFTEventPointProcessor(size,1,1);
 		d.addAudioProcessor(minMaxProcessor);
 		d.run();
 		return new ArrayList<NFFTFingerprint>(minMaxProcessor.getFingerprints());

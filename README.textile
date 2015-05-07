@@ -170,11 +170,15 @@ It is also possible to start the application with media streams immediately pres
 
 bc. panako syncsink reference.avi first.mkv second.mp3 third.wav
 
+By default Panako is configured to synchronize music and to minimize the number of event points and fingerprints per second. This reduces the storage requirements and processing needs. However, it can be of help to change the default configuration to synchronize sparse audio or speech. In such case try to start panako with the following set of configuration values:
 
-
-
-
-
+bc. panako syncsink \
+  SYNC_MIN_ALIGNED_MATCHES=4 \
+  NFFT_EVENT_POINT_MIN_ENERGY_RATIO_THRESHOLD=0.10 \
+  NFFT_EVENT_POINT_MAX_ENERGY_RATIO_THRESHOLD=0.95 \
+  NFFT_EVENT_POINT_MIN_ENERGY=0.01 \
+  NFFT_MAX_FINGERPRINTS_PER_EVENT_POINT=7
+  
 h3(#compare). Compare the structure of media files - **@panako compare@**
 
 This operation extracts fingerprints from a reference media file and searches for the fingerprints in another media file. The aim is to identify the parts of audio that are present in both input files. If only one audio file is given, a self similarity matrix is constructed. Using the matrix it becomes clear when the exact same audio is repeated within the same song. It can be used to automatically detect where cuts have been made in a long original album edit to end up with a shorter radio edit of the same song. Another use case is musical structure analysis, this works especially well in electronic music. To call the application:
