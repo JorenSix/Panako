@@ -21,6 +21,8 @@ h2. Overview
 ## "Synchronize Media Files":#sync
 ## "Synchronize Sensor Streams with SyncSink":#syncsink
 ## "Compare Media Files":#compare
+## "Run the REST webservice":#server
+## "Query the REST service":#client
 # "Further reading":#read
 # "Credits":#credits
 # "Reproduce the ISMIR Paper Results":#ismir
@@ -199,6 +201,19 @@ bc. 10,10
 4000,4000
 4010,4010
 ...
+
+
+h3(#server). Run the REST webservice - **@panako server@**
+
+Panako contains a "lightweight HTTP server":http://acme.com/java/software/Acme.Serve.Serve.html to provide a REST webservice. 
+
+@panako server@
+
+h3(#client). Query the REST service - **@panako client@**
+
+Panako contains functionality to send requests to the REST webservice. 
+
+ @panako client "localhost:8080" test.mp3@
 
 
 h2(#read). Further Reading
