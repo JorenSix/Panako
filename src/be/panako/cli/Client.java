@@ -34,49 +34,66 @@
 
 package be.panako.cli;
 
-import java.io.File;
-import java.util.List;
+import java.io.IOException;
 
+import org.json.JSONObject;
+
+import be.panako.http.HTTPClient;
+import be.panako.strategy.SerializedFingerprintsHandler;
 import be.panako.strategy.Strategy;
 import be.panako.strategy.nfft.NFFTStrategy;
 
-/**
- * Compares audio files in answers the following question:
- *  when does the same exact audio reappear in another file?
- *
- */
-public class Compare extends Application {
+public class Client extends Application {
 
 	@Override
 	public void run(String... args) {
+		final HTTPClient client = new HTTPClient();
+		String url = args[0];
+		if(!url.startsWith("http://")){
+			url = "http://"+url;
+		}
+		if(!url.endsWith("/v1.0/match")){
+			url = url+"/v1.0/match";
+		}
+		final String webservceURL = url;
+		NFFTStrategy strategy = (NFFTStrategy) Strategy.getInstance();
 		
-		Strategy strategy = Strategy.getInstance();
-		if(strategy instanceof NFFTStrategy){
-			NFFTStrategy strat = (NFFTStrategy) strategy;
-			List<File> files = this.getFilesFromArguments(args);
-			if(files.size()==1){
-				strat.compareFingerprints(files.get(0),files.get(0));
-			}else{
-				for(int i = 1 ; i < files.size();i++){
-					strat.compareFingerprints(files.get(0),files.get(1));
-					System.out.println("");
+		String query = Panako.DEFAULT_MICROPHONE;
+		if(args.length>=1){
+			query = args[1];
+		}
+		strategy.monitor(query, new SerializedFingerprintsHandler() {
+			
+		
+
+			@Override
+			public void handleSerializedFingerprints(String fingerprints,
+					double queryDuration, double queryOffset) {
+				JSONObject object = new JSONObject();
+				object.put("query_duration", queryDuration);
+				object.put("query_offset", queryOffset);
+				String body = object.toString();
+				body = body.replace("{", "{\"fingerprints\":" + fingerprints + ",");
+				try {
+					client.post(webservceURL,body , HTTPClient.printResponseHandler);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-			}	
-		}else{
-			System.out.println("Currently only NFFT supports the print operation!");
-			System.err.println("Currently only NFFT supports the print operation!");
-		}		
+			}
+		});
+		
+		
 	}
 
 	@Override
 	public String description() {
-		
-		return "Extracts fingerprints prints the times at which fingerprints occur twice.";
+		return "A client for the rest API";
 	}
 
 	@Override
 	public String synopsis() {
-		return "[audio_files...]";
+		return "client url [audio_file]";
 	}
 
 	@Override

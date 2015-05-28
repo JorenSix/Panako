@@ -50,9 +50,13 @@ import java.util.logging.Logger;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import be.panako.cli.Panako;
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
+import be.panako.strategy.SerializedFingerprintsHandler;
 import be.panako.strategy.Strategy;
 import be.panako.strategy.nfft.storage.NFFTFingerprintHit;
 import be.panako.strategy.nfft.storage.NFFTFingerprintQueryMatch;
@@ -133,6 +137,76 @@ public class NFFTStrategy extends Strategy {
 			}
 		}
 	}
+	
+	public void monitor(String query,final SerializedFingerprintsHandler handler){
+		
+		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
+		int size = Config.getInt(Key.MONITOR_STEP_SIZE) * samplerate;
+		int overlap = Config.getInt(Key.MONITOR_OVERLAP) * samplerate;
+		AudioDispatcher d ;
+		if (query.equals(Panako.DEFAULT_MICROPHONE)){
+			try {
+				d = AudioDispatcherFactory.fromDefaultMicrophone(samplerate,size, overlap);
+			} catch (LineUnavailableException e) {
+				LOG.warning("Could not connect to default microphone!" + e.getMessage());
+				e.printStackTrace();
+				d = null;
+			}
+		}else{
+			d = AudioDispatcherFactory.fromPipe(query, samplerate, size, overlap);
+		}
+		d.addAudioProcessor(new AudioProcessor() {
+			@Override
+			public boolean process(AudioEvent audioEvent) {
+				double timeStamp = audioEvent.getTimeStamp() - Config.getInt(Key.MONITOR_OVERLAP);
+				processMonitorQueryToSerializeFingerprints(audioEvent.getFloatBuffer().clone(), handler,timeStamp);
+				return true;
+			}
+			
+			@Override
+			public void processingFinished() {
+			}
+		});
+		d.run();
+	}
+	
+	private void processMonitorQueryToSerializeFingerprints(float[] audioBuffer,SerializedFingerprintsHandler handler,double queryOffset){
+		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
+		int size = Config.getInt(Key.NFFT_SIZE);
+		int overlap = size - Config.getInt(Key.NFFT_STEP_SIZE);
+		
+		AudioDispatcher d;
+		try {
+			d = AudioDispatcherFactory.fromFloatArray(audioBuffer, samplerate, size, overlap);
+			final NFFTEventPointProcessor minMaxProcessor = new NFFTEventPointProcessor(size,overlap,samplerate);
+			d.addAudioProcessor(minMaxProcessor);
+			d.run();
+			double queryDuration = d.secondsProcessed();
+			List<NFFTFingerprint> fingerprints = new ArrayList<NFFTFingerprint>(minMaxProcessor.getFingerprints());
+			handler.handleSerializedFingerprints(serializeFingerprintsToJson(fingerprints),queryDuration,queryOffset);
+		} catch (UnsupportedAudioFileException e) {
+			LOG.severe("Unsupported audio");
+		}
+	}
+	
+	public void matchSerializedFingerprints(String serizalizedFingerprints,final  int maxNumberOfResults,
+			final QueryResultHandler handler,double queryDuration,double queryOffset){
+		
+		List<NFFTFingerprint> fingerprints = deserializeFingerprintsFromJson(serizalizedFingerprints);
+		final List<NFFTFingerprintQueryMatch> queryMatches = new ArrayList<NFFTFingerprintQueryMatch>();
+		
+		queryMatches.addAll(storage.getMatches(fingerprints, maxNumberOfResults));
+		if(queryMatches.isEmpty()){
+			QueryResult result = QueryResult.emptyQueryResult(queryOffset,queryOffset+queryDuration);
+			handler.handleEmptyResult(result);
+		}else{
+			for(NFFTFingerprintQueryMatch match : queryMatches){
+				String description = storage.getAudioDescription(match.identifier);
+				handler.handleQueryResult(new QueryResult(queryOffset,queryOffset+queryDuration,String.valueOf(match.identifier), description, match.score, match.getStartTime(),100.0,100.0));
+			}
+		}
+	}
+	
 
 	@Override
 	public void monitor(String query,final  int maxNumberOfResults,
@@ -166,6 +240,34 @@ public class NFFTStrategy extends Strategy {
 			}
 		});
 		d.run();
+	}
+	
+	private String serializeFingerprintsToJson(List<NFFTFingerprint> fingerprints){
+		JSONArray jsonArray = new JSONArray();
+		for(NFFTFingerprint fingerprint : fingerprints){
+			JSONObject fingerprintJSON = new JSONObject();
+			fingerprintJSON.put("f1", fingerprint.f1);
+			fingerprintJSON.put("f2", fingerprint.f2);
+			fingerprintJSON.put("t1", fingerprint.t1);
+			fingerprintJSON.put("t2", fingerprint.t2);
+			jsonArray.put(fingerprintJSON);
+		
+		}
+		return jsonArray.toString();
+	}
+	
+	private List<NFFTFingerprint> deserializeFingerprintsFromJson(String fingerprints){
+		JSONArray array = new JSONArray(fingerprints);
+		List<NFFTFingerprint> fingerprintArray = new ArrayList<NFFTFingerprint>();
+		for(int i = 0 ; i < array.length();i++){
+			JSONObject obj = array.getJSONObject(i);
+			int f1 = obj.getInt("f1");
+			int f2 = obj.getInt("f2");
+			int t1 = obj.getInt("t1");
+			int t2 = obj.getInt("t2");
+			fingerprintArray.add(new NFFTFingerprint(t1, f1, t2, f2));
+		}
+		return fingerprintArray;
 	}
 	
 	private void processMonitorQuery(float[] audioBuffer,int maxNumberOfResults,

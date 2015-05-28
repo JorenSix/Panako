@@ -338,6 +338,12 @@ public enum Key{
 	
 	
 	/**
+	 * The port to use for the HTTP server providing the JSON REST API.
+	 */
+	HTTP_SERVER_PORT(8080),
+	
+	
+	/**
 	 * The synchronization algorithm only considers the match as valid if this number of aligning matches are found.
 	 */
 	SYNC_MIN_ALIGNED_MATCHES(7),

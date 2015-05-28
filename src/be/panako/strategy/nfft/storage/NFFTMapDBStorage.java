@@ -132,10 +132,17 @@ public class NFFTMapDBStorage {
 			secondsCounter = db.getAtomicLong("seconds_counter");
 		} else if(Panako.getCurrentApplication().needsStorage()){
 			// read only
-			db = DBMaker.newFileDB(dbFile)
-					.closeOnJvmShutdown() // close the database automatically
-					.readOnly() // make the database read only
-					.make();
+			if(Panako.getCurrentApplication().writesToStorage()){
+				db = DBMaker.newFileDB(dbFile)
+						.closeOnJvmShutdown() // close the database automatically
+						.make();
+			}else{
+				db = DBMaker.newFileDB(dbFile)
+						.closeOnJvmShutdown() // close the database automatically
+						.readOnly() // make the database read only
+						.make();
+			}
+		
 
 			audioNameStore = db.getTreeMap(audioStore);
 			fftFingerprintStore = db.getTreeSet(fftStore);

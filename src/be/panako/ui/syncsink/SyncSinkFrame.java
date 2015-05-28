@@ -1,3 +1,37 @@
+/***************************************************************************
+*                                                                          *                     
+* Panako - acoustic fingerprinting                                         *   
+* Copyright (C) 2014 - Joren Six / IPEM                                    *   
+*                                                                          *
+* This program is free software: you can redistribute it and/or modify     *
+* it under the terms of the GNU Affero General Public License as           *
+* published by the Free Software Foundation, either version 3 of the       *
+* License, or (at your option) any later version.                          *
+*                                                                          *
+* This program is distributed in the hope that it will be useful,          *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the            *
+* GNU Affero General Public License for more details.                      *
+*                                                                          *
+* You should have received a copy of the GNU Affero General Public License *
+* along with this program.  If not, see <http://www.gnu.org/licenses/>     *
+*                                                                          *
+****************************************************************************
+*    ______   ________   ___   __    ________   ___   ___   ______         *
+*   /_____/\ /_______/\ /__/\ /__/\ /_______/\ /___/\/__/\ /_____/\        *      
+*   \:::_ \ \\::: _  \ \\::\_\\  \ \\::: _  \ \\::.\ \\ \ \\:::_ \ \       *   
+*    \:(_) \ \\::(_)  \ \\:. `-\  \ \\::(_)  \ \\:: \/_) \ \\:\ \ \ \      * 
+*     \: ___\/ \:: __  \ \\:. _    \ \\:: __  \ \\:. __  ( ( \:\ \ \ \     * 
+*      \ \ \    \:.\ \  \ \\. \`-\  \ \\:.\ \  \ \\: \ )  \ \ \:\_\ \ \    * 
+*       \_\/     \__\/\__\/ \__\/ \__\/ \__\/\__\/ \__\/\__\/  \_____\/    *
+*                                                                          *
+****************************************************************************
+*                                                                          *
+*                              Panako                                      * 
+*                       Acoustic Fingerprinting                            *
+*                                                                          *
+****************************************************************************/
+
 package be.panako.ui.syncsink;
 
 
@@ -188,18 +222,17 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 					command = "command to add black frames here";
 				}else{
 					String syncedmediaFile = "synced_" + streamFiles.get(i).getName();
-					command = "/opt/ffmpeg/ffmpeg -f lavfi -i aevalsrc=0:d="+guessedStartTimeOfStream+" -i  " + streamFiles.get(i) +  "  -filter_complex \"[0:0] [1:0] concat=n=2:v=0:a=1 [a]\" -map [a] \"" + syncedmediaFile + "\"";
+					command = "ffmpeg -f lavfi -i aevalsrc=0:d="+guessedStartTimeOfStream+" -i  " + streamFiles.get(i) +  "  -filter_complex \"[0:0] [1:0] concat=n=2:v=0:a=1 [a]\" -map [a] \"" + syncedmediaFile + "\"";
 				}
-				
 			}else{
 				//cut the first part away
 				String startString = String.format("%.3f", -1 * guessedStartTimeOfStream);
 				String syncedmediaFile = "synced_" + streamFiles.get(i).getName();
 				if(isVideo){
 					
-					command = "/opt/ffmpeg/fmpeg -ss " + startString + " -i " + streamFiles.get(i) +  " \"" + syncedmediaFile + "\"";
+					command = "ffmpeg -ss " + startString + " -i " + streamFiles.get(i) +  " \"" + syncedmediaFile + "\"";
 				}else{
-					command = "/opt/ffmpeg/fmpeg -ss " + startString + " -i " + streamFiles.get(i) +  " \"" + syncedmediaFile + "\"";
+					command = "ffmpeg -ss " + startString + " -i " + streamFiles.get(i) +  " \"" + syncedmediaFile + "\"";
 				}
 			}
 			
