@@ -331,7 +331,7 @@ public enum Key{
 	/**
 	 * The name of the MapDB database location.
 	 */
-	IFFT_MAPDB_DATABASE("nfft_panako_db"),
+	IFFT_MAPDB_DATABASE("ifft_panako_db"),
 	IFFT_SAMPLE_RATE(8000),	
 	IFFT_SIZE(512),
 	IFFT_STEP_SIZE(256),
@@ -346,13 +346,8 @@ public enum Key{
 	/**
 	 * The synchronization algorithm only considers the match as valid if this number of aligning matches are found.
 	 */
-	SYNC_MIN_ALIGNED_MATCHES(7),
+	SYNC_MIN_ALIGNED_MATCHES(7);
 	
-	
-	/**
-	 * The previously opened directory.
-	 */
-	SYNC_PREV_DIR("~");
 	
 	String defaultValue;
 	private Key(String defaultValue){

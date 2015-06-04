@@ -46,6 +46,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -204,6 +205,7 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 	
 	private void synchronizeMedia(){
 		//float referenceFileDuration = getMediaDuration(streamFiles.get(0).getAbsolutePath());
+		String commandFile = streamFiles.get(0).getAbsolutePath() + File.separator + "sync_ffmpeg_commands.bash";
 		for(int i = 1 ; i < streamFiles.size() ; i++){
 			//float otherFileDuration = getMediaDuration(streamFiles.get(i).getAbsolutePath());
 			
@@ -215,8 +217,7 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 			float guessedStartTimeOfStream = (matchInfo[0] - matchInfo[2]);
 			String command;
 			if(guessedStartTimeOfStream >= 0){
-				//generate silence
-				
+				//generate silence				
 				if(isVideo){
 					//String syncedmediaFile = "synced_" + streamFiles.get(i).getName();
 					command = "command to add black frames here";
@@ -229,12 +230,13 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 				String startString = String.format("%.3f", -1 * guessedStartTimeOfStream);
 				String syncedmediaFile = "synced_" + streamFiles.get(i).getName();
 				if(isVideo){
-					
 					command = "ffmpeg -ss " + startString + " -i " + streamFiles.get(i) +  " \"" + syncedmediaFile + "\"";
 				}else{
 					command = "ffmpeg -ss " + startString + " -i " + streamFiles.get(i) +  " \"" + syncedmediaFile + "\"";
 				}
 			}
+			System.out.println("Wrinting to command file: " +  commandFile);
+			appendToCommandFile(commandFile, command);
 			
 			for(File dataFile : streamLayers.get(i).getDataFiles()){
 				File shiftedCSVFile = new File("synced_" + dataFile.getName());
@@ -245,7 +247,6 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 				}
 			}
 			
-			System.out.println(command);
 		}
 	}
 	
@@ -349,6 +350,17 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 		adp.run();
 		LOG.info(String.format("Duration of file %s is %.02fs",absoluteFileName,duration[0]));
 		return (float) duration[0];
+	}
+	
+	private void appendToCommandFile(String commandFile,String command){
+		try {
+		    PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(commandFile, true)));
+		    System.out.println(command);
+		    out.println(command);
+		    out.close();
+		} catch (IOException e) {
+		    //exception handling left as an exercise for the reader
+		}
 	}
 	
 	

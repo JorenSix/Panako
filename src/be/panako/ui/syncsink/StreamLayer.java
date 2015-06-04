@@ -50,7 +50,6 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 
 import be.panako.util.Config;
-import be.panako.util.Key;
 import be.tarsos.dsp.ui.Axis;
 import be.tarsos.dsp.ui.CoordinateSystem;
 import be.tarsos.dsp.ui.layers.Layer;
@@ -177,13 +176,13 @@ public class StreamLayer implements Layer, MouseListener,MouseMotionListener{
 			int stopTime = Math.round(guessedStartTimeOfStream+streamDuration);
 			if(pointInUnits.getX() >= startTime && pointInUnits.getX() <= stopTime && pointInUnits.getY() >= startHeight &&  pointInUnits.getY() <= stopHeight){
 				//System.out.println("Click in layer " + index);
-				JFileChooser chooser =  new JFileChooser(new File(Config.get(Key.SYNC_PREV_DIR)));
+				
+				JFileChooser chooser =  new JFileChooser(new File(Config.getPreference("SYNC_DIR")));
 				chooser.setDialogTitle("Choose corresponding data file.");
 			    int returnVal = chooser.showOpenDialog(null);
 			    if(returnVal == JFileChooser.APPROVE_OPTION) {
 			    	File file = chooser.getSelectedFile();
-			    	Config.set(Key.SYNC_PREV_DIR, chooser.getSelectedFile().getPath());
-			    	Config.getInstance().saveCurrentConfigration();
+			    	Config.setPreference("SYNC_DIR", chooser.getSelectedFile().getPath());
 			    	this.dataFiles.add(file);
 			    	this.description = description + " + " + file.getName();
 			    	graphics.dispose();

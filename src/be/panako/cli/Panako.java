@@ -136,8 +136,8 @@ public class Panako {
 	}
 
 	private void startApplication(String[] arguments) {
-		String application = "";
-		String[] applicationArguments = null;
+		String application = "syncsink";
+		String[] applicationArguments = {};
 		if (arguments.length > 0) {
 			arguments = filterAndSetConfigurationArguments(arguments);
 			application = arguments[0];

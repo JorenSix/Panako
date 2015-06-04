@@ -44,6 +44,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.prefs.Preferences;
 
 /**
  * Writes and read the configuration values to and from a properties file.
@@ -63,12 +64,17 @@ public class Config {
 	 */
 	private final HashMap<Key,String> configrationStore;
 	
+	
+	private final Preferences preferenceStore;
+	
 	/**
 	 * Hidden default constructor. Reads the configured values, or stores the defaults. 
 	 */
 	public Config(){
 		String path = Config.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 		String decodedPath = "";
+		preferenceStore = Preferences.userNodeForPackage(Config.class);
+		
 		try {
 			decodedPath = URLDecoder.decode(path, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
@@ -119,7 +125,7 @@ public class Config {
 	
 	/**
 	 * Write the current configuration values to disk.
-	 */
+	
 	public void saveCurrentConfigration(){
 		Properties prop = new Properties();
 		try {
@@ -133,6 +139,16 @@ public class Config {
 			ex.printStackTrace();
 	    }
 	}
+	 */
+	
+	public void writePreference(String preferenceKey,String value){
+		preferenceStore.put(preferenceKey, value);
+	}
+	
+	public String readPreference(String preferenceKey){
+		return preferenceStore.get(preferenceKey,"");
+	}
+	
 	
 	
 	private static Config instance;
@@ -168,9 +184,34 @@ public class Config {
 		return get(key).equalsIgnoreCase("true");
 	}
 	
+	/**
+	 * Sets a configuration value to use during the runtime of the application.
+	 * These configuration values are not persisted. To 
+	 * @param key The key to set.
+	 * @param value The value to use.
+	 */
 	public static void set(Key key, String value) {
 		HashMap<Key,String> store = getInstance().configrationStore;
 		store.put(key, value);
-		
 	}
+	
+	/**
+	 * Use preferences to store configuration that changes during runtime
+	 * and need to be persisted.
+	 * @param key The key to store.
+	 * @param value The value to store
+	 */
+	public static void setPreference(String key, String value){
+		getInstance().writePreference(key, value);
+	}
+
+	/**
+	 * Use preferences to store configuration that changes during runtime
+	 * and need to be persisted.
+	 * @param key The key to store.
+	 */
+	public static String getPreference(String key){
+		return getInstance().readPreference(key);
+	}
+	
 }
