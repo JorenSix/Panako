@@ -205,14 +205,14 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 	
 	private void synchronizeMedia(){
 		//float referenceFileDuration = getMediaDuration(streamFiles.get(0).getAbsolutePath());
-		String commandFile = streamFiles.get(0).getAbsolutePath() + File.separator + "sync_ffmpeg_commands.bash";
+		String commandFile = streamFiles.get(0).getParent() + File.separator + "sync_ffmpeg_commands.bash";
 		for(int i = 1 ; i < streamFiles.size() ; i++){
 			//float otherFileDuration = getMediaDuration(streamFiles.get(i).getAbsolutePath());
 			
 			NFFTSyncMatch match = matches.get(i-1);
 			float[] matchInfo = match.getMatch(0);
 			
-			boolean isVideo = streamFiles.get(i).getName().matches("(?i).*(avi|mp4|mkv|mpeg)");
+			boolean isVideo = streamFiles.get(i).getName().matches("(?i).*(mpg|avi|mp4|mkv|mpeg)");
 			
 			float guessedStartTimeOfStream = (matchInfo[0] - matchInfo[2]);
 			String command;
@@ -223,21 +223,22 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 					command = "command to add black frames here";
 				}else{
 					String syncedmediaFile = "synced_" + streamFiles.get(i).getName();
-					command = "ffmpeg -f lavfi -i aevalsrc=0:d="+guessedStartTimeOfStream+" -i  " + streamFiles.get(i) +  "  -filter_complex \"[0:0] [1:0] concat=n=2:v=0:a=1 [a]\" -map [a] \"" + syncedmediaFile + "\"";
+					command = "ffmpeg -f lavfi -i aevalsrc=0:d="+guessedStartTimeOfStream+" -i  \"" + streamFiles.get(i) +  "\"  -filter_complex \"[0:0] [1:0] concat=n=2:v=0:a=1 [a]\" -map [a] \"" + syncedmediaFile + "\"";
 				}
 			}else{
 				//cut the first part away
 				String startString = String.format("%.3f", -1 * guessedStartTimeOfStream);
 				String syncedmediaFile = "synced_" + streamFiles.get(i).getName();
 				if(isVideo){
-					command = "ffmpeg -ss " + startString + " -i " + streamFiles.get(i) +  " \"" + syncedmediaFile + "\"";
+					command = "ffmpeg -ss " + startString + " -i \"" + streamFiles.get(i) +  "\" \"" + syncedmediaFile + "\"";
 				}else{
-					command = "ffmpeg -ss " + startString + " -i " + streamFiles.get(i) +  " \"" + syncedmediaFile + "\"";
+					command = "ffmpeg -ss " + startString + " -i \"" + streamFiles.get(i) +  "\" \"" + syncedmediaFile + "\"";
 				}
 			}
-			System.out.println("Wrinting to command file: " +  commandFile);
+			LOG.info("Wrinting to command file: " +  commandFile);
+			LOG.info("Wrinting command: " +  command);
 			appendToCommandFile(commandFile, command);
-			
+			statusBar.setText("Appending command file: " +  commandFile);
 			for(File dataFile : streamLayers.get(i).getDataFiles()){
 				File shiftedCSVFile = new File("synced_" + dataFile.getName());
 				try {
@@ -246,7 +247,6 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 					e.printStackTrace();
 				}
 			}
-			
 		}
 	}
 	
@@ -355,7 +355,6 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 	private void appendToCommandFile(String commandFile,String command){
 		try {
 		    PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(commandFile, true)));
-		    System.out.println(command);
 		    out.println(command);
 		    out.close();
 		} catch (IOException e) {
