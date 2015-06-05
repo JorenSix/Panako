@@ -123,7 +123,7 @@ public class Config {
 	    }
 	}
 	
-	/**
+	/*
 	 * Write the current configuration values to disk.
 	
 	public void saveCurrentConfigration(){
@@ -140,6 +140,7 @@ public class Config {
 	    }
 	}
 	 */
+	
 	
 	public void writePreference(String preferenceKey,String value){
 		preferenceStore.put(preferenceKey, value);
@@ -209,6 +210,7 @@ public class Config {
 	 * Use preferences to store configuration that changes during runtime
 	 * and need to be persisted.
 	 * @param key The key to store.
+	 * @return The configured preference value.
 	 */
 	public static String getPreference(String key){
 		return getInstance().readPreference(key);
