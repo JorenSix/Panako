@@ -88,6 +88,9 @@
 			<fileset dir="../src">
 				<include name="**/*.java" />
 			</fileset>
+			
+			<!-- include API readme -->
+			<fileset file="../src/be/panako/http/api.html" />
 		</jar>
 	</target>
 	

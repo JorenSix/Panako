@@ -3,7 +3,7 @@ require 'uri'
 require 'json'
 require 'threach'
 
-(1..100).threach(5) do
+#(1..100).threach(5) do
 
 uri = URI.parse("http://localhost:8080/v1.0/match")
 
@@ -23,6 +23,24 @@ request.body = "
 response = http.request(request)
 
 puts response.body
-end
+#end
 
+
+uri = URI.parse("http://localhost:8080/v1.0/metadata")
+
+header = {'Content-Type' => 'text/json'}
+
+# Create the HTTP objects
+http = Net::HTTP.new(uri.host, uri.port)
+request = Net::HTTP::Post.new(uri.request_uri, header)
+request.body = "
+{
+\"id\": 100
+}
+"
+# Send the request
+response = http.request(request)
+
+puts response.body
+#end
 
