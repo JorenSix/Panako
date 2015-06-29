@@ -36,6 +36,7 @@
 package be.panako.http;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 
@@ -46,42 +47,48 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONObject;
 
-import be.panako.strategy.QueryResult;
-import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
 import be.panako.strategy.nfft.NFFTStrategy;
+import be.panako.util.Config;
 import be.panako.util.FileUtils;
+import be.panako.util.Key;
 
-
-public class MatchServlet extends HttpServlet {
+/**
+ * <p>
+ * The meta data Servlet serves meta data for a song.
+ * The url is <code>POST /v1.0/metadata</code>. The body of the <code>POST</code>-request should contain
+ * the following JSON: <code>{id: 1506}</code> for the audio with identifier 1506.
+ * </p>
+ * <p>
+ * The meta-data is available in a JSON file in a metadata directory. The contents of this file is send. e.g.
+ * <code>/opt/panako/metadata/1506.json</code>.
+ * </p>
+ * <p>
+ * A GET-request results in the help-file.
+ * </p>
+ * @author joren
+ *
+ */
+public class MetaDataServlet extends HttpServlet {
 
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 2720842983609869891L;
-	
+	private static final long serialVersionUID = -6714047575444274959L;
+	private final MatchServlet helpServlet;
 	private final NFFTStrategy strategy;
-	public MatchServlet(){
+	private final String metaDataDirectory;
+	
+	public MetaDataServlet(){
+		helpServlet = new MatchServlet();
 		strategy = (NFFTStrategy) Strategy.getInstance();
+		metaDataDirectory= Config.get(Key.META_DATA_DIRECTORY);
 	}
-
+	
 	@Override
 	public void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
-		// Set the response message's MIME type
-		response.setContentType("text/html");
-		response.setContentType("text/html; charset=UTF-8");
-		
-		// Allocate a output writer to write the response message into the
-		// network socket
-		PrintWriter out = response.getWriter();
-		
-		// Write the documentation response message, in an HTML page
-		try {
-			out.println(FileUtils.readFileFromJar("/be/panako/http/api.html"));
-		} finally {
-			out.close(); // Always close the output writer
-		}
+		helpServlet.doGet(request,response);
 	}
 	
 	@Override
@@ -101,72 +108,46 @@ public class MatchServlet extends HttpServlet {
 		
 		String incomJSONRequest = jb.toString();
 		
-		System.out.println("recieved a Match JSON request");
+		System.out.println("recieved a MetaData JSON request");
 		System.out.println("on thread:" + Thread.currentThread().getId());
 		
 		JSONObject obj = new JSONObject(incomJSONRequest);
 		
-		String serializedFingerprints = obj.get("fingerprints").toString();
-		double queryDuration = obj.getDouble("query_duration");
-		double queryOffset = obj.getDouble("query_offset");
+		Integer identifier = Integer.parseInt(obj.get("id").toString());
 		
-		System.out.println("Parsed request with properties :");
-		System.out.println("fingerprint length: " + serializedFingerprints.toString().length());
-		System.out.println("query_duration: " + queryDuration);
-		System.out.println("query_offset: " + queryOffset);
+		System.out.println("Fetch Metadata for:");
+		System.out.println("Audio identifier: " + identifier);
 		
+		
+		String fileName = strategy.getAudioDescription(identifier);
+		
+
 		final PrintWriter output = response.getWriter();
-		
-		strategy.matchSerializedFingerprints(serializedFingerprints, 3, new QueryResultHandler(	) {
-			
-			@Override
-			public void handleQueryResult(QueryResult result) {
-				
-				
-				//
-				/*String queryInfo = String.format("%s;%.0f;%.0f;",query,r.queryTimeOffsetStart,r.queryTimeOffsetStop);
-				String matchInfo = String.format("%s;%s;%.0f;%.0f;", r.identifier,r.description,r.time,r.score);
-				String factorInfo = String.format("%.0f%%;%.0f%%", r.timeFactor,r.frequencyFactor);
-				System.out.println(queryInfo+matchInfo+factorInfo);
-				*/
-				
-				JSONObject object = new JSONObject();
-				//query info
-				object.put("query", "");
-				object.put("query_start", result.queryTimeOffsetStart);
-				object.put("query_stop", result.queryTimeOffsetStop);
-				//match info
-				object.put("match_identifier", result.identifier);
-				object.put("match_description", result.description);
-				object.put("match_start", result.time);
-				object.put("match_score", result.score);
-
-				output.println(object.toString());
+		if(fileName==null){
+			output.println("{\"error\":\"No audio file with descriptor id " + identifier + " found.\"}");
+		}else{
+			String extension = "";
+			int i = fileName.lastIndexOf('.');
+			if (i > 0) {
+			    extension = fileName.substring(i+1);
 			}
+	
 			
-			@Override
-			public void handleEmptyResult(QueryResult result) {
-				JSONObject object = new JSONObject();
-				//query info
-				object.put("query", "");
-				object.put("query_start",  result.queryTimeOffsetStart);
-				object.put("query_stop", result.queryTimeOffsetStop);
-				//match info
-				object.put("match_identifier", 0);
-				object.put("match_description", "NO MATCH");
-				object.put("match_start", 0);
-				object.put("match_score", 0);
-
-				output.println(object.toString());
-				
+			String jsonMetadataFile = new File(metaDataDirectory,fileName.replace(extension, "json")).getAbsolutePath();;
+			if(FileUtils.exists(jsonMetadataFile)){
+				output.println(FileUtils.readFile(jsonMetadataFile));
+				// Set the response message's MIME type
+				response.setContentType("application/json");
+			}else{
+				output.println("{\"error\":\"No JSON meta data file found at "+ jsonMetadataFile + ".\"}");
 			}
-		}, queryDuration, queryOffset);
+		}
 		
-		// Set the response message's MIME type
-		response.setContentType("application/json");
+		
 		
 		// Allocate a output writer to write the response message into the
-		// network socket		
+		// network socket
 		output.close();
 	}
+
 }

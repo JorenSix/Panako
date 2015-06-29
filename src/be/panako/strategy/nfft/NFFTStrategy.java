@@ -1,7 +1,7 @@
 /***************************************************************************
-*                                                                          *                     
-* Panako - acoustic fingerprinting                                         *   
-* Copyright (C) 2014 - Joren Six / IPEM                                    *   
+*                                                                          *
+* Panako - acoustic fingerprinting                                         *
+* Copyright (C) 2014 - 2015 - Joren Six / IPEM                             *
 *                                                                          *
 * This program is free software: you can redistribute it and/or modify     *
 * it under the terms of the GNU Affero General Public License as           *
@@ -18,19 +18,20 @@
 *                                                                          *
 ****************************************************************************
 *    ______   ________   ___   __    ________   ___   ___   ______         *
-*   /_____/\ /_______/\ /__/\ /__/\ /_______/\ /___/\/__/\ /_____/\        *      
-*   \:::_ \ \\::: _  \ \\::\_\\  \ \\::: _  \ \\::.\ \\ \ \\:::_ \ \       *   
-*    \:(_) \ \\::(_)  \ \\:. `-\  \ \\::(_)  \ \\:: \/_) \ \\:\ \ \ \      * 
-*     \: ___\/ \:: __  \ \\:. _    \ \\:: __  \ \\:. __  ( ( \:\ \ \ \     * 
-*      \ \ \    \:.\ \  \ \\. \`-\  \ \\:.\ \  \ \\: \ )  \ \ \:\_\ \ \    * 
+*   /_____/\ /_______/\ /__/\ /__/\ /_______/\ /___/\/__/\ /_____/\        *
+*   \:::_ \ \\::: _  \ \\::\_\\  \ \\::: _  \ \\::.\ \\ \ \\:::_ \ \       *
+*    \:(_) \ \\::(_)  \ \\:. `-\  \ \\::(_)  \ \\:: \/_) \ \\:\ \ \ \      *
+*     \: ___\/ \:: __  \ \\:. _    \ \\:: __  \ \\:. __  ( ( \:\ \ \ \     *
+*      \ \ \    \:.\ \  \ \\. \`-\  \ \\:.\ \  \ \\: \ )  \ \ \:\_\ \ \    *
 *       \_\/     \__\/\__\/ \__\/ \__\/ \__\/\__\/ \__\/\__\/  \_____\/    *
 *                                                                          *
 ****************************************************************************
 *                                                                          *
-*                              Panako                                      * 
+*                              Panako                                      *
 *                       Acoustic Fingerprinting                            *
 *                                                                          *
 ****************************************************************************/
+
 
 
 package be.panako.strategy.nfft;
@@ -93,6 +94,7 @@ public class NFFTStrategy extends Strategy {
 		
 		int identifier = FileUtils.getIdentifier(resource);
 		
+		
 		for(NFFTFingerprint fingerprint: fingerprints){
 			storage.addFingerprint(identifier, fingerprint.t1, fingerprint.hash());
 		}
@@ -106,6 +108,10 @@ public class NFFTStrategy extends Strategy {
 		
 		LOG.info(String.format("Stored %d fingerprints bundeled from %d event points for %s.",fingerprints.size(),minMaxProcessor.getEventPoints().size(),resource));
 		return durationInSeconds;
+	}
+	
+	public String getAudioDescription(int identifier){
+		return storage.getAudioDescription(identifier);
 	}
 
 	@Override
