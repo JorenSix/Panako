@@ -126,6 +126,7 @@ public class MetaDataServlet extends HttpServlet {
 		if(fileName==null){
 			output.println("{\"error\":\"No audio file with descriptor id " + identifier + " found.\"}");
 		}else{
+			fileName = identifier + ".mp3";
 			String extension = "";
 			int i = fileName.lastIndexOf('.');
 			if (i > 0) {
