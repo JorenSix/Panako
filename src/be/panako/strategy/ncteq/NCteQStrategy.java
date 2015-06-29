@@ -230,5 +230,10 @@ public class NCteQStrategy extends Strategy {
 		System.out.println("Number of seconds: " + storage.getNumberOfSeconds());
 		System.out.println("Number of fingerprints/second: " + storage.getNumberOfFingerprints()/storage.getNumberOfSeconds());
 	}
+	
+	@Override
+	public String resolve(String filename) {
+		return "" + FileUtils.getIdentifier(filename);
+	}
 
 }

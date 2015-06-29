@@ -218,5 +218,10 @@ public class CteQStrategy extends Strategy {
 			adp.run();
 	
 		
-	}	
+	}
+
+	@Override
+	public String resolve(String filename) {
+		return "" + FileUtils.getIdentifier(filename);
+	}
 }

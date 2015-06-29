@@ -102,4 +102,11 @@ public abstract class Strategy {
 		}
 		return strategy;
 	}
+
+	/**
+	 * Returns an internal identifier, probably an integer, for a given filename. 
+	 * @param filename the name of the file to resolve.
+	 * @return An internal identifier, probably an integer, for a given filename.
+	 */
+	public abstract String resolve(String filename);
 }

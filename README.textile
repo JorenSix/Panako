@@ -143,6 +143,16 @@ bc. panako store file.mp3 CHECK_FOR_DUPLICATES=FALSE
 
 The configuration values provided as a command line argument have priority over the ones in the configuration file. If there is no value configured a default is used automatically. To find out which configuration options are available and their respective functions, consult the documented example configuration file @doc/config.properties@.. 
 
+h3(#resolve). Resolve an identifier for a filename - **@panako resolve@**
+
+This application simply returns the identifier that is used internally for a filename. The following call returns for example @54657653@: 
+
+ @panako resolve test.mp3@
+ 
+ The internal identifiers are currently defined using integers.
+ 
+
+
 
 h3(#browser). Browse Fingerprints - **@panako browser@**
 
@@ -395,13 +405,15 @@ bc. 10,10
 
 h3(#server). Run the REST webservice - **@panako server@**
 
-Panako contains a "lightweight HTTP server":http://acme.com/java/software/Acme.Serve.Serve.html to provide a REST webservice. 
+Panako contains a "lightweight HTTP server":http://acme.com/java/software/Acme.Serve.Serve.html to provide a REST webservice. The REST webservice provides two 
+methods @/v1.0/match@ and @/v1.0/metadata@ to query for a match and to fetch metadata
+for a match respectively. The server can be configured using the @HTTP_SERVER_PORT@ configuration setting. 
 
 @panako server@
 
 h3(#client). Query the REST service - **@panako client@**
 
-Panako contains functionality to send requests to the REST webservice. 
+Panako contains functionality to send match requests to the REST webservice. 
 
  @panako client "localhost:8080" test.mp3@
 

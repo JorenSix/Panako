@@ -130,6 +130,7 @@ public class Panako {
 		applicationList.add(new Syncsink());
 		applicationList.add(new Server());
 		applicationList.add(new Client());
+		applicationList.add(new Resolve());
 		for (final Application application : applicationList) {
 			applications.put(application.name(), application);
 			applicationTrie.insert(application.name());

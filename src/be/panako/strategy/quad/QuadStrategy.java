@@ -38,6 +38,7 @@ package be.panako.strategy.quad;
 
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
+import be.panako.util.FileUtils;
 
 /**
  * 
@@ -86,4 +87,8 @@ public class QuadStrategy extends Strategy {
 		// TODO Auto-generated method stub
 	}
 
+	@Override
+	public String resolve(String filename) {
+		return "" + FileUtils.getIdentifier(filename);
+	}
 }

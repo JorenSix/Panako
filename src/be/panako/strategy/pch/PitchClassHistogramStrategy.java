@@ -230,5 +230,10 @@ public class PitchClassHistogramStrategy extends Strategy {
 		int size = FileUtils.glob(".", "\\d*.txt", false).size();
 		System.out.println("Stored " + size + " files");
 	}
+	
+	@Override
+	public String resolve(String filename) {
+		return "" + FileUtils.getIdentifier(filename);
+	}
 
 }

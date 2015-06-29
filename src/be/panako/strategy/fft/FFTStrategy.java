@@ -221,6 +221,10 @@ public class FFTStrategy extends Strategy{
 				}
 			});
 			d.run();
-	
 	}	
+	
+	@Override
+	public String resolve(String filename) {
+		return "" + FileUtils.getIdentifier(filename);
+	}
 }
