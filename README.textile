@@ -420,15 +420,16 @@ Panako contains functionality to send match requests to the REST webservice.
 
 h2(#read). Further Reading
 
-Some relevant reading material about acoustic fingerprinting. 
+Some relevant reading material about acoustic fingerprinting. The order gives an idea of relevance to the Panako project. 
 
-* Cano, Pedro and Batlle, Eloi and Kalker, Ton and Haitsma, Jaap __A Review of Audio Fingerprinting__ (2005)
-* Arzt, Andreas and Bock, Sebastian and Widmer, Gerhard __Fast Identification of Piece and Score Position via Symbolic Fingerprinting__ (2012)
-* Fenet, Sebastien and Richard, Gael and Grenier, Yves __A Scalable Audio Fingerprint Method with Robustness to Pitch-Shifting__ (2011)
-* Wang, Avery L. __An Industrial-Strength Audio Search Algorithm__ (2003)
-* Ellis, Dan and Whitman, Brian and Porter, Alastair __Echoprint - An Open Music Identification Service__ (2011)
-* Joren Six and Olmo Cornelis __A Robust Audio Fingerprinter Based on Pitch Class Histograms - Applications for Ethnic Music Archives__ (2012)
-* Reinhard Sonnleitner and Gerhard Widmer __Quad-based Audio Fingerprinting Robust To Time And Frequency Scaling__ (2014)
+# Six, Joren and Leman, Marc "__Panako - A Scalable Acoustic Fingerprinting System Handling Time-Scale and Pitch Modification__":http://www.terasoft.com.tw/conf/ismir2014/proceedings/T048_122_Paper.pdf (2014)
+# Wang, Avery L. __An Industrial-Strength Audio Search Algorithm__ (2003)
+# Cano, Pedro and Batlle, Eloi and Kalker, Ton and Haitsma, Jaap __A Review of Audio Fingerprinting__ (2005)
+# Six, Joren and Cornelis, Olmo __A Robust Audio Fingerprinter Based on Pitch Class Histograms - Applications for Ethnic Music Archives__ (2012)
+# Arzt, Andreas and Bock, Sebastian and Widmer, Gerhard __Fast Identification of Piece and Score Position via Symbolic Fingerprinting__ (2012)
+# Fenet, Sebastien and Richard, Gael and Grenier, Yves __A Scalable Audio Fingerprint Method with Robustness to Pitch-Shifting__ (2011)
+# Ellis, Dan and Whitman, Brian and Porter, Alastair __Echoprint - An Open Music Identification Service__ (2011)
+# Sonnleitner, Reinhard  and Widmer, Gerhard __Quad-based Audio Fingerprinting Robust To Time And Frequency Scaling__ (2014)
 
 h2(#credits). Credits
 
@@ -451,11 +452,11 @@ h2(#ismir). Reproduce the ISMIR Paper Results
 The directory @doc/Reproducibility@ contains scripts to reproduce the result found in the 
 "Panako ISMIR 2014 paper":http://www.terasoft.com.tw/conf/ismir2014/proceedings/T048_122_Paper.pdf. The scripts follow this procedure:
 
-1) The Jamendo dataset is downloaded.
-2) The fingerprints are extracted and stored for each file in the data set.o download an openly available dataset
-3) Query files are created from the Jamendo data set.
-4) Panako is queried for each query file, results are logged
-5) Results are parsed.
+# The Jamendo dataset is downloaded.
+# The fingerprints are extracted and stored for each file in the data set.o download an openly available dataset
+# Query files are created from the Jamendo data set.
+# Panako is queried for each query file, results are logged
+# Results are parsed.
 
 
 h3. Requirements
