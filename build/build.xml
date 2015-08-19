@@ -27,7 +27,7 @@
 	<target name="javadoc">
 		<javadoc access="public" 
 			author="true" 
-			classpath="${junit_jar}:../lib/TarsosDSP-2.2.jar:../lib/json-20140107.jar:../lib/commons-exec-1.3.jar:../lib/mapdb-1.0.7.jar:../lib/webserver.jar:../lib/servlet-2-3.jar" 
+			classpath="${junit_jar}:../lib/TarsosDSP-nightly.jar:../lib/json-20140107.jar:../lib/commons-exec-1.3.jar:../lib/mapdb-1.0.7.jar:../lib/webserver.jar:../lib/servlet-2-3.jar" 
 			destdir="../doc/javadoc"
 			doctitle="Panako ${version}-${DSTAMP}" 
 			nodeprecated="false" 
@@ -70,7 +70,54 @@
 			<zipfileset excludes="META-INF/**" src="../lib/commons-exec-1.3.jar"/>
 			
 			<!-- DSP library -->
-			<zipfileset excludes="META-INF/**" src="../lib/TarsosDSP-2.2.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/TarsosDSP-nightly.jar"/>
+			
+			<!-- webserver library -->
+			<zipfileset excludes="META-INF/**" src="../lib/webserver.jar"/>
+			
+			<!-- servlet library -->
+			<zipfileset excludes="META-INF/**" src="../lib/servlet-2-3.jar"/>
+    		
+			<!-- exclude everything except src dir -->
+			<fileset dir="../bin">
+				<exclude name="**/*.wav" />
+				<exclude name="**/test/**" />
+			</fileset>
+
+			<!-- include source files -->
+			<fileset dir="../src">
+				<include name="**/*.java" />
+			</fileset>
+			
+			<!-- include API readme -->
+			<fileset file="../src/be/panako/http/api.html" />
+		</jar>
+	</target>
+	
+	<!-- Creates the executable JAR-File -->
+	<target name="syncsink" depends="compile">
+		<!-- with source code panako-${version}.jar -->
+		<jar destfile="SynkSink-${version}.jar" filesetmanifest="mergewithoutmain">
+			<manifest>
+				<!-- Standard manifest attributes -->
+				<attribute name="Implementation-Version" value="${version}-${DSTAMP}" />
+				<attribute name="Built-By" value="${built_by}" />
+				<attribute name="Created-By" value="${built_by}" />
+				<attribute name="Built-Date" value="${TODAY}" />
+				<attribute name="Main-Class" value="be.panako.ui.syncsink.SyncSink" />
+			</manifest>
+			
+			<!-- mapdb jar files -->
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb-1.0.7.jar"/>
+			
+			<!-- JSON lib -->
+			<zipfileset excludes="META-INF/**" src="../lib/json-20140107.jar"/>
+			
+			<!-- Execute scripts -->
+			<zipfileset excludes="META-INF/**" src="../lib/commons-exec-1.3.jar"/>
+			
+			<!-- DSP library -->
+			<zipfileset excludes="META-INF/**" src="../lib/TarsosDSP-nightly.jar"/>
 			
 			<!-- webserver library -->
 			<zipfileset excludes="META-INF/**" src="../lib/webserver.jar"/>

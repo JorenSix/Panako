@@ -94,7 +94,7 @@ public enum Key{
 	/**
 	 * The command that streams PCM audio to a pipe
 	 */
-	DECODER_PIPE_COMMAND("avconv -i \"%resource%\" -vn -ar %sample_rate% -ac %channels% -sample_fmt s16 -f wav pipe:1"),
+	DECODER_PIPE_COMMAND("ffmpeg -i \"%resource%\" -vn -ar %sample_rate% -ac %channels% -sample_fmt s16 -f wav pipe:1"),
 
 	/**
 	 * The buffer used to cache the results from 
@@ -112,19 +112,13 @@ public enum Key{
 	 * The number of processors available to Panako. If zero (or less) all
 	 * available processors are used.
 	 */
-	AVAILABLE_PROCESSORS("0"), 
-	
-	
-	
-	
-	
+	AVAILABLE_PROCESSORS("0"), 	
 	
 	/**
 	 * The strategy (algorithm) to use, CTEQ|FFT.
 	 */
-	STRATEGY("CTEQ"),
+	STRATEGY("NFFT"),
 	
-
 	/**
 	 * The name of the MapDB database location.
 	 */

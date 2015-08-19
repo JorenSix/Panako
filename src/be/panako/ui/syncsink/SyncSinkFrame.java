@@ -41,6 +41,7 @@ import java.awt.Color;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -58,8 +59,12 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+import javax.swing.text.DefaultCaret;
 
 import be.panako.strategy.Strategy;
 import be.panako.strategy.nfft.NFFTStrategy;
@@ -97,6 +102,7 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 	
 	private JButton syncButton;
 	private JButton clearButton;
+	private final JTextArea logTextField;
 	
 	private final Color[] colorMap =    {   
 			new Color(0xFFFFB300), //Vivid Yellow
@@ -127,6 +133,9 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 	public SyncSinkFrame(){
 		super("SyncSink");
 		
+		logTextField = new JTextArea();
+		DefaultCaret caret = (DefaultCaret)logTextField.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 		
 		this.setLayout(new BorderLayout());
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -146,19 +155,30 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 		
 		this.streamLayers = new ArrayList<StreamLayer>();
 		this.streamFiles = new ArrayList<File>();
-		this.add(linkedPanel,BorderLayout.CENTER);
+		
+		JTabbedPane tabbedPane = new JTabbedPane();
+
+		
+		tabbedPane.addTab("Timebox plot", null, linkedPanel,"Timebox plots");
+		tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
+
+		
+		tabbedPane.addTab("Messages", null, new JScrollPane(logTextField),"Logs messages");
+		tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
+		
+		this.add(tabbedPane,BorderLayout.CENTER);
 		this.add(createStatusBarPanel(),BorderLayout.SOUTH);
 		
-		new FileDrop(null, linkedPanel, /*dragBorder,*/ new FileDrop.Listener(){   
+		new FileDrop(null, tabbedPane, /*dragBorder,*/ new FileDrop.Listener(){   
 			public void filesDropped( java.io.File[] files ){   
 				for( int i = 0; i < files.length; i++) {   
 					final File fileToAdd = files[i];
 					new Thread(new Runnable(){
 						@Override
 						public void run() {
-							statusBar.setText("Adding " + fileToAdd.getPath()  + "...");
+							logMessage("Adding " + fileToAdd.getPath()  + "...");							
 		                	openFile(fileToAdd,streamFiles.size());
-		                	statusBar.setText("Added " + fileToAdd.getPath()  + ".");
+		                	logMessage("Added " + fileToAdd.getPath()  + ".");
 						}}).start();
 					try {
 						Thread.sleep(60);
@@ -169,8 +189,15 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
         });
 	}
 	
+	public void logMessage(String lineToLog){
+		statusBar.setText(lineToLog);
+		logTextField.setText(logTextField.getText() + "\n" + lineToLog);
+		LOG.info(lineToLog);
+	}
+	
 	private JComponent createStatusBarPanel(){
-		statusBar = new JLabel("Use drag and drop to synchronize audio and video files. Start with the reference file.");
+		statusBar = new JLabel();
+		logMessage("Use drag and drop to synchronize audio and video files. Start with the reference file.");
 		statusBar.setEnabled(false);
 		Border paddingBorder = BorderFactory.createEmptyBorder(0,10,0,0);
 		statusBar.setBorder(paddingBorder);
@@ -222,9 +249,11 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 				if(isVideo){
 					//String syncedmediaFile = "synced_" + streamFiles.get(i).getName();
 					command = "command to add black frames here";
+					logMessage("ffmpeg sync command: " + command);
 				}else{
 					String syncedmediaFile = "synced_" + streamFiles.get(i).getName();
 					command = "ffmpeg -f lavfi -i aevalsrc=0:d="+guessedStartTimeOfStream+" -i  \"" + streamFiles.get(i) +  "\"  -filter_complex \"[0:0] [1:0] concat=n=2:v=0:a=1 [a]\" -map [a] \"" + syncedmediaFile + "\"";
+					logMessage("ffmpeg sync command: " + command);
 				}
 			}else{
 				//cut the first part away
@@ -232,18 +261,22 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 				String syncedmediaFile = "synced_" + streamFiles.get(i).getName();
 				if(isVideo){
 					command = "ffmpeg -ss " + startString + " -i \"" + streamFiles.get(i) +  "\" \"" + syncedmediaFile + "\"";
+					logMessage("ffmpeg sync command: " + command);
 				}else{
 					command = "ffmpeg -ss " + startString + " -i \"" + streamFiles.get(i) +  "\" \"" + syncedmediaFile + "\"";
+					logMessage("ffmpeg sync command: " + command);
 				}
 			}
-			LOG.info("Wrinting to command file: " +  commandFile);
-			LOG.info("Wrinting command: " +  command);
+			
+			logMessage("Wrinting to command file: " +  commandFile);
+			logMessage("Wrinting command: " +  command);
 			appendToCommandFile(commandFile, command);
-			statusBar.setText("Appending command file: " +  commandFile);
+			logMessage("Appending command file: " +  commandFile);
 			for(File dataFile : streamLayers.get(i).getDataFiles()){
 				File shiftedCSVFile = new File("synced_" + dataFile.getName());
 				try {
 					modifyCSVFile(dataFile, shiftedCSVFile, guessedStartTimeOfStream);
+					logMessage("Synced CSV file original:" + dataFile.getAbsolutePath() + " synced: " + shiftedCSVFile);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
