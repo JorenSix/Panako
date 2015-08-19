@@ -338,7 +338,8 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
     			float startTimeInRef = matchInfo[0];
     			float stopTimeInRef = matchInfo[1];
     			otherLayer.addInterval(startTimeInRef*1000,stopTimeInRef*1000,matchInfo[2]*1000,matchInfo[3]*1000);
-    			LOG.info(String.format("Determined offset with reference of %.04f ",startTimeInRef));
+    			logMessage(String.format("Determined offset with reference of %.04f ",startTimeInRef));
+    			
     		}
 			linkedPanel.addLayer(otherLayer);
 			streamLayers.add(otherLayer);
