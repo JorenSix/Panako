@@ -70,6 +70,8 @@ import be.panako.strategy.Strategy;
 import be.panako.strategy.nfft.NFFTStrategy;
 import be.panako.strategy.nfft.NFFTStreamSync;
 import be.panako.strategy.nfft.NFFTSyncMatch;
+import be.panako.util.Config;
+import be.panako.util.Key;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
@@ -134,8 +136,23 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 		super("SyncSink");
 		
 		logTextField = new JTextArea();
+		logTextField.setEditable(false);
 		DefaultCaret caret = (DefaultCaret)logTextField.getCaret();
 		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append("----------------------------------------\n");
+		sb.append("Configuration currently in use: \n");
+		for(Key key : Key.values()){
+			sb.append("\t");
+			sb.append(key.name());
+			sb.append("=");
+			sb.append(Config.get(key));
+			sb.append("\n");
+		}
+		sb.append("----------------------------------------\n");
+		logTextField.setText(sb.toString());
+		
 		
 		this.setLayout(new BorderLayout());
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -338,7 +355,7 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
     			float startTimeInRef = matchInfo[0];
     			float stopTimeInRef = matchInfo[1];
     			otherLayer.addInterval(startTimeInRef*1000,stopTimeInRef*1000,matchInfo[2]*1000,matchInfo[3]*1000);
-    			logMessage(String.format("Determined offset with reference of %.04f ",startTimeInRef));
+    			logMessage(String.format("Determined offset of %s with respect to reference audio of %.04f ",fileName,startTimeInRef));
     			
     		}
 			linkedPanel.addLayer(otherLayer);
