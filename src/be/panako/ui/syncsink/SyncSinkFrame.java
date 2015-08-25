@@ -183,6 +183,9 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 		tabbedPane.addTab("Messages", null, new JScrollPane(logTextField),"Logs messages");
 		tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
 		
+		tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
+		tabbedPane.setBorder(new EmptyBorder(0,0,0,0));
+		
 		this.add(tabbedPane,BorderLayout.CENTER);
 		this.add(createStatusBarPanel(),BorderLayout.SOUTH);
 		
@@ -308,7 +311,7 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
     	 	streamFiles.add(file);
     		float duration = getMediaDuration(file.getAbsolutePath());
     		
-    		StreamLayer refLayer = new StreamLayer(cs,streamIndex,colorMap[streamIndex],fileName,true,duration*1000);
+    		StreamLayer refLayer = new StreamLayer(cs,streamIndex,colorMap[streamIndex],fileName,true,duration*1000,this.streamFiles);
     		
 			refLayer.addInterval(0, duration*1000,0,0);
 			maxDuration = duration;
@@ -348,7 +351,7 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
     		cs.setStartPoint(-2000, 30);
 			cs.setEndPoint(1000*maxDuration+2000,-500);				
     	
-    		StreamLayer otherLayer = new StreamLayer(cs,streamIndex,colorMap[streamIndex%colorMap.length],fileName,false,duration*1000);
+    		StreamLayer otherLayer = new StreamLayer(cs,streamIndex,colorMap[streamIndex%colorMap.length],fileName,false,duration*1000,this.streamFiles);
     		
     		for(int i = 0 ; i < match.getNumberOfMatches();i++){
     			float[] matchInfo = match.getMatch(i);
@@ -450,8 +453,8 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 		NFFTStreamSync sync = strat.sync(reference, others);
 		//others is only one, so get the first Match list:
 		NFFTSyncMatch match = sync.getMatches().get(0);
-		match.removeOverlappingMatchesWithLowerScores();
-		match.removeMatchesWithLowerScores(0.5f);
+		//match.removeOverlappingMatchesWithLowerScores();
+		//match.removeMatchesWithLowerScores(0.5f);
 		return match;
 	}
 

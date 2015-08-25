@@ -49,6 +49,10 @@ import be.tarsos.dsp.AudioProcessor;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 
 public class NFFTStreamSync {
+	
+	private static String prevReference;
+	private static List<NFFTFingerprint> prevReferencePrints;
+	
 	private final String reference;
 	private final String[] others;
 	
@@ -67,7 +71,7 @@ public class NFFTStreamSync {
 		
 		AudioDispatcher d = AudioDispatcherFactory.fromPipe(resource, samplerate, size, overlap);
 		//d.skip(millisecondsSkipped/1000.0f);
-		final NFFTEventPointProcessor minMaxProcessor = new NFFTEventPointProcessor(size,1,1);
+		final NFFTEventPointProcessor minMaxProcessor = new NFFTEventPointProcessor(size,overlap,samplerate);
 		d.addAudioProcessor(minMaxProcessor);
 		d.run();
 		return new ArrayList<NFFTFingerprint>(minMaxProcessor.getFingerprints());
@@ -75,7 +79,16 @@ public class NFFTStreamSync {
 	
 	public void synchronize(){
 		//extract fingerprints for reference audio
-		List<NFFTFingerprint> referencePrints = extractFingerprints(reference);
+		//if needed, the reference prints are cached.
+		List<NFFTFingerprint> referencePrints;
+		if(reference == prevReference){
+			referencePrints = prevReferencePrints;
+			System.out.println("Using cached reference prints");
+		}else{
+			referencePrints = extractFingerprints(reference);
+			prevReferencePrints = referencePrints;
+			prevReference = reference;
+		}
 		
 		//extract fingerprints for other audio streams
 		List<List<NFFTFingerprint>> otherPrints = new ArrayList<List<NFFTFingerprint>>();
@@ -110,6 +123,7 @@ public class NFFTStreamSync {
 		NFFTSyncMatch match = new NFFTSyncMatch(reference, others[otherIndex]);
 		matches.add(match);
 		
+		int numberOfMatchingHashes = 0;
 		//iterate each fingerprint in the reference stream 
 		for(Map.Entry<Integer,NFFTFingerprint> entry : referenceHash.entrySet()){
 			//if the fingerprint is also present in the other stream
@@ -132,8 +146,10 @@ public class NFFTStreamSync {
 				if(mostPopularOffsets.get(offset).size()/2 > maxAlignedOffsets){
 					maxAlignedOffsets = mostPopularOffsets.get(offset).size()/2;
 				}
-			}
+				numberOfMatchingHashes++;
+			}	
 		}
+		System.out.println("Number of matching hashes between reference and query: " + numberOfMatchingHashes);
 		
 		
 		if(maxAlignedOffsets >= minimumAlignedMatchesThreshold){

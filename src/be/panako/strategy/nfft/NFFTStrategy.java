@@ -389,9 +389,6 @@ public class NFFTStrategy extends Strategy {
 			}
 		}
 		
-		
-
-		
 		LOG.info(String.format("%d fingerprints printed on stdout from %d event points for %s.",fingerprintsReference.size(),minMaxProcessor.getEventPoints().size(),reference.getAbsolutePath()));
 		
 		

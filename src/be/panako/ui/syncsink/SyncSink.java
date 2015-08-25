@@ -46,8 +46,12 @@ import be.panako.cli.Panako;
 public class SyncSink {
 
 	public static void main(String[] args) {
-		String[] arg = {"syncsink"};
-		Panako.main(arg);
+		String[] actualArguments = new String[args.length+1];
+		actualArguments[0] = "syncsink";
+		for(int i = 0 ; i <args.length ; i++){
+			actualArguments[i+1] = args[i];
+		}
+		Panako.main(actualArguments);
 	}
 
 }

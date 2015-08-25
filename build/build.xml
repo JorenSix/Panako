@@ -97,7 +97,7 @@
 	<!-- Creates the executable JAR-File -->
 	<target name="syncsink" depends="compile">
 		<!-- with source code panako-${version}.jar -->
-		<jar destfile="SynkSink-${version}.jar" filesetmanifest="mergewithoutmain">
+		<jar destfile="SyncSink-${version}.jar" filesetmanifest="mergewithoutmain">
 			<manifest>
 				<!-- Standard manifest attributes -->
 				<attribute name="Implementation-Version" value="${version}-${DSTAMP}" />

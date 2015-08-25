@@ -47,10 +47,18 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 
 import be.panako.util.Config;
+import be.tarsos.dsp.AudioDispatcher;
+import be.tarsos.dsp.AudioEvent;
+import be.tarsos.dsp.AudioProcessor;
+import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
+import be.tarsos.dsp.io.jvm.AudioPlayer;
+import be.tarsos.dsp.io.jvm.JVMAudioInputStream;
 import be.tarsos.dsp.ui.Axis;
 import be.tarsos.dsp.ui.CoordinateSystem;
 import be.tarsos.dsp.ui.layers.Layer;
@@ -69,8 +77,9 @@ public class StreamLayer implements Layer, MouseListener,MouseMotionListener{
 	private float guessedStartTimeOfStream;
 	private Graphics2D graphics;
 	private final List<File> dataFiles;
+	private final List<File> streamFiles;
 	
-	public StreamLayer(CoordinateSystem cs,int index, Color color,String description, boolean isReference,float streamDuration){
+	public StreamLayer(CoordinateSystem cs,int index, Color color,String description, boolean isReference,float streamDuration,List<File> streamFiles){
 		this.index = index;
 		this.color = color;
 		this.description = description;
@@ -80,6 +89,7 @@ public class StreamLayer implements Layer, MouseListener,MouseMotionListener{
 		this.stopTimes = new ArrayList<Float>();
 		this.streamDuration = streamDuration;
 		this.dataFiles = new ArrayList<File>();
+		this.streamFiles = streamFiles;
 	}
 	
 	public void addInterval(float startTimeInReference, float stopTimeInReference,float startTimeInResource, float stopTimeInResource){
@@ -147,8 +157,6 @@ public class StreamLayer implements Layer, MouseListener,MouseMotionListener{
 		graphics.setColor(color);
 		float verticalTextPosition = verticalOffsetOffset + heightOfABlock/2.0f;
 		LayerUtilities.drawString(graphics, description, (stopTime+startTime)/2.0f, verticalTextPosition , true, true, null);
-
-	
 	}
 	
 	private Color getBackgroundColor(){
@@ -175,19 +183,93 @@ public class StreamLayer implements Layer, MouseListener,MouseMotionListener{
 			Point2D pointInUnits = LayerUtilities.pixelsToUnits(graphics, e.getX(), e.getY());
 			int startTime = Math.round(guessedStartTimeOfStream);
 			int stopTime = Math.round(guessedStartTimeOfStream+streamDuration);
+			
 			if(pointInUnits.getX() >= startTime && pointInUnits.getX() <= stopTime && pointInUnits.getY() >= startHeight &&  pointInUnits.getY() <= stopHeight){
 				//System.out.println("Click in layer " + index);
-				
-				JFileChooser chooser =  new JFileChooser(new File(Config.getPreference("SYNC_DIR")));
-				chooser.setDialogTitle("Choose corresponding data file.");
-			    int returnVal = chooser.showOpenDialog(null);
-			    if(returnVal == JFileChooser.APPROVE_OPTION) {
-			    	File file = chooser.getSelectedFile();
-			    	Config.setPreference("SYNC_DIR", chooser.getSelectedFile().getPath());
-			    	this.dataFiles.add(file);
-			    	this.description = description + " + " + file.getName();
-			    	graphics.dispose();
-			    }
+				if(e.isShiftDown() || e.isControlDown() || e.isAltDown()){
+					System.out.println("Play stream x");
+					float sr = 44100;
+					final int numberOfSamples = (int) Math.min(25 *  sr , streamDuration * 44100);
+					final float[] syncedAudio = new float[numberOfSamples];
+					final float[] referenceAudio = new float[numberOfSamples];
+					final float[] mixedAudio = new float[numberOfSamples];
+					
+					AudioDispatcher adp = AudioDispatcherFactory.fromPipe(streamFiles.get(index).getAbsolutePath(), 44100, numberOfSamples, 0);
+					adp.addAudioProcessor(new AudioProcessor() {
+						boolean first = true;
+						@Override
+						public void processingFinished() {}
+						
+						@Override
+						public boolean process(AudioEvent audioEvent) {
+							if(first){
+								float[] buffer = audioEvent.getFloatBuffer();
+								for(int i = 0 ; i < numberOfSamples ; i++){
+									syncedAudio[i] =buffer[i];
+								}
+								first = false;
+							}
+							return true;
+						}
+					});
+					adp.run();
+					
+					adp = AudioDispatcherFactory.fromPipe(streamFiles.get(0).getAbsolutePath(), 44100, numberOfSamples, 0);
+					adp.skip(guessedStartTimeOfStream/1000.0);
+					adp.addAudioProcessor(new AudioProcessor() {
+						boolean first = true;
+						@Override
+						public void processingFinished() {}
+						
+						@Override
+						public boolean process(AudioEvent audioEvent) {
+							if(first){
+								float[] buffer = audioEvent.getFloatBuffer();
+								for(int i = 0 ; i < numberOfSamples ; i++){
+									referenceAudio[i] = buffer[i];
+								}
+								first = false;
+							}
+							return true;
+						}
+					});
+					adp.run();
+					
+					double syncRMS = AudioEvent.calculateRMS(syncedAudio);
+					double refRMS = AudioEvent.calculateRMS(referenceAudio);
+					float rmsFactor = (float) (syncRMS/refRMS);
+					
+					for(int i = 0 ; i < numberOfSamples ; i++){
+						float sourceFactor = i/((float)numberOfSamples/5.0f) % 1.0f;//goes from 0 to 1 five times
+						mixedAudio[i] = sourceFactor * syncedAudio[i] + (1-sourceFactor) * referenceAudio[i] * rmsFactor;
+					}
+					
+					
+					try {
+						adp = AudioDispatcherFactory.fromFloatArray(mixedAudio, 44100, 2048, 0);
+						adp.addAudioProcessor(new AudioPlayer(JVMAudioInputStream.toAudioFormat(adp.getFormat())));
+						new Thread(adp).start();
+					} catch (UnsupportedAudioFileException e2) {
+						// TODO Auto-generated catch block
+						e2.printStackTrace();
+					} catch (LineUnavailableException e1) {
+						e1.printStackTrace();
+					}
+					
+					
+					
+				}else{
+					JFileChooser chooser =  new JFileChooser(new File(Config.getPreference("SYNC_DIR")));
+					chooser.setDialogTitle("Choose corresponding data file.");
+				    int returnVal = chooser.showOpenDialog(null);
+				    if(returnVal == JFileChooser.APPROVE_OPTION) {
+				    	File file = chooser.getSelectedFile();
+				    	Config.setPreference("SYNC_DIR", chooser.getSelectedFile().getPath());
+				    	this.dataFiles.add(file);
+				    	this.description = description + " + " + file.getName();
+				    	graphics.dispose();
+				    }
+				}
 			}
 		}
 	}
@@ -233,10 +315,11 @@ public class StreamLayer implements Layer, MouseListener,MouseMotionListener{
 			Point2D pointInUnits = LayerUtilities.pixelsToUnits(graphics, e.getX(), e.getY());
 			int startTime = Math.round(guessedStartTimeOfStream);
 			int stopTime = Math.round(guessedStartTimeOfStream+streamDuration);
+			
 			if(pointInUnits.getX() >= startTime && pointInUnits.getX() <= stopTime && pointInUnits.getY() >= startHeight &&  pointInUnits.getY() <= stopHeight){
 				((JComponent)(e.getSource())).setCursor(new Cursor(Cursor.HAND_CURSOR));
 				e.consume();
 			}
 		}
 	}
-	}
+}
