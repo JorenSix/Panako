@@ -58,6 +58,11 @@ public class NFFTStreamSync {
 	
 	private final List<NFFTSyncMatch> matches;
 	
+	//fingerprints to sync are only used between 100 and 4000Hz.
+	private static final float minFrequency = 100;//hz
+	private static final float maxFrequency = 4000;//hz
+	
+	
 	public NFFTStreamSync(String reference, String[] others){
 		this.reference = reference;
 		this.others = others;
@@ -86,6 +91,7 @@ public class NFFTStreamSync {
 			System.out.println("Using cached reference prints");
 		}else{
 			referencePrints = extractFingerprints(reference);
+			filterPrints(referencePrints);
 			prevReferencePrints = referencePrints;
 			prevReference = reference;
 		}
@@ -93,11 +99,34 @@ public class NFFTStreamSync {
 		//extract fingerprints for other audio streams
 		List<List<NFFTFingerprint>> otherPrints = new ArrayList<List<NFFTFingerprint>>();
 		for(String other : others){
-			otherPrints.add(extractFingerprints(other));
+			List<NFFTFingerprint> extracted =  extractFingerprints(other);
+			filterPrints(extracted);
+			otherPrints.add(extracted);
 		}
 		//match the reference with all other streams
 		
 		match(referencePrints,otherPrints);
+	}
+	
+	private void filterPrints(List<NFFTFingerprint> prints){
+		float samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
+		float size = Config.getInt(Key.NFFT_SIZE);
+		int minf = (int) Math.ceil(minFrequency/(samplerate/size));
+		int maxf = (int) Math.floor(maxFrequency/(samplerate/size));
+		int numberRemoved = 0;
+		int prevSize = prints.size();
+		for(int i = 0 ; i< prints.size();i++){
+			NFFTFingerprint print = prints.get(i);
+			boolean smallerThanMin = print.f1 <= minf || print.f2 <= minf;
+			boolean biggerThanMax = print.f1 >= maxf || print.f2 >= maxf;
+			
+			if(smallerThanMin || biggerThanMax){
+				prints.remove(i);
+				i--;
+				numberRemoved++;
+			}
+		}
+		System.out.println("Filtered " + numberRemoved + " of " + prevSize + " fingerprints");
 	}
 
 	private void match(List<NFFTFingerprint> referencePrints, List<List<NFFTFingerprint>> otherPrints) {
@@ -149,14 +178,18 @@ public class NFFTStreamSync {
 				numberOfMatchingHashes++;
 			}	
 		}
-		System.out.println("Number of matching hashes between reference and query: " + numberOfMatchingHashes);
+		System.out.println("Number of matching hashes between reference and query: " + numberOfMatchingHashes + " aligned: " + maxAlignedOffsets);
 		
-		
+		boolean onlyKeepBestAlignedMatch = true;
+		int removeBelow = minimumAlignedMatchesThreshold;
+		if(onlyKeepBestAlignedMatch){
+			removeBelow = maxAlignedOffsets;
+		}
 		if(maxAlignedOffsets >= minimumAlignedMatchesThreshold){
 			//remove each offset below the minimum threshold
 			List<Integer> offsetsToRemove = new ArrayList<Integer>();
 			for(Map.Entry<Integer,List<NFFTFingerprint>> entry : mostPopularOffsets.entrySet()){
-				if(entry.getValue().size()/2 < minimumAlignedMatchesThreshold){
+				if(entry.getValue().size()/2 < removeBelow){
 					offsetsToRemove.add(entry.getKey());
 				}
 			}

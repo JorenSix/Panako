@@ -235,13 +235,23 @@ public class StreamLayer implements Layer, MouseListener,MouseMotionListener{
 					});
 					adp.run();
 					
-					double syncRMS = AudioEvent.calculateRMS(syncedAudio);
-					double refRMS = AudioEvent.calculateRMS(referenceAudio);
-					float rmsFactor = (float) (syncRMS/refRMS);
+					//double syncRMS = AudioEvent.calculateRMS(syncedAudio);
+					//double refRMS = AudioEvent.calculateRMS(referenceAudio);
+					//float rmsFactor = (float) (syncRMS/refRMS);
 					
 					for(int i = 0 ; i < numberOfSamples ; i++){
-						float sourceFactor = i/((float)numberOfSamples/5.0f) % 1.0f;//goes from 0 to 1 five times
-						mixedAudio[i] = sourceFactor * syncedAudio[i] + (1-sourceFactor) * referenceAudio[i] * rmsFactor;
+						float gain = 1.0f;
+						//fade in
+						if(i < 1000){
+							gain = i/1000.0f;
+						}
+						//fade out
+						if(i > numberOfSamples - 1000){
+							gain = (float)(numberOfSamples-i)/1000.0f;
+						}
+						float sourceFactor = i/((float)numberOfSamples);//goes from 0 to 1 five times
+						
+						mixedAudio[i] = gain * (sourceFactor * syncedAudio[i] + (1-sourceFactor) * referenceAudio[i]);
 					}
 					
 					

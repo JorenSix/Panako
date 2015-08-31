@@ -84,9 +84,12 @@ public class NFFTFingerprint {
 		int deltaF = Math.abs(f2 - f1);
 		deltaF = deltaF & ((1<<8)-1);
 		//6 bits for the time difference
-		int deltaT = Math.abs(timeDelta()) & ((1<<6)-1);
+		int deltaT = Math.abs(timeDelta()) & ((1<<7)-1);
 		//In total the hash contains 8 + 8 + 6 bits == 22 bits (about 4 million values)
-		int hash = (f<<14) + (deltaF<<6) + deltaT;
+		int hash = (f<<15) + (deltaF<<7) + deltaT;
+		if(f1>f2){
+			hash = hash *-1;
+		}
 		return hash;
 	}
 	
@@ -150,5 +153,15 @@ public class NFFTFingerprint {
 	 */
 	public int timeDelta() {
 		return t2 - t1;
+	}
+	
+	public static void main(String... args){
+		
+		NFFTFingerprint firstPrint = new NFFTFingerprint(2424,28,2524,22);
+		NFFTFingerprint otherPrint = new NFFTFingerprint(887,28,923,34);
+		System.out.println(firstPrint + " " + otherPrint);		
+		firstPrint = new NFFTFingerprint(18732,42,18799,28);
+		otherPrint = new NFFTFingerprint(809,42,876,28);
+		System.out.println(firstPrint + " " + otherPrint);
 	}
 }

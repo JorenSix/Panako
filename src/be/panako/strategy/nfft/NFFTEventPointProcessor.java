@@ -68,6 +68,8 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 	private int magnitudesIndex=0;
 	
 	private final ArrayDeque<float[]> previousFrames;
+	private final ArrayDeque<float[]> framesHistory;
+	
 	private final ArrayDeque<float[]> previousPhase;
 	private final ArrayDeque<float[]> previousMinFrames;
 	private final ArrayDeque<float[]> previousMaxFrames;
@@ -132,6 +134,7 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 		previousPhase = new ArrayDeque<>();
 		previousMaxFrames = new ArrayDeque<>();
 		previousMinFrames = new ArrayDeque<>();
+		framesHistory =  new ArrayDeque<>();
 		
 		maxFilterVertical = new LemireMinMaxFilter(maxFilterWindowSize, size/2,true);
 		minFilterVertical = new LemireMinMaxFilter(minFilterWindowSize, size/2,true);
@@ -196,6 +199,11 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 		if(previousFrames.size() == maxFilterWindowSize/2 + minFilterWindowSize/2  ){
 			previousFrames.removeFirst();
 			previousPhase.removeFirst();
+			
+			framesHistory.addLast(previousFrames.removeFirst());
+			if(framesHistory.size()==4){
+				framesHistory.removeFirst();
+			}
 		}
 		
 		//magnitude index counter
@@ -267,10 +275,29 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 				
 				if(currentValLog > minEnergyForPoint * framMaxValLog &&
 						ratio > minRatioThreshold  && 
-						ratio < maxRatioThreshold){
+						ratio < maxRatioThreshold && framesHistory.size()==3){
+					
+					//a good event point also stands out compared to its environment.
+					Iterator<float[]> prevFrameIterator = framesHistory.iterator();
+					
+					float[] compareFrame;
+					float compareValue = frame[Math.max(0, i-1)];
+					compareValue = Math.max(compareValue, frame[Math.min(frame.length -1, i+1)]);
+					for(int j = 0 ; j < 3 ; j++){
+						 compareFrame = prevFrameIterator.next();
+						 compareValue = Math.max(compareValue, compareFrame[Math.max(0, i-1)]);
+						 compareValue = Math.max(compareValue, compareFrame[Math.min(compareFrame.length -1, i+1)]);
+						 compareValue = Math.max(compareValue, compareFrame[i]);
+					}
+					//compareValue contains the max energy of neighboring elements.
+					float neigbourRatio = (float)Math.log1p(compareValue)/currentValLog;
+					
+					if(neigbourRatio < 1.0){
+					
 					//now calculate detailed frequency information using fft:
 					float frequencyEstimate = getFrequencyForBin(i, currentPhase,previousPhase);//in Hz
 					eventPoints.add(new NFFTEventPoint(timeInFrames, i, frequencyEstimate, currentVal,minVal/maxVal) );
+					}
 				}
 			}
 					
