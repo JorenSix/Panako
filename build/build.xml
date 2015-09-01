@@ -11,6 +11,8 @@
 	<target name="clean">
 		<delete dir="../bin" />
 		<delete dir="../doc/javadoc" />
+		<delete dir="Panako-${version}" />
+		<delete file="panako-${version}.jar" />
 	</target>
 
 	<!-- Compiles the java files to bytecode and copy required resources -->
@@ -27,7 +29,7 @@
 	<target name="javadoc">
 		<javadoc access="public" 
 			author="true" 
-			classpath="${junit_jar}:../lib/TarsosDSP-nightly.jar:../lib/json-20140107.jar:../lib/commons-exec-1.3.jar:../lib/mapdb-1.0.7.jar:../lib/webserver.jar:../lib/servlet-2-3.jar" 
+			classpath="${junit_jar}:../lib/TarsosDSP-2.3.jar:../lib/json-20140107.jar:../lib/commons-exec-1.3.jar:../lib/mapdb-1.0.7.jar:../lib/webserver.jar:../lib/servlet-2-3.jar" 
 			destdir="../doc/javadoc"
 			doctitle="Panako ${version}-${DSTAMP}" 
 			nodeprecated="false" 
@@ -70,7 +72,7 @@
 			<zipfileset excludes="META-INF/**" src="../lib/commons-exec-1.3.jar"/>
 			
 			<!-- DSP library -->
-			<zipfileset excludes="META-INF/**" src="../lib/TarsosDSP-nightly.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/TarsosDSP-2.3.jar"/>
 			
 			<!-- webserver library -->
 			<zipfileset excludes="META-INF/**" src="../lib/webserver.jar"/>
