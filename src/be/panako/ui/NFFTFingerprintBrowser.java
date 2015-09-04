@@ -204,8 +204,7 @@ public class NFFTFingerprintBrowser extends JFrame{
 
 	public void addAudio(String audioFile) {
 		final Runnable uiRunnable;
-		if(referenceFile == null){
-			
+		if(referenceFile == null){			
 			cs = new CoordinateSystem(AxisUnit.FREQUENCY, 3500, 11900);
 			//remove the empty feature panel
 			referenceFile = new NFFTAudioFileInfo(new File(audioFile), null);

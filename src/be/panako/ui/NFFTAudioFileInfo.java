@@ -4,7 +4,9 @@ import java.awt.Component;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
@@ -22,6 +24,22 @@ import be.tarsos.dsp.AudioProcessor;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 
 class NFFTAudioFileInfo implements AudioProcessor{
+	
+	private static final Set<Integer> selectedFingerprintHashes = new HashSet<Integer>();
+	
+	public static void clearSelectedFingerprints(){
+		selectedFingerprintHashes.clear();
+	}
+	
+	public static void addFingerprintToSelection(NFFTFingerprint print){
+		selectedFingerprintHashes.add(print.hash());
+	}
+	
+	public static boolean isFingerprintSelected(NFFTFingerprint print){
+		return selectedFingerprintHashes.contains(print.hash());
+	}
+	
+	
 	public final TreeMap<Float,float[]> magnitudes;
 	public final List<NFFTEventPoint> eventpoints;
 	public final List<NFFTFingerprint> fingerprints;
