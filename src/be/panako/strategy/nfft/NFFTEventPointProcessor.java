@@ -36,11 +36,11 @@
 
 package be.panako.strategy.nfft;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
@@ -55,24 +55,30 @@ import be.tarsos.dsp.util.fft.HammingWindow;
 public class NFFTEventPointProcessor implements AudioProcessor {
 
 	private final FFT fft;
-	
-	//Use a 2D float array to prevent creation of new
-	//objects in the processing loop, at the expense of a bit of
-	//complexity
-	private float[][] magnitudes;
+		
 	/**
-	 * The phase info of the current frame.
+	 * 
+	 * Use a 2D float array to prevent creation of new
+	 * objects in the processing loop, at the expense of a bit of
+	 * complexity
+	 */
+	private final float[][] magnitudes;
+	/**
+	 * The phase info of the current and previous frames.
 	 */
 	private final float[][] phases;
 	
+	/**
+	 * A counter used in the 2D float arrays
+	 */
 	private int magnitudesIndex=0;
 	
-	private final ArrayDeque<float[]> previousFrames;
-	private final ArrayDeque<float[]> framesHistory;
+	//Each map maps a frame index to the data represented.
+	private final Map<Integer,float[]> previousMagintudes;
+	private final Map<Integer,float[]> previousPhase;
+	private final Map<Integer,float[]> previousMinMagnitudes;
+	private final Map<Integer,float[]> previousMaxMagnitudes;
 	
-	private final ArrayDeque<float[]> previousPhase;
-	private final ArrayDeque<float[]> previousMinFrames;
-	private final ArrayDeque<float[]> previousMaxFrames;
 	
 	/**
 	 * The sample rate of the signal.
@@ -93,13 +99,14 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 	private final List<NFFTEventPoint> eventPoints = new ArrayList<>();
 	private final List<NFFTFingerprint> fingerprints = new ArrayList<>();
 
-	private int t = 0;
+	private int analysisFrameIndex = 0;
 	
 	private final LemireMinMaxFilter maxFilterVertical;
 	private final LemireMinMaxFilter minFilterVertical;
 
 	private final int maxFilterWindowSize;
 	private final int minFilterWindowSize;
+	private final int longestFilterWindowSize;
 	
 	private final float[] maxHorizontal;
 	private final float[] minHorizontal;
@@ -118,35 +125,38 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 	
 	int maxFingerprintsPerEventPoint = Config.getInt(Key.NFFT_MAX_FINGERPRINTS_PER_EVENT_POINT);
 	
+	private static final int defaultMaxFilterWindowSize = Config.getInt(Key.NFFT_MAX_FILTER_WINDOW_SIZE);
+	private static final int defaultMinFilterWindowSize = Config.getInt(Key.NFFT_MIN_FILTER_WINDOW_SIZE);
+	
 	
 	public NFFTEventPointProcessor(int size,int overlap,int sampleRate){
-		this(size,overlap,sampleRate,15,3);
+		this(size,overlap,sampleRate,defaultMaxFilterWindowSize,defaultMinFilterWindowSize);
 	}
 	
-	public NFFTEventPointProcessor(int size,int overlap,int sampleRate, int maxFilterWindowSize,int minFilterWindowSize){
-		fft = new FFT(size, new HammingWindow());
-		
-		magnitudesIndex=0;
-		magnitudes = new float[maxFilterWindowSize/2 + minFilterWindowSize/2][size/2];
-		phases = new float[maxFilterWindowSize/2 + minFilterWindowSize/2][size/2];
-		
-		previousFrames = new ArrayDeque<>();
-		previousPhase = new ArrayDeque<>();
-		previousMaxFrames = new ArrayDeque<>();
-		previousMinFrames = new ArrayDeque<>();
-		framesHistory =  new ArrayDeque<>();
-		
-		maxFilterVertical = new LemireMinMaxFilter(maxFilterWindowSize, size/2,true);
-		minFilterVertical = new LemireMinMaxFilter(minFilterWindowSize, size/2,true);
-		
-		maxHorizontal = new float[size/2];
-		minHorizontal = new float[size/2];
+	private NFFTEventPointProcessor(int fftSize,int overlap,int sampleRate, int maxFilterWindowSize,int minFilterWindowSize){
+		fft = new FFT(fftSize, new HammingWindow());
 		
 		this.maxFilterWindowSize = maxFilterWindowSize;
 		this.minFilterWindowSize = minFilterWindowSize;
+		longestFilterWindowSize = Math.max(maxFilterWindowSize, minFilterWindowSize);
 		
-		dt = (size - overlap) / (double) sampleRate;
-		cbin = (double) (dt * sampleRate / (double) size);
+		magnitudesIndex=0;
+		magnitudes = new float[longestFilterWindowSize][fftSize/2];
+		phases = new float[longestFilterWindowSize][fftSize/2];
+		
+		previousMagintudes = new HashMap<>();
+		previousPhase = new HashMap<>();
+		previousMaxMagnitudes = new HashMap<>();
+		previousMinMagnitudes = new HashMap<>();
+		
+		maxFilterVertical = new LemireMinMaxFilter(maxFilterWindowSize, fftSize/2,true);
+		minFilterVertical = new LemireMinMaxFilter(minFilterWindowSize, fftSize/2,true);
+		
+		maxHorizontal = new float[fftSize/2];
+		minHorizontal = new float[fftSize/2];
+		
+		dt = (fftSize - overlap) / (double) sampleRate;
+		cbin = (double) (dt * sampleRate / (double) fftSize);
 
 		inv_2pi = (double) (1.0 / (2.0 * Math.PI));
 		inv_deltat = (double) (1.0 / dt);
@@ -167,53 +177,42 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 		fft.powerAndPhaseFromFFT(buffer, magnitudes[magnitudesIndex],phases[magnitudesIndex]);
 		
 		//calculate the natural logarithm
+		//It is not really needed, and skipped since it is very computationally expensive
 		//log();
 		
 		//run a maximum filter on the frame
 		maxFilterVertical.filter(magnitudes[magnitudesIndex]);
-		previousMaxFrames.addLast(maxFilterVertical.getMaxVal());
+		previousMaxMagnitudes.put(analysisFrameIndex,maxFilterVertical.getMaxVal());
 	
 		//run a minimum filter on the frame
 		minFilterVertical.filter(magnitudes[magnitudesIndex]);
-		previousMinFrames.addLast(minFilterVertical.getMinVal());
+		previousMinMagnitudes.put(analysisFrameIndex,minFilterVertical.getMinVal());
 		
 		//store the frame magnitudes
-		previousFrames.addLast(magnitudes[magnitudesIndex]);
+		previousMagintudes.put(analysisFrameIndex, magnitudes[magnitudesIndex]);
 		//store the frame phase info
-		previousPhase.addLast(phases[magnitudesIndex]);
+		previousPhase.put(analysisFrameIndex,phases[magnitudesIndex]);
 		
 		//find the horziontal minima and maxima
-		if(previousMaxFrames.size()==maxFilterWindowSize){
+		if(previousMaxMagnitudes.size()==longestFilterWindowSize){
 			horizontalFilter();
-			previousMaxFrames.removeFirst();
+			//Remove analysis frames thashat are not needed any more:
+			//previousMaxFrames.removeFirst();
+			previousMaxMagnitudes.remove(analysisFrameIndex-longestFilterWindowSize+1);
+			previousMinMagnitudes.remove(analysisFrameIndex-longestFilterWindowSize+1);
+			previousMagintudes.remove(analysisFrameIndex-longestFilterWindowSize+1);
+			previousPhase.remove(analysisFrameIndex-longestFilterWindowSize+1);
 		}
-		
-		//this makes sure that the first frame in previousMinFrames aligns with the center of 
-		//previousmaxframes
-		if(previousMinFrames.size() == maxFilterWindowSize/2 + minFilterWindowSize/2 + 1 ){
-			previousMinFrames.removeFirst();
-		}
-		
-		//this makes sure that the first frame in previousframes alignes with the center of 
-		//previousmaxframes
-		if(previousFrames.size() == maxFilterWindowSize/2 + minFilterWindowSize/2  ){
-			previousFrames.removeFirst();
-			previousPhase.removeFirst();
-			
-			framesHistory.addLast(previousFrames.removeFirst());
-			if(framesHistory.size()==4){
-				framesHistory.removeFirst();
-			}
-		}
-		
+				
 		//magnitude index counter
 		magnitudesIndex++;
 		if(magnitudesIndex == magnitudes.length){
 			magnitudesIndex=0;
 		}
 		
-		//frame counter
-		t++;
+		//Increment analysis frame counter
+		analysisFrameIndex++;
+		
 		return true;
 	}
 	
@@ -226,81 +225,61 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 		Arrays.fill(maxHorizontal, -10000);
 		Arrays.fill(minHorizontal, 10000000);
 		
-		Iterator<float[]> prevMinFramesIterator = previousMinFrames.iterator();
+		// For the horizontal min and max filter we need a history of 
+		// max(maxFilterSize/2,minFilterSize/2) frames and the same amount
+		// of frames in the 'future' for the frame under analysis. 
 		
-		int i = 0;
-		while(prevMinFramesIterator.hasNext() && i < minFilterWindowSize){
-			float[] minFrame = prevMinFramesIterator.next();
+		// The frame index of the frame under analysis:
+		int frameUnderAnalysis = analysisFrameIndex - longestFilterWindowSize/2;
+		
+		// Run a horizontal min filter
+		for(int i = frameUnderAnalysis - minFilterWindowSize/2; i < frameUnderAnalysis + minFilterWindowSize/2;i++){
+			float[] minFrame = previousMinMagnitudes.get(i);
 			for(int j = 0 ; j < minFrame.length ; j++){
 				minHorizontal[j] = Math.min(minHorizontal[j], minFrame[j]);
 			}
-			i++;
 		}
 		
-		Iterator<float[]> prevMaxFramesIterator = previousMaxFrames.iterator();
-		while(prevMaxFramesIterator.hasNext()){
-			float[] maxFrame = prevMaxFramesIterator.next();
+		// Run a horizontal max filter
+		for(int i = frameUnderAnalysis - maxFilterWindowSize/2; i < frameUnderAnalysis + maxFilterWindowSize/2;i++){
+			float[] maxFrame = previousMaxMagnitudes.get(i);
 			for(int j = 0 ; j < maxFrame.length ; j++){
 				maxHorizontal[j] = Math.max(maxHorizontal[j], maxFrame[j]);
 			}
 		}
 		
 		
-		float[] frame = previousFrames.getFirst();
-		
-		Iterator<float[]> it = previousPhase.iterator();
-		float[] currentPhase = it.next();
-		float[] previousPhase = null;
-		if(it.hasNext()){
-			previousPhase = it.next();
-		}
-		
+		float[] frameMagnitudes = previousMagintudes.get(frameUnderAnalysis);
+		float[] currentPhase = previousPhase.get(frameUnderAnalysis);
+				
 		float frameMaxVal=0;
-		int timeInFrames = t-maxFilterWindowSize/2;
+		int timeInFrames = analysisFrameIndex-maxFilterWindowSize/2;
 		
-		
-		for(i = 0 ; i<frame.length ; i++){
+		for(int i = 0 ; i<frameMagnitudes.length ; i++){
 			float maxVal = maxHorizontal[i];
-			float minVal = minHorizontal[i];
-			float currentVal = frame[i];
+			float minVal = frameMagnitudes[i];
+			float currentVal = frameMagnitudes[i];
 			frameMaxVal = Math.max(frameMaxVal, maxVal);
 			
 			if(currentVal == maxVal && currentVal !=0 && minVal != 0){
 				//only calculate log values when needed, to compare minimum and max
 				float maxValLog = (float) Math.log1p(maxHorizontal[i]);
 				float minValLog = (float) Math.log1p(minHorizontal[i]);
-				float currentValLog = (float) Math.log1p(frame[i]);
+				float currentValLog = (float) Math.log1p(frameMagnitudes[i]);
 				float framMaxValLog = (float) Math.log1p(frameMaxVal);
 				float ratio = minValLog/maxValLog;
 				
-				if(currentValLog > minEnergyForPoint * framMaxValLog &&
-						ratio > minRatioThreshold  && 
-						ratio < maxRatioThreshold && framesHistory.size()==3){
-					
-					//a good event point also stands out compared to its environment.
-					Iterator<float[]> prevFrameIterator = framesHistory.iterator();
-					
-					float[] compareFrame;
-					float compareValue = frame[Math.max(0, i-1)];
-					compareValue = Math.max(compareValue, frame[Math.min(frame.length -1, i+1)]);
-					for(int j = 0 ; j < 3 ; j++){
-						 compareFrame = prevFrameIterator.next();
-						 compareValue = Math.max(compareValue, compareFrame[Math.max(0, i-1)]);
-						 compareValue = Math.max(compareValue, compareFrame[Math.min(compareFrame.length -1, i+1)]);
-						 compareValue = Math.max(compareValue, compareFrame[i]);
-					}
-					//compareValue contains the max energy of neighboring elements.
-					float neigbourRatio = (float)Math.log1p(compareValue)/currentValLog;
-					
-					if(neigbourRatio < 1.0){
-					
+				if(currentValLog > minEnergyForPoint * framMaxValLog ){
+					//&&
+				//		ratio > minRatioThreshold  && 
+				//		ratio < maxRatioThreshold){
+					float[] previousPhaseData = previousPhase.get(frameUnderAnalysis-1);
 					//now calculate detailed frequency information using fft:
-					float frequencyEstimate = getFrequencyForBin(i, currentPhase,previousPhase);//in Hz
+					float frequencyEstimate = getFrequencyForBin(i, currentPhase,previousPhaseData);//in Hz
 					eventPoints.add(new NFFTEventPoint(timeInFrames, i, frequencyEstimate, currentVal,minVal/maxVal) );
-					}
+				//}
 				}
-			}
-					
+			}	
 		}
 	}
 	
@@ -346,11 +325,9 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 	
 	private void packEventPointsIntoFingerprints(){
 		int maxEventPointDeltaTInSteps = 120; //about two seconds
-		int maxEventPointDeltaFInBins = 19; // 256 is the complete spectrum
+		int maxEventPointDeltaFInBins = 19; // 256 is the complete spectrum		
+		int minTimeDifference = 10;//time steps about 200ms
 		
-		
-		
-		int minTimeDifference = 19;//time steps about 200ms
 		//Pack the event points into fingerprints
 		for(int i = 0; i < eventPoints.size();i++){
 			int t1 = eventPoints.get(i).t;

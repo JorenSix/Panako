@@ -223,6 +223,7 @@ public class NFFTFingerprintBrowser extends JFrame{
 			NFFTAudioFileInfo otherFileInfo = new NFFTAudioFileInfo(new File(audioFile), referenceFile);
 			this.otherFiles.add(otherFileInfo);
 			otherFileInfo.extractInfoFromAudio(fingerprintPanel);
+			
 			final Component featurePanel = createFeaturePanel(otherFileInfo);
 			uiRunnable = new Runnable() {
 				@Override
@@ -232,9 +233,7 @@ public class NFFTFingerprintBrowser extends JFrame{
 					fingerprintPanel.validate();
 				}
 			};
-		}		
-		
-
+		}
 		// run ui stuff on ui thread.
 		SwingUtilities.invokeLater(uiRunnable);
 	}	

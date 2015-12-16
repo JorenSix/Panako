@@ -150,7 +150,7 @@ public class NFFTAudioInfoLayer implements Layer, MouseMotionListener {
 				
 				graphics.drawLine(Math.round(timeInMsT1), Math.round(centsF1), Math.round(timeInMsT2), Math.round(centsF2));
 			}
-		}
+		} 
 	}
 	
 	

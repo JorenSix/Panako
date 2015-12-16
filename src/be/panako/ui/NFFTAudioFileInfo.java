@@ -91,6 +91,8 @@ class NFFTAudioFileInfo implements AudioProcessor{
 						componentToRepaint.repaint();
 					}
 				});
+				if(referenceAudioFileInfo!=null)
+				referenceAudioFileInfo.setMatchingFingerprints(matchingPrints);
 			}			
 			@Override
 			public boolean process(AudioEvent audioEvent) {
@@ -195,6 +197,19 @@ class NFFTAudioFileInfo implements AudioProcessor{
 		for(int i = 0 ; i < magnitudes.length ;i++){
 			if(magnitudes[i]!=0){
 				magnitudes[i] = magnitudes[i]/runningMaxMagnitude;
+			}
+		}
+	}
+
+	public void setMatchingFingerprints(List<NFFTFingerprint> matchingPrints2) {
+		matchingPrints.clear();
+		HashMap<Integer,NFFTFingerprint> prints = new HashMap<Integer, NFFTFingerprint>();
+		for(NFFTFingerprint print : fingerprints){
+			prints.put(print.hash(), print);
+		}
+		for(NFFTFingerprint print : matchingPrints2){
+			if(prints.containsKey(print.hash())){
+				matchingPrints.add(prints.get(print.hash()));
 			}
 		}
 	}

@@ -229,8 +229,7 @@ public enum Key{
 	 * //An event point is only valid if the ratio between min and max is larger than 20%
 	*	//This eliminates points where the minimum is close to silence.
 	 */
-	NFFT_EVENT_POINT_MIN_ENERGY_RATIO_THRESHOLD(0.20f),
-		//
+	NFFT_EVENT_POINT_MIN_ENERGY_RATIO_THRESHOLD(0.15f),
 	/**
 	 * An event point is only valid if the ratio between min and max is smaller than 90%
 	 * This eliminates points in a region of equal energy (no contrast between min and max).
@@ -242,11 +241,22 @@ public enum Key{
 	 * of the maximum energy bin in the frame.
 	 * This eliminates low energy points.
 	 */
-	NFFT_EVENT_POINT_MIN_ENERGY(0.1f),
+	NFFT_EVENT_POINT_MIN_ENERGY(0.05f),
 	/**
 	 * The maximum number of fingerpints per event points (fan-out).
 	 */
 	NFFT_MAX_FINGERPRINTS_PER_EVENT_POINT(2),
+	
+	
+	/**
+	 * The size of the Min filter halve of the MIN/MAX filter for spectral peak detection, it should be odd.
+	 */
+	NFFT_MIN_FILTER_WINDOW_SIZE("7"),
+	
+	/**
+	 * The size of the MAX filter halve of the MIN/MAX filter for spectral peak detection, it should be odd.
+	 */
+	 NFFT_MAX_FILTER_WINDOW_SIZE("15"),
 		
 	/**
 	 * The name of the MapDB database location.
