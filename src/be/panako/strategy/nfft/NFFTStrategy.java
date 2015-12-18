@@ -63,6 +63,7 @@ import be.panako.strategy.nfft.storage.NFFTFingerprintHit;
 import be.panako.strategy.nfft.storage.NFFTFingerprintQueryMatch;
 import be.panako.strategy.nfft.storage.NFFTMapDBStorage;
 import be.panako.strategy.nfft.storage.Storage;
+import be.panako.strategy.nfft.storage.redisson.NFFTRedisStorage;
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
@@ -78,7 +79,7 @@ public class NFFTStrategy extends Strategy {
 	private final Storage storage;
 	
 	public NFFTStrategy(){
-		storage = NFFTMapDBStorage.getInstance();
+		storage = NFFTRedisStorage.getInstance();
 	}
 	
 	@Override
