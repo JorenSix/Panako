@@ -33,38 +33,23 @@
 ****************************************************************************/
 
 
-
 package be.panako.cli;
 
+public class Tap extends Application {
 
-import be.panako.strategy.QueryResult;
-import be.panako.strategy.QueryResultHandler;
-import be.panako.strategy.Strategy;
-import be.tarsos.dsp.util.AudioResourceUtils;
-
-public class Monitor extends Application implements QueryResultHandler {
-	String inputResource;
-	
 	@Override
 	public void run(String... args) {
-		if (args.length > 0){
-			inputResource = AudioResourceUtils.sanitizeResource(args[0]);
-		}else if (args.length == 0){
-			inputResource = Panako.DEFAULT_MICROPHONE;
-		}
-		Strategy strategy = Strategy.getInstance();
-		Panako.printQueryResultHeader();
-		strategy.monitor(inputResource,1, this);
+		
 	}
 
 	@Override
 	public String description() {
-		return "Monitors a stream or a long audio file, the main difference with query is that more than one detection result is expected.";
+		return "Tap to the beat of the incoming audio stream. Taps are printed to the command line." ;
 	}
 
 	@Override
 	public String synopsis() {
-		return "[pls|m3u|file]";
+		return "tap [audio.mp3]";
 	}
 
 	@Override
@@ -75,15 +60,5 @@ public class Monitor extends Application implements QueryResultHandler {
 	@Override
 	public boolean writesToStorage() {
 		return false;
-	}
-
-	@Override
-	public void handleQueryResult(QueryResult r) {
-		Panako.printQueryResult(inputResource, r);
-	}
-
-	@Override
-	public void handleEmptyResult(QueryResult r) {
-		Panako.printQueryResult(inputResource, r);
 	}
 }

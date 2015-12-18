@@ -64,13 +64,13 @@ import be.panako.util.FileUtils;
 import be.panako.util.Key;
 import be.panako.util.StopWatch;
 
-public class NFFTMapDBStorage {
+public class NFFTMapDBStorage implements Storage {
 	private final static Logger LOG = Logger.getLogger(NFFTMapDBStorage.class.getName());
 
 	/**
 	 * The single instance of the storage.
 	 */
-	private static NFFTMapDBStorage instance;
+	private static Storage instance;
 
 	/**
 	 * A mutex for synchronization purposes
@@ -81,7 +81,7 @@ public class NFFTMapDBStorage {
 	 * @return Returns or creates a storage instance. This should be a thread
 	 *         safe operation.
 	 */
-	public synchronized static NFFTMapDBStorage getInstance() {
+	public synchronized static Storage getInstance() {
 		if (instance == null) {
 			synchronized (mutex) {
 				if (instance == null) {
@@ -184,20 +184,33 @@ public class NFFTMapDBStorage {
 		}
 	}
 
+	/* (non-Javadoc)
+	 * @see be.panako.strategy.nfft.storage.Storage#addAudio(int, java.lang.String)
+	 */
+	@Override
 	public void addAudio(int identifier, String description) {
 		audioNameStore.put(identifier, description);
 	}
 
 
+	/* (non-Javadoc)
+	 * @see be.panako.strategy.nfft.storage.Storage#audioObjectAdded(int)
+	 */
+	@Override
 	public void audioObjectAdded(int numberOfSeconds) {
 		secondsCounter.addAndGet(numberOfSeconds);
 		db.commit();
 	}
 
+	/* (non-Javadoc)
+	 * @see be.panako.strategy.nfft.storage.Storage#getNumberOfFingerprints()
+	 */
+	@Override
 	public int getNumberOfFingerprints() {
 		return fftFingerprintStore.size();
 	}
 	
+
 	public void checkNumberOfFingerprints() {
 
     	Iterator<Tuple3<Integer,Integer,Integer>> it = fftFingerprintStore.iterator();
@@ -210,30 +223,54 @@ public class NFFTMapDBStorage {
 	}
 
 
+	/* (non-Javadoc)
+	 * @see be.panako.strategy.nfft.storage.Storage#getAudioDescription(int)
+	 */
+	@Override
 	public String getAudioDescription(int identifier) {
 		return audioNameStore.get(identifier);
 	}
 
+	/* (non-Javadoc)
+	 * @see be.panako.strategy.nfft.storage.Storage#getNumberOfAudioObjects()
+	 */
+	@Override
 	public int getNumberOfAudioObjects() {
 		return audioNameStore.size();
 	}
 
+	/* (non-Javadoc)
+	 * @see be.panako.strategy.nfft.storage.Storage#getNumberOfSeconds()
+	 */
+	@Override
 	public double getNumberOfSeconds() {
 		return secondsCounter.get();
 	}
 
+	/* (non-Javadoc)
+	 * @see be.panako.strategy.nfft.storage.Storage#hasDescription(java.lang.String)
+	 */
+	@Override
 	public boolean hasDescription(String description) {
 		int indentifier = FileUtils.getIdentifier(description);
 		return description.equals(getAudioDescription(indentifier));
 	}
 
+	/* (non-Javadoc)
+	 * @see be.panako.strategy.nfft.storage.Storage#addFingerprint(int, int, int)
+	 */
+	@Override
 	public float addFingerprint(int identifier, int time, int landmarkHash) {
 		fftFingerprintStore.add(Fun.t3(landmarkHash, time, identifier));
 		return 0.0f;
 	}
 	
 	
-public List<NFFTFingerprintQueryMatch> getMatches(List<NFFTFingerprint> fingerprints, int size) {
+	/* (non-Javadoc)
+	 * @see be.panako.strategy.nfft.storage.Storage#getMatches(java.util.List, int)
+	 */
+	@Override
+	public List<NFFTFingerprintQueryMatch> getMatches(List<NFFTFingerprint> fingerprints, int size) {
 	
 		StopWatch w = new StopWatch();
 		Set<NFFTFingerprintHit> allHits = new HashSet<NFFTFingerprintHit>();	
