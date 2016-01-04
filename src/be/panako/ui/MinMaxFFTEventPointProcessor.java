@@ -34,7 +34,7 @@
 
 
 
-package be.panako.strategy.quad;
+package be.panako.ui;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -56,7 +56,6 @@ import javax.swing.JFrame;
 
 import be.panako.strategy.fft.FFTEventPoint;
 import be.panako.strategy.fft.FFTFingerprint;
-import be.panako.ui.FrequencyAxisLayer;
 import be.panako.util.LemireMinMaxFilter;
 import be.panako.util.StopWatch;
 import be.panako.util.TimeUnit;
