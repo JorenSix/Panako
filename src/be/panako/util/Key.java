@@ -117,98 +117,7 @@ public enum Key{
 	/**
 	 * The strategy (algorithm) to use, CTEQ|FFT.
 	 */
-	STRATEGY("NFFT"),
-	
-	/**
-	 * The name of the MapDB database location.
-	 */
-	CTEQ_MAPDB_DATABASE("cteq_panako_db"),
-	/**
-	 * The expected sample rate for the constant q transform.
-	 */
-	CTEQ_SAMPLE_RATE(44100),
-	/**
-	 * Step size in samples for the constant q transform.
-	 */
-	CTEQ_STEP_SIZE(1536),
-	/**
-	 * The minimum pitch, in absolute cents 3383cents is about +-77 Hz.
-	 */
-	CTEQ_MIN_FREQ(3700),
-	/**
-	 * The maximum pitch, in absolute cents. 11533 cents is about +-6392.63 Hz.
-	 */
-	CTEQ_MAX_FREQ(12200),
-	/**
-	 * The number of bins per octave for the constant q transform
-	 */
-	CTEQ_BINS_PER_OCTAVE(36),
-	/**
-	 * The maximum number of event points generated for each second of analyzed
-	 * audio to store in the database (Hz).
-	 */
-	CTEQ_EVENT_POINTS_PER_SECOND_FOR_STORAGE(8),
-	/**
-	 * The number of event points per audio second for queries (Hz)
-	 */
-	CTEQ_EVENT_POINTS_PER_SECOND_FOR_QUERY(8),
-	/**
-	 * The maximum delta between two frequency components in one 
-	 * fingerprint, in cents
-	 */
-	CTEQ_EVENT_POINT_FREQUENCY_DELTA_MAX(1066),
-	/**
-	 * Defines how much fingerprints can be connected to one 
-	 * event point in the spectrum. Increasing this factor improves 
-	 * retrieval rate but limits performance and storage needs.
-	 */
-	CTEQ_EVENT_POINT_BRANCHING_FOR_STORAGE(1),
-	/**
-	 * The branching factor for a query needs to be higher to make sure
-	 * matches are found, but not too high, so no unneeded hash collisions
-	 * are found.
-	 */
-	CTEQ_EVENT_POINT_BRANCHING_FOR_QUERY(4),
-	/**
-	 * The maximum number of hash collisions allowed in storage. It is a
-	 * trade-off between recall and response time. More hash collisions
-	 * means a larger search time, but more hits. Allowing more collisions
-	 * also increases disk space.
-	 */
-	 CTEQ_MAX_HASH_COLLISIONS(1000),
-	 
-	/**
-	 * The minimum number of fingerprints that 
-	 * need to match between a query and the reference audio. 
-	 * The aim is to remove random fingerprint matches.
-	 * If this is set too high, some real matches may be discarded. 
-	 * Set it too low, and the matching algorithm will spend a lot of time 
-	 * checking random matches.  
-	 */
-	CTEQ_MINIMUM_MATCHES_THRESHOLD(4),
-	/**
-	 * The matching algorithm detects a real match if at least this number of fingerprints align. 
-	 * If it is set too low, false positives may appear. If it is set too high some real matches
-	 * may be ignored. 
-	 */
-	CTEQ_MINIMUM_ALIGNED_MATCHES_THRESHOLD(3), 
-	
-	
-	FFT_SAMPLE_RATE(11025),
-	
-	FFT_SIZE(512),
-	
-	FFT_STEP_SIZE(256), 
-	
-	FFT_FINGERPRINTS_PER_SECOND_FOR_STORAGE(10), 
-	
-	/**
-	 * The name of the MapDB database location.
-	 */
-	FFT_MAPDB_DATABASE("fft_panako_db"), 
-	
-	FFT_LANDMARKS_PER_SECOND_FOR_QUERY(30),
-	
+	STRATEGY("NFFT"),	
 	
 	
 	PCH_FILES("dbs/pch"),
@@ -257,6 +166,8 @@ public enum Key{
 	 * The size of the MAX filter halve of the MIN/MAX filter for spectral peak detection, it should be odd.
 	 */
 	 NFFT_MAX_FILTER_WINDOW_SIZE("15"),
+	 
+	 
 		
 	/**
 	 * The name of the MapDB database location.
@@ -332,14 +243,6 @@ public enum Key{
 	 */
 	NCTEQ_MINIMUM_ALIGNED_MATCHES_THRESHOLD(3),
 	
-	
-	/**
-	 * The name of the MapDB database location.
-	 */
-	IFFT_MAPDB_DATABASE("ifft_panako_db"),
-	IFFT_SAMPLE_RATE(8000),	
-	IFFT_SIZE(512),
-	IFFT_STEP_SIZE(256),
 	
 	
 	/**

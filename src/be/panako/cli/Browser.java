@@ -41,7 +41,6 @@ import java.lang.reflect.InvocationTargetException;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import be.panako.ui.IFFTFingerprintBrowser;
 import be.panako.ui.NCteQFingerprintBrowser;
 import be.panako.ui.NFFTFingerprintBrowser;
 import be.panako.util.Config;
@@ -60,8 +59,6 @@ public class Browser extends Application {
 						frame = new NFFTFingerprintBrowser();
 					}else if(Config.get(Key.STRATEGY).equals("NCTEQ")) {
 						frame = new NCteQFingerprintBrowser();
-					}else if(Config.get(Key.STRATEGY).equals("IFFT")) {
-						frame = new IFFTFingerprintBrowser();
 					}
 					frame.pack();
 					frame.setSize(800,550);

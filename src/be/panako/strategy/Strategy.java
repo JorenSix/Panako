@@ -36,7 +36,6 @@
 
 package be.panako.strategy;
 
-import be.panako.strategy.ifft.IFFTStrategy;
 import be.panako.strategy.ncteq.NCteQStrategy;
 import be.panako.strategy.nfft.NFFTStrategy;
 import be.panako.strategy.pch.PitchClassHistogramStrategy;
@@ -90,8 +89,6 @@ public abstract class Strategy {
 				strategy = new NFFTStrategy();
 			}else if ("NCTEQ".equalsIgnoreCase(Config.get(Key.STRATEGY))){
 				strategy = new NCteQStrategy();
-			}else if ("IFFT".equalsIgnoreCase(Config.get(Key.STRATEGY))){
-				strategy = new IFFTStrategy();
 			}
 		}
 		return strategy;

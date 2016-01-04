@@ -159,7 +159,7 @@ public class NCteQFingerprintBrowser extends JFrame{
 				Map<Float, float[]> magnitudesSubMap = magnitudes.subMap(
 						cs.getMin(Axis.X) / 1000.0f, cs.getMax(Axis.X) / 1000.0f);
 				
-				float frameDurationInMS = Config.getInt(Key.CTEQ_STEP_SIZE)/  ((float) Config.getInt(Key.CTEQ_SAMPLE_RATE)) * 1000.f;
+				float frameDurationInMS = Config.getInt(Key.NCTEQ_STEP_SIZE)/  ((float) Config.getInt(Key.NCTEQ_SAMPLE_RATE)) * 1000.f;
 				float frameOffsetInMS = frameDurationInMS/2.0f;
 				
 				for (Map.Entry<Float, float[]> frameEntry : magnitudesSubMap.entrySet()) {
@@ -274,10 +274,10 @@ public class NCteQFingerprintBrowser extends JFrame{
 			w.start();
 			
 			ConstantQ constantQ = createConstantQ();
-			int sampleRate = Config.getInt(Key.CTEQ_SAMPLE_RATE);
+			int sampleRate = Config.getInt(Key.NCTEQ_SAMPLE_RATE);
 			int size = constantQ.getFFTlength();
-			int overlap = size - Config.getInt(Key.CTEQ_STEP_SIZE);
-			final NCteQEventPointProcessor eventPointProcessor = new NCteQEventPointProcessor(constantQ,sampleRate,Config.getInt(Key.CTEQ_STEP_SIZE));
+			int overlap = size - Config.getInt(Key.NCTEQ_STEP_SIZE);
+			final NCteQEventPointProcessor eventPointProcessor = new NCteQEventPointProcessor(constantQ,sampleRate,Config.getInt(Key.NCTEQ_STEP_SIZE));
 			
 			final AudioDispatcher d = AudioDispatcherFactory.fromPipe(audioFile, sampleRate, size , overlap);
 			d.addAudioProcessor(eventPointProcessor);
@@ -360,10 +360,10 @@ public class NCteQFingerprintBrowser extends JFrame{
 			w.start();
 			
 			ConstantQ constantQ = createConstantQ();
-			int sampleRate = Config.getInt(Key.CTEQ_SAMPLE_RATE);
+			int sampleRate = Config.getInt(Key.NCTEQ_SAMPLE_RATE);
 			int size = constantQ.getFFTlength();
-			int overlap = size - Config.getInt(Key.CTEQ_STEP_SIZE);
-			final NCteQEventPointProcessor eventPointProcessor = new NCteQEventPointProcessor(constantQ,sampleRate,Config.getInt(Key.CTEQ_STEP_SIZE));
+			int overlap = size - Config.getInt(Key.NCTEQ_STEP_SIZE);
+			final NCteQEventPointProcessor eventPointProcessor = new NCteQEventPointProcessor(constantQ,sampleRate,Config.getInt(Key.NCTEQ_STEP_SIZE));
 			
 			final AudioDispatcher d = AudioDispatcherFactory.fromPipe(audioFile, sampleRate, size , overlap);
 			d.addAudioProcessor(eventPointProcessor);
@@ -446,10 +446,10 @@ public class NCteQFingerprintBrowser extends JFrame{
 	}	
 	
 	private ConstantQ createConstantQ(){
-		int binsPerOctave = Config.getInt(Key.CTEQ_BINS_PER_OCTAVE);
-		int sampleRate = Config.getInt(Key.CTEQ_SAMPLE_RATE);
-		int minFreqInCents = Config.getInt(Key.CTEQ_MIN_FREQ);
-		int maxFreqInCents = Config.getInt(Key.CTEQ_MAX_FREQ);
+		int binsPerOctave = Config.getInt(Key.NCTEQ_BINS_PER_OCTAVE);
+		int sampleRate = Config.getInt(Key.NCTEQ_SAMPLE_RATE);
+		int minFreqInCents = Config.getInt(Key.NCTEQ_MIN_FREQ);
+		int maxFreqInCents = Config.getInt(Key.NCTEQ_MAX_FREQ);
 		
 		float minFreqInHerz = (float)  PitchUnit.HERTZ.convert(minFreqInCents,PitchUnit.ABSOLUTE_CENTS);
 		float maxFreqInHertz = (float) PitchUnit.HERTZ.convert(maxFreqInCents,PitchUnit.ABSOLUTE_CENTS);
