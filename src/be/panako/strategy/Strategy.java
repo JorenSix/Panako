@@ -37,7 +37,6 @@
 package be.panako.strategy;
 
 import be.panako.strategy.cteq.CteQStrategy;
-import be.panako.strategy.fft.FFTStrategy;
 import be.panako.strategy.ifft.IFFTStrategy;
 import be.panako.strategy.ncteq.NCteQStrategy;
 import be.panako.strategy.nfft.NFFTStrategy;
@@ -88,8 +87,6 @@ public abstract class Strategy {
 		if(strategy == null){
 			if("CTEQ".equalsIgnoreCase(Config.get(Key.STRATEGY))){
 				strategy = new CteQStrategy();
-			}else if ("FFT".equalsIgnoreCase(Config.get(Key.STRATEGY))){
-				strategy = new FFTStrategy();
 			}else if ("PCH".equalsIgnoreCase(Config.get(Key.STRATEGY))){
 				strategy = new PitchClassHistogramStrategy();
 			}else if ("NFFT".equalsIgnoreCase(Config.get(Key.STRATEGY))){
