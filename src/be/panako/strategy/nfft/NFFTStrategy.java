@@ -63,7 +63,6 @@ import be.panako.strategy.nfft.storage.NFFTFingerprintHit;
 import be.panako.strategy.nfft.storage.NFFTFingerprintQueryMatch;
 import be.panako.strategy.nfft.storage.NFFTMapDBStorage;
 import be.panako.strategy.nfft.storage.Storage;
-import be.panako.strategy.nfft.storage.redisson.NFFTRedisStorage;
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
@@ -271,6 +270,8 @@ public class NFFTStrategy extends Strategy {
 			fingerprintJSON.put("f2", fingerprint.f2);
 			fingerprintJSON.put("t1", fingerprint.t1);
 			fingerprintJSON.put("t2", fingerprint.t2);
+			fingerprintJSON.put("f1e", fingerprint.f1Estimate);
+			fingerprintJSON.put("f2e", fingerprint.f2Estimate);
 			jsonArray.put(fingerprintJSON);
 		
 		}
@@ -286,8 +287,9 @@ public class NFFTStrategy extends Strategy {
 			int f2 = obj.getInt("f2");
 			int t1 = obj.getInt("t1");
 			int t2 = obj.getInt("t2");
-			//Breaking change: frequency estimate!
-			fingerprintArray.add(new NFFTFingerprint(t1, f1,0.0f, t2, f2,0.0f));
+			float f1e = (float) obj.getDouble("f1e");
+			float f2e = (float) obj.getDouble("f2e");
+			fingerprintArray.add(new NFFTFingerprint(t1, f1,f1e, t2, f2,f2e));
 		}
 		return fingerprintArray;
 	}

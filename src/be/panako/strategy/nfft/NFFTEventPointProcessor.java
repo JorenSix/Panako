@@ -293,7 +293,7 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 		float[] binStartingPointsInCents = new float[size];
 		float[] binHeightsInCents = new float[size];
 		for (int i = 1; i < size; i++) {
-			binStartingPointsInCents[i] = (float) PitchConverter.hertzToAbsoluteCent(fft.binToHz(i,8000));
+			binStartingPointsInCents[i] = (float) PitchConverter.hertzToAbsoluteCent(fft.binToHz(i,sampleRate));
 			binHeightsInCents[i] = binStartingPointsInCents[i] - binStartingPointsInCents[i-1];
 		}
 		
@@ -360,47 +360,65 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 	
 
 	private void packEventPointsIntoFingerprints(){
-		int maxEventPointDeltaTInSteps = 120; //about two seconds
-		int maxEventPointDeltaFInBins = 19; // 256 is the complete spectrum		
-		int minTimeDifference = 5;//time steps about 100ms
-		Collections.shuffle(eventPoints);
+		int size = Config.getInt(Key.NFFT_SIZE);
+		FFT fft = new FFT(size);
+		float[] binStartingPointsInCents = new float[size];
+		float[] binHeightsInCents = new float[size];
+		for (int i = 1; i < size; i++) {
+			binStartingPointsInCents[i] = (float) PitchConverter.hertzToAbsoluteCent(fft.binToHz(i,sampleRate));
+			binHeightsInCents[i] = binStartingPointsInCents[i] - binStartingPointsInCents[i-1];
+		}
+		
+		float frameDurationInMS = Config.getInt(Key.NFFT_STEP_SIZE)/  ((float) Config.getInt(Key.NFFT_SAMPLE_RATE)) * 1000.f;
+		
+		int maxEventPointDeltaTInMs = 2000; //two seconds
+		int maxEventPointDeltaFInCents = 1800; //1.5 octave		
+		int minEventPointDeltaTInMs = 60;//milliseconds
+		//Collections.shuffle(eventPoints);
 		
 		TreeMap<Float,NFFTFingerprint> printsOrderedByEnergy = new TreeMap<Float,NFFTFingerprint>();
 					
+		//int countPrint = 0;
 		//Pack the event points into fingerprints
 		for(int i = 0; i < eventPoints.size();i++){
 			int t1 = eventPoints.get(i).t;
-			int f1 = eventPoints.get(i).f;
+			float f1 = binStartingPointsInCents[eventPoints.get(i).f];
 			//int maxtFirstLevel = t1 + maxEventPointDeltaTInSteps;
-			int maxfFirstLevel = f1 + maxEventPointDeltaFInBins;
-			int minfFirstLevel = f1 - maxEventPointDeltaFInBins;
+			float maxfFirstLevel = f1 + maxEventPointDeltaFInCents;
+			float minfFirstLevel = f1 - maxEventPointDeltaFInCents;
 				
 			for(int j = 0; j < eventPoints.size() ;j++){
 				int t2 = eventPoints.get(j).t;
-				int f2 = eventPoints.get(j).f;
-				if(t1 < t2 && f1 != f2 &&  Math.abs(t2-t1)> minTimeDifference &&  Math.abs(t2-t1)< maxEventPointDeltaTInSteps && f2 > minfFirstLevel && f2 < maxfFirstLevel){
+				float f2 = binStartingPointsInCents[eventPoints.get(j).f];
+				if(t1 > t2 && f1 != f2 &&  Math.abs(t2-t1) * frameDurationInMS > minEventPointDeltaTInMs &&  Math.abs(t2-t1) * frameDurationInMS < maxEventPointDeltaTInMs && f2 > minfFirstLevel && f2 < maxfFirstLevel){
 					float energy = eventPoints.get(i).contrast + eventPoints.get(j).contrast;
 					
 					NFFTFingerprint fingerprint;
 					fingerprint = new NFFTFingerprint(eventPoints.get(i),eventPoints.get(j));
 					fingerprint.energy = energy;
 					printsOrderedByEnergy.put(energy,fingerprint);
+					//countPrint++;
 				}
 			}
 		}
 		
+		//System.out.println(countPrint + " prints created, stored : " + printsOrderedByEnergy.size());
+		//countPrint=0;
+		int maxPrintsPerPoint = Config.getInt(Key.NFFT_MAX_FINGERPRINTS_PER_EVENT_POINT);
 		HashMap<NFFTEventPoint,Integer> printsPerPoint = new HashMap<NFFTEventPoint, Integer>();
 		for(int i = 0; i < eventPoints.size();i++){
 			printsPerPoint.put(eventPoints.get(i), 0);
 		}
 		for(Float key: printsOrderedByEnergy.descendingKeySet()){
 			NFFTFingerprint print = printsOrderedByEnergy.get(key);
-			printsPerPoint.put(print.p1,printsPerPoint.get(print.p1)+1);
-			printsPerPoint.put(print.p2,printsPerPoint.get(print.p2)+1);
-			if(printsPerPoint.get(print.p1)<=5 && printsPerPoint.get(print.p2)<=5){
+			if(printsPerPoint.get(print.p1)<=maxPrintsPerPoint && printsPerPoint.get(print.p2)<=maxPrintsPerPoint){
+				printsPerPoint.put(print.p1,printsPerPoint.get(print.p1)+1);
+				printsPerPoint.put(print.p2,printsPerPoint.get(print.p2)+1);
 				fingerprints.add(print);
+				//countPrint++;
 			}
 		}
+		//System.out.println(countPrint + " prints created");
 	}
 
 	public List<NFFTEventPoint> getEventPoints() {

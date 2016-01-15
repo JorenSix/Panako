@@ -48,12 +48,16 @@ import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import be.panako.ui.syncsink.FileDrop;
+import be.panako.util.Config;
+import be.panako.util.Key;
 import be.tarsos.dsp.ui.AxisUnit;
 import be.tarsos.dsp.ui.CoordinateSystem;
 import be.tarsos.dsp.ui.LinkedPanel;
@@ -134,11 +138,64 @@ public class NFFTFingerprintBrowser extends JFrame{
 			}
 		});
 		
+		
+		int maxPrintsPerPoint = Config.getInt(Key.NFFT_MAX_FINGERPRINTS_PER_EVENT_POINT);
+		final JLabel maxPrintsPerPointLabel = new JLabel("Max prints per point " + maxPrintsPerPoint);
+		final JSlider maxPrintsPerPointSlider = new JSlider(1,20);
+		maxPrintsPerPointSlider.setValue(maxPrintsPerPoint);
+		maxPrintsPerPointSlider.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				int value = maxPrintsPerPointSlider.getValue();
+				if(!maxPrintsPerPointSlider.getValueIsAdjusting()){
+					Config.set(Key.NFFT_MAX_FINGERPRINTS_PER_EVENT_POINT, ""+value);
+					recalculate();
+				}	
+				maxPrintsPerPointLabel.setText("Max prints per point " + value);
+			}
+		});
+		
+
+		int minEventPointDistanceValue = Config.getInt(Key.NFFT_EVENT_POINT_MIN_DISTANCE);
+		final JLabel minEventPointDistanceLabel = new JLabel("Min distance " + minEventPointDistanceValue);
+		final JSlider minEventPointDistance = new JSlider(20, 2000);
+		minEventPointDistance.setValue(minEventPointDistanceValue);
+		minEventPointDistance.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				int value = minEventPointDistance.getValue();
+				if(!minEventPointDistance.getValueIsAdjusting()){
+					Config.set(Key.NFFT_EVENT_POINT_MIN_DISTANCE, ""+value);
+					recalculate();
+				}	
+				minEventPointDistanceLabel.setText("Min distance " + value);
+			}
+		});
+		
+		
+		
 		buttonPanel.add(clearButton);
+		buttonPanel.add(maxPrintsPerPointLabel);
+		buttonPanel.add(maxPrintsPerPointSlider);
+		buttonPanel.add(minEventPointDistanceLabel);
+		buttonPanel.add(minEventPointDistance);
 		buttonPanel.add(drawFFTCheckBox);
 		return buttonPanel;
 	}
 	
+	protected void recalculate() {
+		File ref = referenceFile.getFile();
+		ArrayList<File> otherFilesLocationsCopy = new ArrayList<File>();
+		for(NFFTAudioFileInfo info : otherFiles){
+			otherFilesLocationsCopy.add(info.getFile());
+		}
+		clear();
+		addAudio(ref.getAbsolutePath());
+		for(File file : otherFilesLocationsCopy){
+			addAudio(file.getAbsolutePath());
+		}
+	}
+
 	private void clear() {
 		otherFiles.clear();
 		referenceFile = null;

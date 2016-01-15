@@ -49,11 +49,14 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import be.panako.ui.syncsink.FileDrop;
+import be.panako.util.Config;
+import be.panako.util.Key;
 import be.tarsos.dsp.ui.AxisUnit;
 import be.tarsos.dsp.ui.CoordinateSystem;
 import be.tarsos.dsp.ui.LinkedPanel;
@@ -137,7 +140,11 @@ public class NFFTEventPointBrowser extends JFrame{
 			}
 		});
 		
+		final JSlider minEventPointDistance = new JSlider(20, 2000);
+		minEventPointDistance.setValue(Config.getInt(Key.NFFT_EVENT_POINT_MIN_DISTANCE));
+		
 		buttonPanel.add(clearButton);
+		buttonPanel.add(minEventPointDistance);
 		buttonPanel.add(drawFFTCheckBox);
 		return buttonPanel;
 	}

@@ -180,6 +180,10 @@ class NFFTAudioFileInfo implements AudioProcessor{
 		return timeOffset;
 	}
 	
+	public File getFile(){
+		return audioFile;
+	}
+	
 	private float max(float[] magnitudes){
 		float max = 0;
 		for(int i = 0 ; i < magnitudes.length ;i++){

@@ -8,7 +8,6 @@ import java.awt.event.MouseMotionListener;
 import java.util.Map;
 
 import be.panako.strategy.nfft.NFFTEventPoint;
-import be.panako.strategy.nfft.NFFTFingerprint;
 import be.panako.util.Config;
 import be.panako.util.Key;
 import be.tarsos.dsp.ui.Axis;

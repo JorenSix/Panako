@@ -37,8 +37,7 @@
 
 package be.panako.strategy.nfft;
 
-import be.panako.util.Config;
-import be.panako.util.Key;
+
 import be.tarsos.dsp.util.PitchConverter;
 
 
@@ -65,8 +64,9 @@ public class NFFTFingerprint {
 	
 	private boolean hashWithFrequencyEstimate = true;
 	
-	private final double nyquistFrequencyInCents = PitchConverter.hertzToAbsoluteCent(Config.getInt(Key.NFFT_SAMPLE_RATE)/2.0);
+	/*private final double nyquistFrequencyInCents = PitchConverter.hertzToAbsoluteCent(Config.getInt(Key.NFFT_SAMPLE_RATE)/2.0);
 	private final double minimumFrequencyInCents = PitchConverter.hertzToAbsoluteCent(20);
+	*/
 	
 	public double energy;
 
