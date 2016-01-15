@@ -129,28 +129,22 @@ public enum Key{
 	/**
 	 * The name of the MapDB database location.
 	 */
-	NFFT_MAPDB_DATABASE("nfft_panako_db"),
+	NFFT_MAPDB_DATABASE("/opt/panako/dbs/nfft_panako_db"),
 	NFFT_SAMPLE_RATE(8000),	
 	NFFT_SIZE(512),
 	NFFT_STEP_SIZE(256),
 	
 	/**
-	 * //An event point is only valid if the ratio between min and max is larger than 20%
-	*	//This eliminates points where the minimum is close to silence.
+	 * Allows only  a limited amount of event points each frame.
+	 * Especially useful for percussive onsets.
 	 */
-	NFFT_EVENT_POINT_MIN_ENERGY_RATIO_THRESHOLD(0.15f),
-	/**
-	 * An event point is only valid if the ratio between min and max is smaller than 90%
-	 * This eliminates points in a region of equal energy (no contrast between min and max).
-	 */
-	NFFT_EVENT_POINT_MAX_ENERGY_RATIO_THRESHOLD(0.90f),
+	NFFT_EVENT_POINTS_MAX_PER_FFT_FRAME(3),
 
 	/**
-	 * An event point is only valid if it contains at least 10% 
-	 * of the maximum energy bin in the frame.
-	 * This eliminates low energy points.
+	 * Minium euclidean distance between event points. 
+	 * The value is expressed in milliseconds cents
 	 */
-	NFFT_EVENT_POINT_MIN_ENERGY(0.05f),
+	NFFT_EVENT_POINT_MIN_DISTANCE(600),
 	/**
 	 * The maximum number of fingerpints per event points (fan-out).
 	 */
@@ -158,14 +152,15 @@ public enum Key{
 	
 	
 	/**
-	 * The size of the Min filter halve of the MIN/MAX filter for spectral peak detection, it should be odd.
+	 * The size of the Min filter halve of the MIN/MAX filter for 
+	 * spectral peak detection, it should be odd.
 	 */
-	NFFT_MIN_FILTER_WINDOW_SIZE("7"),
-	
+	NFFT_MIN_FILTER_WINDOW_SIZE(7),
 	/**
-	 * The size of the MAX filter halve of the MIN/MAX filter for spectral peak detection, it should be odd.
+	 * The size of the MAX filter halve of the MIN/MAX filter for 
+	 * spectral peak detection, it should be odd.
 	 */
-	 NFFT_MAX_FILTER_WINDOW_SIZE("15"),
+	 NFFT_MAX_FILTER_WINDOW_SIZE(15),
 	 
 	 
 		

@@ -19,7 +19,7 @@ import be.tarsos.dsp.ui.layers.LayerUtilities;
 import be.tarsos.dsp.util.PitchConverter;
 import be.tarsos.dsp.util.fft.FFT;
 
-public class NFFTAudioInfoLayer implements Layer, MouseMotionListener {
+public class NFFTAudioEventPointLayer implements Layer, MouseMotionListener {
 	
 	final float[] binStartingPointsInCents;
 	final float[] binHeightsInCents;
@@ -30,8 +30,9 @@ public class NFFTAudioInfoLayer implements Layer, MouseMotionListener {
 	private Graphics2D graphics;
 	
 	private NFFTEventPoint selectedEventPoint=null;
+	private NFFTEventPoint prevSelectedEventPoint;
 	
-	public NFFTAudioInfoLayer(CoordinateSystem cs,NFFTAudioFileInfo fileInfo) {
+	public NFFTAudioEventPointLayer(CoordinateSystem cs,NFFTAudioFileInfo fileInfo) {
 		int size = Config.getInt(Key.NFFT_SIZE);
 		FFT fft = new FFT(size);
 		binStartingPointsInCents = new float[size];
@@ -48,7 +49,7 @@ public class NFFTAudioInfoLayer implements Layer, MouseMotionListener {
 	public void draw(Graphics2D graphics) {
 		this.graphics = graphics;
 		float frameDurationInMS = Config.getInt(Key.NFFT_STEP_SIZE)/  ((float) Config.getInt(Key.NFFT_SAMPLE_RATE)) * 1000.f;
-		float frameOffsetInMS = frameDurationInMS/2.0f ;
+		float frameOffsetInMS = frameDurationInMS/2.0f;
 		
 		if(drawFFT){
 			Map<Float, float[]> magnitudesSubMap = fileInfo.magnitudes.subMap(cs.getMin(Axis.X) / 1000.0f - (float) fileInfo.getTimeOffset(), cs.getMax(Axis.X) / 1000.0f - (float) fileInfo.getTimeOffset());
@@ -114,43 +115,7 @@ public class NFFTAudioInfoLayer implements Layer, MouseMotionListener {
 				
 				graphics.drawOval(Math.round(timeInMs-timeDiameter/2.0f) , Math.round(cents - frequencyDiameter/2.0f), Math.round(timeDiameter), Math.round(frequencyDiameter));
 			}
-		}	
-		
-		for(NFFTFingerprint print : fileInfo.fingerprints){
-			int timeInMsT1 = (int) (print.t1 * frameDurationInMS + frameOffsetInMS + fileInfo.getTimeOffset() * 1000);
-			int timeInMsT2 = (int) (print.t2 * frameDurationInMS + frameOffsetInMS + fileInfo.getTimeOffset() * 1000);
-			if(NFFTAudioFileInfo.isFingerprintSelected(print)){
-				graphics.setColor(Color.RED);
-			}else{
-				graphics.setColor(Color.ORANGE);
-			}
-			
-			if(timeInMsT1 > cs.getMin(Axis.X) && timeInMsT1 <  cs.getMax(Axis.X)){
-				float centsF1 = binStartingPointsInCents[print.f1] + binHeightsInCents[print.f1]/2.0f;
-				
-				float centsF2 = binStartingPointsInCents[print.f2] + binHeightsInCents[print.f2]/2.0f;
-				
-				graphics.drawLine(Math.round(timeInMsT1), Math.round(centsF1), Math.round(timeInMsT2), Math.round(centsF2));
-			}
-		}	
-		
-		for(NFFTFingerprint print : fileInfo.matchingPrints){
-			int timeInMsT1 = (int) (print.t1 * frameDurationInMS + frameOffsetInMS + fileInfo.getTimeOffset() * 1000);
-			int timeInMsT2 = (int) (print.t2 * frameDurationInMS + frameOffsetInMS + fileInfo.getTimeOffset() * 1000);
-			
-			if(NFFTAudioFileInfo.isFingerprintSelected(print)){
-				graphics.setColor(Color.RED);
-			}else{
-				graphics.setColor(Color.GREEN);
-			}
-			if(timeInMsT1 > cs.getMin(Axis.X) && timeInMsT1 <  cs.getMax(Axis.X)){
-				float centsF1 = binStartingPointsInCents[print.f1] + binHeightsInCents[print.f1]/2.0f;
-				
-				float centsF2 = binStartingPointsInCents[print.f2] + binHeightsInCents[print.f2]/2.0f;
-				
-				graphics.drawLine(Math.round(timeInMsT1), Math.round(centsF1), Math.round(timeInMsT2), Math.round(centsF2));
-			}
-		} 
+		}
 	}
 	
 	
@@ -195,14 +160,9 @@ public class NFFTAudioInfoLayer implements Layer, MouseMotionListener {
 					selectedEventPoint = eventPoint;
 				}	
 			}
-			
-			if(selectedEventPoint!=null){
-				NFFTAudioFileInfo.clearSelectedFingerprints();
-				for(NFFTFingerprint print: fileInfo.fingerprints){
-					if((print.t1==selectedEventPoint.t && print.f1==selectedEventPoint.f) || (print.t2==selectedEventPoint.t && print.f2==selectedEventPoint.f)){
-						NFFTAudioFileInfo.addFingerprintToSelection(print);
-					}
-				}
+			if(selectedEventPoint!=null && selectedEventPoint!=prevSelectedEventPoint ){
+				prevSelectedEventPoint = selectedEventPoint;
+				System.out.println(String.format("Selected (t,f,fe,c): (%d,%d,%02fHz,%02f)",selectedEventPoint.t,selectedEventPoint.f,selectedEventPoint.frequencyEstimate,selectedEventPoint.contrast));
 				e.getComponent().getParent().invalidate();
 				for(Component c : e.getComponent().getParent().getComponents()){
 					if(c instanceof LinkedPanel){
@@ -211,7 +171,6 @@ public class NFFTAudioInfoLayer implements Layer, MouseMotionListener {
 				}
 			}
 		}
-		
 	}
 
 	private float frequencyIndexToCents(int f) {

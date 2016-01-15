@@ -38,10 +38,11 @@ package be.panako.strategy.nfft;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import be.panako.util.Config;
@@ -49,6 +50,7 @@ import be.panako.util.Key;
 import be.panako.util.LemireMinMaxFilter;
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
+import be.tarsos.dsp.util.PitchConverter;
 import be.tarsos.dsp.util.fft.FFT;
 import be.tarsos.dsp.util.fft.HammingWindow;
 
@@ -110,18 +112,6 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 	
 	private final float[] maxHorizontal;
 	private final float[] minHorizontal;
-	
-
-	//An event point is only valid if the ratio between min and max is larger than 20%
-	//This eliminates points where the minimum is close to silence.
-	private final float minRatioThreshold = Config.getFloat(Key.NFFT_EVENT_POINT_MIN_ENERGY_RATIO_THRESHOLD);
-	//An event point is only valid if the ratio between min and max is smaller than 90%
-	//This eliminates points in a region of equal energy (no contrast between min and max).
-	private final float maxRatioThreshold =  Config.getFloat(Key.NFFT_EVENT_POINT_MAX_ENERGY_RATIO_THRESHOLD);
-	//An event point is only valid if it contains at least 10% 
-	//of the maximum energy bin in the frame.
-	//This eliminates low energy points.
-	private final float minEnergyForPoint = Config.getFloat(Key.NFFT_EVENT_POINT_MIN_ENERGY);
 	
 	int maxFingerprintsPerEventPoint = Config.getInt(Key.NFFT_MAX_FINGERPRINTS_PER_EVENT_POINT);
 	
@@ -222,7 +212,7 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 	
 
 	private void horizontalFilter() {
-		Arrays.fill(maxHorizontal, -10000);
+		Arrays.fill(maxHorizontal, -1000000);
 		Arrays.fill(minHorizontal, 10000000);
 		
 		// For the horizontal min and max filter we need a history of 
@@ -248,38 +238,85 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 			}
 		}
 		
-		
 		float[] frameMagnitudes = previousMagintudes.get(frameUnderAnalysis);
 		float[] currentPhase = previousPhase.get(frameUnderAnalysis);
 				
-		float frameMaxVal=0;
-		int timeInFrames = analysisFrameIndex-maxFilterWindowSize/2;
+				
 		
 		for(int i = 0 ; i<frameMagnitudes.length ; i++){
 			float maxVal = maxHorizontal[i];
-			float minVal = frameMagnitudes[i];
+			float minVal = minHorizontal[i];
 			float currentVal = frameMagnitudes[i];
-			frameMaxVal = Math.max(frameMaxVal, maxVal);
 			
-			if(currentVal == maxVal && currentVal !=0 && minVal != 0){
-				//only calculate log values when needed, to compare minimum and max
-				float maxValLog = (float) Math.log1p(maxHorizontal[i]);
-				float minValLog = (float) Math.log1p(minHorizontal[i]);
-				float currentValLog = (float) Math.log1p(frameMagnitudes[i]);
-				float framMaxValLog = (float) Math.log1p(frameMaxVal);
-				float ratio = minValLog/maxValLog;
-				
-				if(currentValLog > minEnergyForPoint * framMaxValLog ){
-					//&&
-				//		ratio > minRatioThreshold  && 
-				//		ratio < maxRatioThreshold){
-					float[] previousPhaseData = previousPhase.get(frameUnderAnalysis-1);
-					//now calculate detailed frequency information using fft:
-					float frequencyEstimate = getFrequencyForBin(i, currentPhase,previousPhaseData);//in Hz
-					eventPoints.add(new NFFTEventPoint(timeInFrames, i, frequencyEstimate, currentVal,minVal/maxVal) );
-				//}
+			if(currentVal == maxVal && currentVal !=0 && minVal != 0 ){
+				float[] previousPhaseData = previousPhase.get(frameUnderAnalysis-1);
+				float frequencyEstimate = getFrequencyForBin(i, currentPhase,previousPhaseData);//in Hz
+				eventPoints.add(new NFFTEventPoint(frameUnderAnalysis+longestFilterWindowSize, i, frequencyEstimate, currentVal,currentVal) );
+				filterEventPoints();
+			}
+		}
+	}
+	
+	private void filterEventPoints(){
+		//do not 
+		
+		int history = 25;
+		
+		//filter excessive amount of event points in one frame 
+		int maxEventPointsPerFrame = Config.getInt(Key.NFFT_EVENT_POINTS_MAX_PER_FFT_FRAME);
+		HashMap<Integer,ArrayList<NFFTEventPoint>> counter =  new HashMap<Integer,ArrayList<NFFTEventPoint>>();
+		for(int i = Math.max(eventPoints.size()-history, 0) ; i< eventPoints.size();i++){
+			NFFTEventPoint ep  = eventPoints.get(i);
+			if(!counter.containsKey(ep.t)){
+				counter.put(ep.t, new ArrayList<NFFTEventPoint>());
+			}
+			counter.get(ep.t).add(ep);
+		}
+		for(Integer frameIndex : counter.keySet()){
+			ArrayList<NFFTEventPoint> points = counter.get(frameIndex);
+			if(points.size()>maxEventPointsPerFrame){
+				Collections.sort(points,new Comparator<NFFTEventPoint>() {
+					@Override
+					public int compare(NFFTEventPoint o1, NFFTEventPoint o2) {
+						return Double.compare(o2.contrast, o1.contrast);
+					}
+				});
+				for(int i = maxEventPointsPerFrame ; i < points.size() ; i++ ){
+					eventPoints.remove(points.get(i));
+					//System.out.println("Removed event point at t " + points.get(i).t + " c " +  points.get(i).contrast);
 				}
-			}	
+			}
+		}
+		
+		int size = Config.getInt(Key.NFFT_SIZE);
+		FFT fft = new FFT(size);
+		float[] binStartingPointsInCents = new float[size];
+		float[] binHeightsInCents = new float[size];
+		for (int i = 1; i < size; i++) {
+			binStartingPointsInCents[i] = (float) PitchConverter.hertzToAbsoluteCent(fft.binToHz(i,8000));
+			binHeightsInCents[i] = binStartingPointsInCents[i] - binStartingPointsInCents[i-1];
+		}
+		
+		
+		//filter points that are too close
+		double minDistance = Config.getFloat(Key.NFFT_EVENT_POINT_MIN_DISTANCE);
+		float frameDurationInMS = Config.getInt(Key.NFFT_STEP_SIZE)/  ((float) Config.getInt(Key.NFFT_SAMPLE_RATE)) * 1000.f;
+		List<NFFTEventPoint> pointsToDelete = new ArrayList<NFFTEventPoint>();
+		for(int i = Math.max(eventPoints.size()-history, 0) ; i< eventPoints.size();i++){
+			
+			NFFTEventPoint first  = eventPoints.get(i);
+			for(int j  = i+1  ; j< eventPoints.size();j++){
+				NFFTEventPoint other  = eventPoints.get(j);
+				int diffInMS = (int) (first.t * frameDurationInMS  - other.t * frameDurationInMS);
+				int diffInCents = (int) ( (binStartingPointsInCents[first.f] + binHeightsInCents[first.f]/2.0f) - (binStartingPointsInCents[other.f] + binHeightsInCents[other.f]/2.0f));
+				int distance = (int) Math.sqrt(diffInMS * diffInMS  +  diffInCents *  diffInCents);
+				if(distance < minDistance){
+					pointsToDelete.add(first.contrast > other.contrast ? other : first);
+				}
+			}
+		}
+		for(NFFTEventPoint pointToDelete : pointsToDelete){
+			eventPoints.remove(pointToDelete);
 		}
 	}
 	
@@ -322,42 +359,46 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 	}
 	
 
-	
 	private void packEventPointsIntoFingerprints(){
 		int maxEventPointDeltaTInSteps = 120; //about two seconds
 		int maxEventPointDeltaFInBins = 19; // 256 is the complete spectrum		
-		int minTimeDifference = 10;//time steps about 200ms
+		int minTimeDifference = 5;//time steps about 100ms
+		Collections.shuffle(eventPoints);
 		
+		TreeMap<Float,NFFTFingerprint> printsOrderedByEnergy = new TreeMap<Float,NFFTFingerprint>();
+					
 		//Pack the event points into fingerprints
 		for(int i = 0; i < eventPoints.size();i++){
 			int t1 = eventPoints.get(i).t;
 			int f1 = eventPoints.get(i).f;
-			int maxtFirstLevel = t1 + maxEventPointDeltaTInSteps;
+			//int maxtFirstLevel = t1 + maxEventPointDeltaTInSteps;
 			int maxfFirstLevel = f1 + maxEventPointDeltaFInBins;
 			int minfFirstLevel = f1 - maxEventPointDeltaFInBins;
-			
-			//A list of fingerprints Per Event Point, ordered by energy of the combined event points
-			TreeMap<Float,NFFTFingerprint> fingerprintsPerEventPoint = new TreeMap<Float,NFFTFingerprint>();
-			
-			for(int j = i + 1; j < eventPoints.size()  && eventPoints.get(j).t < maxtFirstLevel;j++){
+				
+			for(int j = 0; j < eventPoints.size() ;j++){
 				int t2 = eventPoints.get(j).t;
 				int f2 = eventPoints.get(j).f;
-				if(t1 != t2 && f1 != f2 && t2 > t1 + minTimeDifference && f2 > minfFirstLevel && f2 < maxfFirstLevel){
+				if(t1 < t2 && f1 != f2 &&  Math.abs(t2-t1)> minTimeDifference &&  Math.abs(t2-t1)< maxEventPointDeltaTInSteps && f2 > minfFirstLevel && f2 < maxfFirstLevel){
 					float energy = eventPoints.get(i).contrast + eventPoints.get(j).contrast;
-					NFFTFingerprint fingerprint = new NFFTFingerprint(t1, f1, t2, f2);
+					
+					NFFTFingerprint fingerprint;
+					fingerprint = new NFFTFingerprint(eventPoints.get(i),eventPoints.get(j));
 					fingerprint.energy = energy;
-					fingerprintsPerEventPoint.put(energy,fingerprint);					
+					printsOrderedByEnergy.put(energy,fingerprint);
 				}
 			}
-
-			if(fingerprintsPerEventPoint.size() >= maxFingerprintsPerEventPoint ){
-				for(int s = 0 ; s < maxFingerprintsPerEventPoint ; s++){
-					Entry<Float, NFFTFingerprint> e = fingerprintsPerEventPoint.lastEntry();
-					fingerprints.add(e.getValue());
-					fingerprintsPerEventPoint.remove(e.getKey());
-				}
-			}else{
-				fingerprints.addAll(fingerprintsPerEventPoint.values());	
+		}
+		
+		HashMap<NFFTEventPoint,Integer> printsPerPoint = new HashMap<NFFTEventPoint, Integer>();
+		for(int i = 0; i < eventPoints.size();i++){
+			printsPerPoint.put(eventPoints.get(i), 0);
+		}
+		for(Float key: printsOrderedByEnergy.descendingKeySet()){
+			NFFTFingerprint print = printsOrderedByEnergy.get(key);
+			printsPerPoint.put(print.p1,printsPerPoint.get(print.p1)+1);
+			printsPerPoint.put(print.p2,printsPerPoint.get(print.p2)+1);
+			if(printsPerPoint.get(print.p1)<=5 && printsPerPoint.get(print.p2)<=5){
+				fingerprints.add(print);
 			}
 		}
 	}

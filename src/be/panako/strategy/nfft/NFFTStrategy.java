@@ -79,7 +79,7 @@ public class NFFTStrategy extends Strategy {
 	private final Storage storage;
 	
 	public NFFTStrategy(){
-		storage = NFFTRedisStorage.getInstance();
+		storage = NFFTMapDBStorage.getInstance();
 	}
 	
 	@Override
@@ -115,14 +115,26 @@ public class NFFTStrategy extends Strategy {
 	public String getAudioDescription(int identifier){
 		return storage.getAudioDescription(identifier);
 	}
+	
+	public List<NFFTFingerprint> extractFingerprintsFromQuery(String query){
+		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
+		int size = Config.getInt(Key.NFFT_SIZE);
+		int overlap = size - Config.getInt(Key.NFFT_STEP_SIZE);
+		AudioDispatcher d = AudioDispatcherFactory.fromPipe(query, samplerate, size, overlap);
+		final NFFTEventPointProcessor minMaxProcessor = new NFFTEventPointProcessor(size,overlap,samplerate);
+		d.addAudioProcessor(minMaxProcessor);
+		d.run();
+		List<NFFTFingerprint> fingerprints = new ArrayList<NFFTFingerprint>(minMaxProcessor.getFingerprints());
+		return fingerprints;
+	}
 
 	@Override
 	public void query(String query, int maxNumberOfResults,
 			QueryResultHandler handler) {
+		
 		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
 		int size = Config.getInt(Key.NFFT_SIZE);
 		int overlap = size - Config.getInt(Key.NFFT_STEP_SIZE);
-		
 		AudioDispatcher d = AudioDispatcherFactory.fromPipe(query, samplerate, size, overlap);
 		final NFFTEventPointProcessor minMaxProcessor = new NFFTEventPointProcessor(size,overlap,samplerate);
 		d.addAudioProcessor(minMaxProcessor);
@@ -132,6 +144,7 @@ public class NFFTStrategy extends Strategy {
 		final List<NFFTFingerprintQueryMatch> queryMatches = new ArrayList<NFFTFingerprintQueryMatch>();
 		
 		queryMatches.addAll(storage.getMatches(fingerprints, maxNumberOfResults));
+		
 		
 		double queryDuration = d.secondsProcessed();
 		
@@ -273,7 +286,8 @@ public class NFFTStrategy extends Strategy {
 			int f2 = obj.getInt("f2");
 			int t1 = obj.getInt("t1");
 			int t2 = obj.getInt("t2");
-			fingerprintArray.add(new NFFTFingerprint(t1, f1, t2, f2));
+			//Breaking change: frequency estimate!
+			fingerprintArray.add(new NFFTFingerprint(t1, f1,0.0f, t2, f2,0.0f));
 		}
 		return fingerprintArray;
 	}

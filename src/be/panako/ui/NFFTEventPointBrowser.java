@@ -65,19 +65,22 @@ import be.tarsos.dsp.ui.layers.SelectionLayer;
 import be.tarsos.dsp.ui.layers.TimeAxisLayer;
 import be.tarsos.dsp.ui.layers.ZoomMouseListenerLayer;
 
-public class NFFTFingerprintBrowser extends JFrame{
+public class NFFTEventPointBrowser extends JFrame{
 
 	private static final long serialVersionUID = 8131793763940515009L;	
 
-	private NFFTAudioFileInfo referenceFile;	
+	private NFFTAudioFileInfo referenceFile;
+	private String referenceFileLocation;
+	
 	private final List<NFFTAudioFileInfo> otherFiles;
 	private final List<Component> featurePanels;
-	private final List<NFFTAudioInfoLayer> infoLayers;
+	private final List<NFFTAudioEventPointLayer> infoLayers;
 	private final JPanel fingerprintPanel;
+	
 	
 	private CoordinateSystem cs;
 	
-	public NFFTFingerprintBrowser(){
+	public NFFTEventPointBrowser(){
 		this.setLayout(new BorderLayout());
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		this.setTitle("NFFT Fingerprint Visualizer");
@@ -88,7 +91,7 @@ public class NFFTFingerprintBrowser extends JFrame{
 		
 		otherFiles = new ArrayList<NFFTAudioFileInfo>();
 		featurePanels = new ArrayList<Component>();
-		infoLayers = new ArrayList<NFFTAudioInfoLayer>();
+		infoLayers = new ArrayList<NFFTAudioEventPointLayer>();
 		
 		new FileDrop(null, fingerprintPanel, /*dragBorder,*/ new FileDrop.Listener(){   
 			public void filesDropped( java.io.File[] files ){   
@@ -109,7 +112,7 @@ public class NFFTFingerprintBrowser extends JFrame{
 	
 	private Component createButtonPanel() {
 		JPanel buttonPanel = new JPanel();
-		JButton clearButton = new JButton("Clear");
+		JButton clearButton = new JButton("Recalculate");
 		clearButton.addActionListener(new ActionListener() {
 			
 			@Override
@@ -125,7 +128,7 @@ public class NFFTFingerprintBrowser extends JFrame{
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				
-				for(NFFTAudioInfoLayer layer : infoLayers){
+				for(NFFTAudioEventPointLayer layer : infoLayers){
 					layer.drawFFT(drawFFTCheckBox.isSelected());
 				}
 				for(Component c : featurePanels){
@@ -152,6 +155,7 @@ public class NFFTFingerprintBrowser extends JFrame{
 				fingerprintPanel.add(emptyFeaturePanel());
 				//Validating a container means laying out its subcomponents:
 				fingerprintPanel.validate();
+				addAudio(referenceFileLocation);
 			}
 		});
 	}
@@ -170,7 +174,6 @@ public class NFFTFingerprintBrowser extends JFrame{
 		frequencyDomainPanel.addLayer(new DragMouseListenerLayer(cs));
 		frequencyDomainPanel.addLayer(new BackgroundLayer(cs));
 		frequencyDomainPanel.addLayer(new FrequencyAxisLayer(cs));
-		frequencyDomainPanel.addLayer(new MarkCenterLayer(cs));
 		frequencyDomainPanel.addLayer(new TimeAxisLayer(cs));
 		frequencyDomainPanel.addLayer(new SelectionLayer(cs));
 		return frequencyDomainPanel;
@@ -188,15 +191,13 @@ public class NFFTFingerprintBrowser extends JFrame{
 				}
 			}
 		});
-		NFFTAudioInfoLayer infoLayer = new NFFTAudioInfoLayer(cs,audioFileInfo);
+		NFFTAudioEventPointLayer infoLayer = new NFFTAudioEventPointLayer(cs,audioFileInfo);
 		infoLayers.add(infoLayer);
 		
 		frequencyDomainPanel.addLayer(new ZoomMouseListenerLayer());
 		frequencyDomainPanel.addLayer(new DragMouseListenerLayer(cs));
 		frequencyDomainPanel.addLayer(new BackgroundLayer(cs));
-		
 		frequencyDomainPanel.addLayer(infoLayer);
-		frequencyDomainPanel.addLayer(new MarkCenterLayer(cs));
 		frequencyDomainPanel.addLayer(new FrequencyAxisLayer(cs));
 		frequencyDomainPanel.addLayer(new TimeAxisLayer(cs));
 		frequencyDomainPanel.addLayer(new SelectionLayer(cs));
@@ -207,36 +208,23 @@ public class NFFTFingerprintBrowser extends JFrame{
 
 	public void addAudio(String audioFile) {
 		final Runnable uiRunnable;
-		if(referenceFile == null){			
-			cs = new CoordinateSystem(AxisUnit.FREQUENCY, 3500, 11900);
-			//remove the empty feature panel
-			referenceFile = new NFFTAudioFileInfo(new File(audioFile), null);
-			referenceFile.extractInfoFromAudio(fingerprintPanel);
-			final Component featurePanel = createFeaturePanel(referenceFile);
-			uiRunnable = new Runnable() {
-				@Override
-				public void run() {
-					fingerprintPanel.removeAll();
-					fingerprintPanel.add(featurePanel);
-					//Validating a container means laying out its subcomponents:
-					fingerprintPanel.validate();
-				}
-			};
-		}else{
-			NFFTAudioFileInfo otherFileInfo = new NFFTAudioFileInfo(new File(audioFile), referenceFile);
-			this.otherFiles.add(otherFileInfo);
-			otherFileInfo.extractInfoFromAudio(fingerprintPanel);
-			
-			final Component featurePanel = createFeaturePanel(otherFileInfo);
-			uiRunnable = new Runnable() {
-				@Override
-				public void run() {
-					fingerprintPanel.add(featurePanel);
-					//Validating a container means laying out its subcomponents:
-					fingerprintPanel.validate();
-				}
-			};
-		}
+				
+		cs = new CoordinateSystem(AxisUnit.FREQUENCY, 3500, 11900);
+		//remove the empty feature panel
+		referenceFile = new NFFTAudioFileInfo(new File(audioFile), null);
+		referenceFileLocation = audioFile;
+		referenceFile.extractInfoFromAudio(fingerprintPanel);
+		final Component featurePanel = createFeaturePanel(referenceFile);
+		uiRunnable = new Runnable() {
+			@Override
+			public void run() {
+				fingerprintPanel.removeAll();
+				fingerprintPanel.add(featurePanel);
+				//Validating a container means laying out its subcomponents:
+				fingerprintPanel.validate();
+			}
+		};
+		
 		// run ui stuff on ui thread.
 		SwingUtilities.invokeLater(uiRunnable);
 	}	

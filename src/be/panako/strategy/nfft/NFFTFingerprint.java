@@ -37,6 +37,10 @@
 
 package be.panako.strategy.nfft;
 
+import be.panako.util.Config;
+import be.panako.util.Key;
+import be.tarsos.dsp.util.PitchConverter;
+
 
 
 
@@ -51,25 +55,49 @@ public class NFFTFingerprint {
 	
 	public final int t1;
 	public final int f1;
+	public final double f1Estimate;
 	
 	public final int t2;
-	public final int f2;
+	public final int f2;	
+	public final double f2Estimate;
+	
+	public NFFTEventPoint p1,p2;
+	
+	private boolean hashWithFrequencyEstimate = true;
+	
+	private final double nyquistFrequencyInCents = PitchConverter.hertzToAbsoluteCent(Config.getInt(Key.NFFT_SAMPLE_RATE)/2.0);
+	private final double minimumFrequencyInCents = PitchConverter.hertzToAbsoluteCent(20);
 	
 	public double energy;
 
 	
-	public NFFTFingerprint(int t1,int f1,int t2,int f2){
+	public NFFTFingerprint(int t1,int f1,float f1Estimate,int t2,int f2,float f2Estimate){
 		this.t1 = t1;
 		this.f1 = f1;
 		
 		this.t2 = t2;
 		this.f2 = f2;
 		
+		if(f1Estimate == 0 || f2Estimate==0){
+			hashWithFrequencyEstimate = false;
+		}
+		
+		if(hashWithFrequencyEstimate){
+			this.f1Estimate = PitchConverter.hertzToAbsoluteCent(f1Estimate);
+			this.f2Estimate = PitchConverter.hertzToAbsoluteCent(f2Estimate);
+		}else{
+			this.f1Estimate = 0.0;
+			this.f2Estimate = 0.0;
+		}
+		
 		assert t2 > t1;
 	}	
 	
 	public NFFTFingerprint(NFFTEventPoint l1, NFFTEventPoint l2){
-		this(l1.t,l1.f,l2.t,l2.f);
+		this(l1.t,l1.f,l1.frequencyEstimate,l2.t,l2.f,l2.frequencyEstimate);
+		p1 = l1;
+		p2 = l2;
+			
 	}
 	
 	/**
@@ -78,17 +106,64 @@ public class NFFTFingerprint {
 	 * @return a hash representing this fingerprint.
 	 */
 	public int hash(){
-		//8 bits for the exact location of the frequency component
-		int f = f1 & ((1<<8)-1);
-		//8 bits for the frequency delta (not fully used?)
-		int deltaF = Math.abs(f2 - f1);
-		deltaF = deltaF & ((1<<8)-1);
-		//6 bits for the time difference
-		int deltaT = Math.abs(timeDelta()) & ((1<<7)-1);
-		//In total the hash contains 8 + 8 + 6 bits == 22 bits (about 4 million values)
-		int hash = (f<<15) + (deltaF<<7) + deltaT;
-		if(f1>f2){
-			hash = hash *-1;
+		final int hash;
+		
+		if(hashWithFrequencyEstimate){
+			
+			/*
+			//11 bits for the exact location of the frequency component
+			int f =  ((int) Math.round((f1Estimate-minimumFrequencyInCents)/7.0)) & ((1<<11)-1);
+			//10 bits for the frequency delta (not fully used?)
+			//delta f should be correct up to 5 cents
+			int deltaF = (int) Math.round(Math.abs(f2Estimate - f1Estimate)/7.0);
+			deltaF = deltaF & ((1<<10)-1);
+			//6 bits for the time difference
+			int deltaT = ((int) Math.round(Math.abs(timeDelta()/2.5))) & ((1<<7)-1);
+			//In total the hash contains 8 + 8 + 6 bits == 22 bits (about 4 million values)
+			int binHash = (f<<17) + (deltaF<<7) + deltaT;
+			if(f1>f2){
+				hash = binHash *-1;
+			}else{
+				hash = binHash;
+			}
+			*/
+			
+			//8 bits for the exact location of the frequency component
+			int f = f1 & ((1<<8)-1);
+			//8 bits for the frequency delta (not fully used?)
+			int deltaF = Math.abs( f2 - f1);
+			deltaF = deltaF & ((1<<8)-1);
+			//6 bits for the time difference
+			int deltaT = Math.abs(timeDelta()) & ((1<<7)-1);
+			//In total the hash contains 8 + 8 + 6 bits == 22 bits (about 4 million values)
+			int binHash = (f<<15) + (deltaF<<7) + deltaT;
+
+			int deltaFInCents = (int) Math.round(Math.abs(f2Estimate - f1Estimate)/7.0);
+			binHash = binHash | deltaFInCents;
+			if(f1>f2){
+				hash = binHash *-1;
+			}else{
+				hash = binHash;
+			}
+			
+					
+			
+			
+		}else{
+			//8 bits for the exact location of the frequency component
+			int f = f1 & ((1<<8)-1);
+			//8 bits for the frequency delta (not fully used?)
+			int deltaF = Math.abs( f2 - f1);
+			deltaF = deltaF & ((1<<8)-1);
+			//6 bits for the time difference
+			int deltaT = Math.abs(timeDelta()) & ((1<<7)-1);
+			//In total the hash contains 8 + 8 + 6 bits == 22 bits (about 4 million values)
+			int binHash = (f<<15) + (deltaF<<7) + deltaT;
+			if(f1>f2){
+				hash = binHash *-1;
+			}else{
+				hash = binHash;
+			}
 		}
 		return hash;
 	}
@@ -153,15 +228,5 @@ public class NFFTFingerprint {
 	 */
 	public int timeDelta() {
 		return t2 - t1;
-	}
-	
-	public static void main(String... args){
-		
-		NFFTFingerprint firstPrint = new NFFTFingerprint(2424,28,2524,22);
-		NFFTFingerprint otherPrint = new NFFTFingerprint(887,28,923,34);
-		System.out.println(firstPrint + " " + otherPrint);		
-		firstPrint = new NFFTFingerprint(18732,42,18799,28);
-		otherPrint = new NFFTFingerprint(809,42,876,28);
-		System.out.println(firstPrint + " " + otherPrint);
 	}
 }

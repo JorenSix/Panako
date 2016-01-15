@@ -42,6 +42,7 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import be.panako.ui.NCteQFingerprintBrowser;
+import be.panako.ui.NFFTEventPointBrowser;
 import be.panako.ui.NFFTFingerprintBrowser;
 import be.panako.util.Config;
 import be.panako.util.Key;
