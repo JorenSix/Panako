@@ -131,6 +131,7 @@ public class Panako {
 		applicationList.add(new Server());
 		applicationList.add(new Client());
 		applicationList.add(new Resolve());
+		applicationList.add(new Tap());
 		for (final Application application : applicationList) {
 			applications.put(application.name(), application);
 			applicationTrie.insert(application.name());

@@ -51,10 +51,10 @@ import java.util.logging.Logger;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+
 
 import be.panako.cli.Panako;
+import be.panako.http.PanakoWebserviceClient;
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.SerializedFingerprintsHandler;
@@ -203,7 +203,7 @@ public class NFFTStrategy extends Strategy {
 			d.run();
 			double queryDuration = d.secondsProcessed();
 			List<NFFTFingerprint> fingerprints = new ArrayList<NFFTFingerprint>(minMaxProcessor.getFingerprints());
-			handler.handleSerializedFingerprints(serializeFingerprintsToJson(fingerprints),queryDuration,queryOffset);
+			handler.handleSerializedFingerprints(PanakoWebserviceClient.serializeFingerprintsToJson(fingerprints),queryDuration,queryOffset);
 		} catch (UnsupportedAudioFileException e) {
 			LOG.severe("Unsupported audio");
 		}
@@ -212,7 +212,7 @@ public class NFFTStrategy extends Strategy {
 	public void matchSerializedFingerprints(String serizalizedFingerprints,final  int maxNumberOfResults,
 			final QueryResultHandler handler,double queryDuration,double queryOffset){
 		
-		List<NFFTFingerprint> fingerprints = deserializeFingerprintsFromJson(serizalizedFingerprints);
+		List<NFFTFingerprint> fingerprints = PanakoWebserviceClient.deserializeFingerprintsFromJson(serizalizedFingerprints);
 		final List<NFFTFingerprintQueryMatch> queryMatches = new ArrayList<NFFTFingerprintQueryMatch>();
 		
 		queryMatches.addAll(storage.getMatches(fingerprints, maxNumberOfResults));
@@ -262,37 +262,9 @@ public class NFFTStrategy extends Strategy {
 		d.run();
 	}
 	
-	private String serializeFingerprintsToJson(List<NFFTFingerprint> fingerprints){
-		JSONArray jsonArray = new JSONArray();
-		for(NFFTFingerprint fingerprint : fingerprints){
-			JSONObject fingerprintJSON = new JSONObject();
-			fingerprintJSON.put("f1", fingerprint.f1);
-			fingerprintJSON.put("f2", fingerprint.f2);
-			fingerprintJSON.put("t1", fingerprint.t1);
-			fingerprintJSON.put("t2", fingerprint.t2);
-			fingerprintJSON.put("f1e", fingerprint.f1Estimate);
-			fingerprintJSON.put("f2e", fingerprint.f2Estimate);
-			jsonArray.put(fingerprintJSON);
-		
-		}
-		return jsonArray.toString();
-	}
 	
-	private List<NFFTFingerprint> deserializeFingerprintsFromJson(String fingerprints){
-		JSONArray array = new JSONArray(fingerprints);
-		List<NFFTFingerprint> fingerprintArray = new ArrayList<NFFTFingerprint>();
-		for(int i = 0 ; i < array.length();i++){
-			JSONObject obj = array.getJSONObject(i);
-			int f1 = obj.getInt("f1");
-			int f2 = obj.getInt("f2");
-			int t1 = obj.getInt("t1");
-			int t2 = obj.getInt("t2");
-			float f1e = (float) obj.getDouble("f1e");
-			float f2e = (float) obj.getDouble("f2e");
-			fingerprintArray.add(new NFFTFingerprint(t1, f1,f1e, t2, f2,f2e));
-		}
-		return fingerprintArray;
-	}
+	
+
 	
 	private void processMonitorQuery(float[] audioBuffer,int maxNumberOfResults,
 			QueryResultHandler handler,double queryOffset){

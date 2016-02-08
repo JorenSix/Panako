@@ -424,5 +424,17 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 	public List<NFFTEventPoint> getEventPoints() {
 		return eventPoints;
 	}
+
+	public void reset() {
+		eventPoints.clear();
+		fingerprints.clear();
+		analysisFrameIndex=0;
+		magnitudesIndex=0;
+
+		previousMagintudes.clear();
+		previousPhase.clear();
+		previousMaxMagnitudes.clear();
+		previousMinMagnitudes.clear();
+	}
 	
 }

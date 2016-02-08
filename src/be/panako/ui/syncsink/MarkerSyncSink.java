@@ -33,10 +33,38 @@
 ****************************************************************************/
 
 
-package be.panako.http;
+package be.panako.ui.syncsink;
 
-public interface ResponseHandler{
-	
-	void handle(int responseCode,String response,String source,String type,long millis);
-	
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.io.File;
+
+import javax.swing.UIManager;
+
+import be.panako.cli.Panako;
+
+/**
+ * This just starts the syncsink application it serves as
+ * an extra entry point to allow double clicking on the SyncSink.jar.
+ * @author Joren Six
+ *
+ */
+public class MarkerSyncSink {
+
+	public static void main(String[] args) {
+		javax.swing.SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+				} catch (Exception e) {
+				}
+				SyncSinkMarkerFrame frame = new SyncSinkMarkerFrame();
+				frame.setSize(800, 600);
+				frame.setVisible(true);
+				Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+				frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
+			}
+		});
+	}
+
 }
