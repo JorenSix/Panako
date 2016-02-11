@@ -411,7 +411,7 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 		}
 		for(Float key: printsOrderedByEnergy.descendingKeySet()){
 			NFFTFingerprint print = printsOrderedByEnergy.get(key);
-			if(printsPerPoint.get(print.p1)<=maxPrintsPerPoint && printsPerPoint.get(print.p2)<=maxPrintsPerPoint){
+			if(printsPerPoint.get(print.p1)<maxPrintsPerPoint && printsPerPoint.get(print.p2)<maxPrintsPerPoint){
 				printsPerPoint.put(print.p1,printsPerPoint.get(print.p1)+1);
 				printsPerPoint.put(print.p2,printsPerPoint.get(print.p2)+1);
 				fingerprints.add(print);

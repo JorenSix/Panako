@@ -37,8 +37,12 @@ package be.panako.cli;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.sound.sampled.LineUnavailableException;
+
+import jssc.SerialPortList;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -47,6 +51,8 @@ import be.panako.http.PanakoWebserviceClient;
 import be.panako.http.ResponseHandler;
 import be.panako.strategy.nfft.NFFTEventPointProcessor;
 import be.panako.strategy.nfft.NFFTFingerprint;
+import be.panako.tap.SerialDevice;
+import be.panako.tap.SerialDevice.SerialDataLineHandler;
 import be.panako.util.Config;
 import be.panako.util.Key;
 import be.tarsos.dsp.AudioDispatcher;
@@ -60,9 +66,10 @@ import be.tarsos.dsp.util.AudioResourceUtils;
 public class Tap extends Application  {
 	
 	private static long startQuery;
-	private static long audioStart;
 	private static double matchStart;
 	private static double queryDuration;
+	 private static ExecutorService es;
+	 private static AudioPlayer player;
 
 	private final int sampleRate = Config.getInt(Key.NFFT_SAMPLE_RATE);
     private final int bufferSize = Config.getInt(Key.NFFT_SIZE);
@@ -75,6 +82,7 @@ public class Tap extends Application  {
 
 	@Override
 	public void run(String... args) {
+		
 		client = new PanakoWebserviceClient();
 		AudioDispatcher d = null;
 		if (args.length > 0){
@@ -87,7 +95,6 @@ public class Tap extends Application  {
 				e.printStackTrace();
 			}
 		}
-		
 		d.addAudioProcessor(processorEventPoints);
 		d.addAudioProcessor(new AudioProcessor() {
 			
@@ -101,11 +108,7 @@ public class Tap extends Application  {
 
 			@Override
 			public boolean process(AudioEvent audioEvent) {
-				if(audioStart == 0){
-					audioStart = System.currentTimeMillis();
-				}
-				if (frameCounter != 0
-						&& frameCounter % queryLengthInAnalysisFrames == 0) {
+				if (frameCounter != 0 && frameCounter % queryLengthInAnalysisFrames == 0) {
 					processorEventPoints.processingFinished();
 					List<NFFTFingerprint> fingerprints = new ArrayList<NFFTFingerprint>(processorEventPoints.getFingerprints());
 					handleFingerprints(fingerprints);
@@ -117,18 +120,49 @@ public class Tap extends Application  {
 		});
 		
 		try {
-			d.addAudioProcessor(new AudioPlayer(d.getFormat()));
+			player = new AudioPlayer(d.getFormat(),192);
+			d.addAudioProcessor(player);
 		} catch (LineUnavailableException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
-		
 		d.run();
 	}
 
 	@Override
 	public String description() {
 		return "Tap to the beat of the incoming audio stream. Taps are printed to the command line." ;
+	}
+		
+	
+	private void handleFingerprints(final List<NFFTFingerprint> fingerprints){
+		startQuery = System.currentTimeMillis();
+		 new Thread(new Runnable(){
+			 private double timeDelta = stepSize/(double) sampleRate;//seconds
+	         @Override
+	         public void run() {
+	        	 String parsed = null;
+	             try {
+	                 parsed = PanakoWebserviceClient.serializeFingerprintsToJson(fingerprints).toString();
+	             } catch (JSONException e) {
+	                 e.printStackTrace();
+	             }
+	             client.match(new MatchResponseHandler(), parsed, queryLengthInAnalysisFrames * timeDelta, 0);
+	         }
+	     }).start();
+	}
+
+	@Override
+	public String synopsis() {
+		return "tap [audio.mp3]";
+	}
+
+	@Override
+	public boolean needsStorage() {
+		return true;
+	}
+
+	@Override
+	public boolean writesToStorage() {
+		return false;
 	}
 	
 	private static class MatchResponseHandler implements ResponseHandler {
@@ -146,19 +180,13 @@ public class Tap extends Application  {
 			}
 			int matchScore = responseObject.getInt("match_score");
 			if(matchStart==0){
-			 matchStart = responseObject.getDouble("match_start") - 0.064;
-			
+				matchStart = responseObject.getDouble("match_start") - 0.064;
 			}else{
 				matchStart = responseObject.getDouble("match_start") - 0.096;	
 			}
-			 queryDuration = responseObject.getDouble("query_stop") - responseObject.getDouble("query_start");
+			queryDuration = responseObject.getDouble("query_stop") - responseObject.getDouble("query_start");
 			
-			 
-			 /*String message = ("Finished '" + type + "'-request on " + source);
-				message = message + ("\tResponse Code : " + responseCode);
-				message = message + ("\tResponse time: " + millis);
-				message = message + ("\tResponse body: " + response);*/
-				System.out.println(matchStart);
+			System.out.println(matchStart);
 				
 			if (matchScore > 1) {
 				String matchIdentifier = responseObject.getString("match_identifier");
@@ -166,118 +194,79 @@ public class Tap extends Application  {
 			}
 		}
 	}
-	private static AudioGenerator old = null;
+	
 	private static class MetaDataResponseHandler implements ResponseHandler{
 		@Override
 		public void handle(int responseCode, String response,String source, String type, long millis) {
 			final List<Double> beats = PanakoWebserviceClient.beatListFromResponse(response);
 			
-			
 			double requestTime = (System.currentTimeMillis() - startQuery)/1000.0;
-	        double systemLatency = 0.02; 
+	        double systemLatency = 0.072;
 	        double totalOffset = requestTime  + systemLatency + queryDuration + matchStart;
-	        
-			double firstBeat = 0;
-	        boolean first = true;
 	        for(int i = 0 ; i < beats.size() ; i++){
 	            double newTime= beats.get(i) - totalOffset;
 	            if(newTime < 0.1){
 	            	beats.remove(i);
 	                i--;
 	            }else{
-	                if(first) {
-	                    firstBeat = beats.get(i);
-	                    first = false;
-	                }
 	                beats.set(i,newTime);
 	            }
 	        }
 	        
-	        AudioGenerator g = new AudioGenerator(32, 0);
-	        g.addAudioProcessor(new AudioProcessor() {
-				
-	        	int i;
-				@Override
-				public void processingFinished() {
-					// TODO Auto-generated method stub
-					
-				}
-				
-				@Override
-				public boolean process(AudioEvent audioEvent) {
-					if(i< beats.size() && audioEvent.getTimeStamp() > beats.get(i)){
-						System.out.println(";"+(System.currentTimeMillis() -  audioStart)/1000.0);
-						i++;
-						for(int i = 0 ; i < audioEvent.getFloatBuffer().length;i++){
-							audioEvent.getFloatBuffer()[i]= (float) Math.random();
-						}
-					}
-					return true;
-				}
-			});
-	        try {
-				g.addAudioProcessor(new AudioPlayer(g.getFormat()));
-				g.addAudioProcessor(new AudioProcessor() {
-					
-					@Override
-					public void processingFinished() {
-						// TODO Auto-generated method stub
-					}
-					
-					@Override
-					public boolean process(AudioEvent audioEvent) {
-						audioEvent.clearFloatBuffer();
-						return true;
-					}
-				});
-			} catch (LineUnavailableException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-	        if(old !=null){
-	        	old.stop();
+	        if(es!=null){
+	        	es.shutdownNow();
 	        }
-	        old = g;
-	        new Thread(g).start();
+	        es = Executors.newFixedThreadPool(50);
+	        for(int i = 0 ; i < beats.size() && beats.get(i) < 25 ; i++){
+		    	 es.execute(new Waiter((int) (beats.get(i)*1000)));
+	        }
+
 			System.out.println("Total offset time " + totalOffset + " s");
 			System.out.println("recieved " + beats.size() + " beats");
 			System.out.println("Total query time " + (System.currentTimeMillis()-startQuery) + " ms");
 		}
 	}
 	
+	private static class Generator{
+		private final SerialDevice spr;
 	
-	private void handleFingerprints(final List<NFFTFingerprint> fingerprints){
+		public Generator(){
+			spr = new SerialDevice("/dev/ttyACM0",new SerialDataLineHandler() {
+				
+				@Override
+				public void handleSerialDataLine(int lineNumber, String lineData) {
+					System.out.println(lineNumber + " " + lineData);
+				}
+			});
+	    	spr.open();
+	    	spr.start();
+		}
 		
-			startQuery = System.currentTimeMillis();	
+		public void click(){
+			spr.write("");
+		}
+	}
+	
+	private final static Generator gen = new Generator();
+	
+	private static class Waiter implements Runnable {
 		
+		private final int millisecondsToWait;
 		
-		 new Thread(new Runnable(){
-			 private double timeDelta = stepSize/(double) sampleRate;//seconds
-             @Override
-             public void run() {
-            	 String parsed = null;
-                 try {
-                     parsed = PanakoWebserviceClient.serializeFingerprintsToJson(fingerprints).toString();
-                 } catch (JSONException e) {
-                     e.printStackTrace();
-                 }
-                 client.match(new MatchResponseHandler(), parsed, queryLengthInAnalysisFrames * timeDelta, 0);
-             }
-         }).start();
-	}
-
-	@Override
-	public String synopsis() {
-		return "tap [audio.mp3]";
-	}
-
-	@Override
-	public boolean needsStorage() {
-		return true;
-	}
-
-	@Override
-	public boolean writesToStorage() {
-		return false;
-	}
+		public Waiter(int milliseconds){
+			millisecondsToWait = milliseconds;
+		}
+		
+	    @Override
+	    public void run() {
+	    	//long nanoStart = System.nanoTime();
+	        try {
+				Thread.sleep(millisecondsToWait);
+				gen.click();
+				System.out.println(player.getMicroSecondPosition()/1000000.0);
+			} catch (InterruptedException e) {
+				
+			}
+	    }
+	};
 }
