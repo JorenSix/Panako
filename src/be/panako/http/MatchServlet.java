@@ -123,8 +123,8 @@ public class MatchServlet extends HttpServlet {
 			public void handleQueryResult(QueryResult result) {
 				
 				
-				//
-				/*String queryInfo = String.format("%s;%.0f;%.0f;",query,r.queryTimeOffsetStart,r.queryTimeOffsetStop);
+				/*
+				String queryInfo = String.format("%s;%.0f;%.0f;",query,r.queryTimeOffsetStart,r.queryTimeOffsetStop);
 				String matchInfo = String.format("%s;%s;%.0f;%.0f;", r.identifier,r.description,r.time,r.score);
 				String factorInfo = String.format("%.0f%%;%.0f%%", r.timeFactor,r.frequencyFactor);
 				System.out.println(queryInfo+matchInfo+factorInfo);

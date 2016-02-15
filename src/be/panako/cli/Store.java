@@ -39,10 +39,17 @@
 package be.panako.cli;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
+
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.ExecuteWatchdog;
 
 import be.panako.strategy.Strategy;
 import be.panako.util.Config;
@@ -63,6 +70,7 @@ public class Store extends Application {
 		int counter=0;
 		final ExecutorService executor = Executors.newFixedThreadPool(processors);
 		final List<File> files = this.getFilesFromArguments(args);
+		boolean extractMetaData = hasArgument("-m", args) || hasArgument("--meta-data", args);
 		if(files.size() > 1){
 			String msg = "Processing " + files.size() + " files on " + processors + " seperate threads.";
 			System.out.println(msg);
@@ -72,10 +80,9 @@ public class Store extends Application {
 		for(File file: files){
 			counter++;
 			//executor.submit(new StoreTask(file, counter, files.size()));
-			StoreTask task = new StoreTask(file, counter, files.size());
+			StoreTask task = new StoreTask(file, counter, files.size(),extractMetaData);
 			task.run();
 		}
-	
 	
 		try {
 			//do not accept more tasks.
@@ -107,12 +114,14 @@ public class Store extends Application {
 		private final File file;
 		private final int taskID;
 		private final int totalTasks;
+		private final boolean extractMetaData;
 		
 		
-		public StoreTask(File file,int taskID,int totalTasks){
+		public StoreTask(File file,int taskID,int totalTasks,boolean extractMetaData){
 			this.file = file;
 			this.taskID = taskID;
 			this.totalTasks = totalTasks;
+			this.extractMetaData = extractMetaData;
 		}
 
 		@Override
@@ -134,12 +143,46 @@ public class Store extends Application {
 					message = String.format("%d/%d;%s;%s;%s",taskID,totalTasks,file.getName(),StopWatch.toTime("", 0),"Skipped: description already present;");
 				}else{
 					double durationInSecons = strategy.store(file.getAbsolutePath(), file.getName());
+					
+					if(extractMetaData){
+						extractMetaData(file);
+					}
 					double secondsPassed = w.timePassed(TimeUnit.SECONDS);
 					message = String.format("%d/%d;%s;%s;%s;%.2f",taskID,totalTasks,file.getName(),StopWatch.toTime("", (int) Math.round(durationInSecons)),w.formattedToString(),durationInSecons/secondsPassed);			
 				}
 				LOG.info(message);
 				System.out.println(message);
 			}
+		}
+		
+		private void extractMetaData(File audioFile){
+			Strategy strategy = Strategy.getInstance();
+			String identifier = strategy.resolve(file.getAbsolutePath());
+			String dir = Config.get(Key.META_DATA_DIRECTORY);
+			File metaDataFile = new File(dir,identifier+".json");
+			String command = Config.get(Key.META_DATA_COMMAND);
+			Map<String,File> map = new HashMap<String,File>();
+			map.put("audiofile", audioFile);
+			map.put("metadatafile", metaDataFile);
+			CommandLine cmdLine = new CommandLine(command);
+			cmdLine.addArgument("${audiofile}");
+			cmdLine.addArgument("${metadatafile}");
+			cmdLine.setSubstitutionMap(map);
+			DefaultExecutor executor = new DefaultExecutor();
+			//executor.setExitValue(1);
+			ExecuteWatchdog watchdog = new ExecuteWatchdog(1000000);
+			executor.setWatchdog(watchdog);
+			try {
+				int exitValue = executor.execute(cmdLine);
+				if(exitValue==0){
+					System.out.println("Extracted metadata successfully");
+				}else{
+					System.err.println("Failed to extract metadata for:" + audioFile);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
 		}
 		
 		private boolean checkFile(File file){

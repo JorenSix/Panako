@@ -254,7 +254,11 @@ public enum Key{
 	/**
 	 * The folder where metadata (json files) for each file is stored.
 	 */
-	META_DATA_DIRECTORY("/opt/panako/metadata");
+	META_DATA_DIRECTORY("/opt/panako/metadata"), 
+	/**
+	 * The command executed to get meta data.
+	 */
+	META_DATA_COMMAND("/opt/panako/extract_metadata.sh");
 	
 	
 	String defaultValue;

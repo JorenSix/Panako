@@ -35,14 +35,13 @@
 
 package be.panako.cli;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javax.sound.sampled.LineUnavailableException;
-
-import jssc.SerialPortList;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -57,7 +56,6 @@ import be.panako.util.Config;
 import be.panako.util.Key;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
-import be.tarsos.dsp.AudioGenerator;
 import be.tarsos.dsp.AudioProcessor;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 import be.tarsos.dsp.io.jvm.AudioPlayer;
@@ -228,9 +226,10 @@ public class Tap extends Application  {
 	}
 	
 	private static class Generator{
-		private final SerialDevice spr;
+		private SerialDevice spr;
 	
 		public Generator(){
+			if(new File("/dev/ttyACM0").exists()){
 			spr = new SerialDevice("/dev/ttyACM0",new SerialDataLineHandler() {
 				
 				@Override
@@ -240,6 +239,9 @@ public class Tap extends Application  {
 			});
 	    	spr.open();
 	    	spr.start();
+			}else{
+				System.err.println("/dev/ttyACM0 does not exist!");
+			}
 		}
 		
 		public void click(){
