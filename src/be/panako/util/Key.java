@@ -130,8 +130,17 @@ public enum Key{
 	 * The name of the MapDB database location.
 	 */
 	NFFT_MAPDB_DATABASE("/opt/panako/dbs/nfft_panako_db"),
+	/**
+	 * The sample rate of the input signal
+	 */
 	NFFT_SAMPLE_RATE(8000),	
+	/**
+	 * The size of the audio block and consequently the size (in samples) of the FFT.
+	 */
 	NFFT_SIZE(512),
+	/**
+	 * The size of the audio block step size (in samples).
+	 */
 	NFFT_STEP_SIZE(256),
 	
 	/**
@@ -161,6 +170,12 @@ public enum Key{
 	 * spectral peak detection, it should be odd.
 	 */
 	 NFFT_MAX_FILTER_WINDOW_SIZE(15),
+	 
+	 /**
+	 * Use a hash based on refined pitch estimates using the phase
+	 * or not.
+	 */
+	NFFT_USE_PHASE_REFINED_HASH("FALSE"), 
 	 
 	 
 		

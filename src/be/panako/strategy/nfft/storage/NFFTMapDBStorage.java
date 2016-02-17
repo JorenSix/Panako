@@ -111,7 +111,7 @@ public class NFFTMapDBStorage implements Storage {
 		
 		// If the current application writes to the storage of if a new database has to be created
 		// create the stores.
-		if (Panako.getCurrentApplication().writesToStorage() && !dbFile.exists()) {
+		if (Panako.getCurrentApplication() == null || (Panako.getCurrentApplication().writesToStorage() && !dbFile.exists())) {
 			// Check for and create a lock.
 			checkAndCreateLock(dbFile);
 			db = DBMaker.newFileDB(dbFile)

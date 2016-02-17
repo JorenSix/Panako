@@ -74,7 +74,7 @@ public class Tap extends Application  {
     private final int stepSize = Config.getInt(Key.NFFT_STEP_SIZE);
     private PanakoWebserviceClient client;
     
-    private final double queryLengthInSeconds = 12.8;
+    private final double queryLengthInSeconds = 25.6;
     private final NFFTEventPointProcessor processorEventPoints = new NFFTEventPointProcessor(bufferSize,stepSize,sampleRate);
     private final int queryLengthInAnalysisFrames = (int) Math.round(queryLengthInSeconds*sampleRate/(float) stepSize);
 

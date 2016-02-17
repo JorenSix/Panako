@@ -38,6 +38,8 @@
 package be.panako.strategy.nfft;
 
 
+import be.panako.util.Config;
+import be.panako.util.Key;
 import be.tarsos.dsp.util.PitchConverter;
 
 
@@ -62,7 +64,7 @@ public class NFFTFingerprint {
 	
 	public NFFTEventPoint p1,p2;
 	
-	private boolean hashWithFrequencyEstimate = true;
+	private boolean hashWithFrequencyEstimate = Config.getBoolean(Key.NFFT_USE_PHASE_REFINED_HASH);
 	
 	/*private final double nyquistFrequencyInCents = PitchConverter.hertzToAbsoluteCent(Config.getInt(Key.NFFT_SAMPLE_RATE)/2.0);
 	private final double minimumFrequencyInCents = PitchConverter.hertzToAbsoluteCent(20);
@@ -81,6 +83,7 @@ public class NFFTFingerprint {
 		if(f1Estimate == 0 || f2Estimate==0){
 			hashWithFrequencyEstimate = false;
 		}
+		//hashWithFrequencyEstimate = false;
 		
 		if(hashWithFrequencyEstimate){
 			this.f1Estimate = PitchConverter.hertzToAbsoluteCent(f1Estimate);
@@ -97,7 +100,6 @@ public class NFFTFingerprint {
 		this(l1.t,l1.f,l1.frequencyEstimate,l2.t,l2.f,l2.frequencyEstimate);
 		p1 = l1;
 		p2 = l2;
-			
 	}
 	
 	/**
@@ -144,11 +146,7 @@ public class NFFTFingerprint {
 				hash = binHash *-1;
 			}else{
 				hash = binHash;
-			}
-			
-					
-			
-			
+			}			
 		}else{
 			//8 bits for the exact location of the frequency component
 			int f = f1 & ((1<<8)-1);

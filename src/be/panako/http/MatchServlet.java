@@ -121,8 +121,7 @@ public class MatchServlet extends HttpServlet {
 			
 			@Override
 			public void handleQueryResult(QueryResult result) {
-				
-				
+
 				/*
 				String queryInfo = String.format("%s;%.0f;%.0f;",query,r.queryTimeOffsetStart,r.queryTimeOffsetStop);
 				String matchInfo = String.format("%s;%s;%.0f;%.0f;", r.identifier,r.description,r.time,r.score);
