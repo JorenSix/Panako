@@ -12,7 +12,6 @@ final class MarkDetector implements AudioProcessor {
 	int frameCounter = 0;
 	
 	private final double dbDelta;//the loudness change (in dB) to look for
-	private final double markerDelta;//the exact time between loudness changes (in ms)
 	private final double minDiff;//the max time allowed between loudness changes (in ms)
 	private final double maxDiff;//the min time allowed between loudness changes (in ms)
 	private final double minDistance;//minimum distance between markers
@@ -20,7 +19,6 @@ final class MarkDetector implements AudioProcessor {
 	
 	
 	public MarkDetector(double markerDelta, double errorMargin, double dbDelta){
-		this.markerDelta = markerDelta;
 		this.minDistance = markerDelta;
 		
 		this.dbDelta = dbDelta;
