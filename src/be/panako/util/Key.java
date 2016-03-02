@@ -265,6 +265,17 @@ public enum Key{
 	 * The synchronization algorithm only considers the match as valid if this number of aligning matches are found.
 	 */
 	SYNC_MIN_ALIGNED_MATCHES(7), 
+	/**
+	 * The loudness delta in dB
+	 */
+	SYNC_MARKER_LOUDNESS_DELTA(20),
+	
+	/**
+	 * Difference allowed in ms
+	 */
+	SYNC_MARKER_TIME_ERROR_ALLOWED(1),
+	
+	
 	
 	/**
 	 * The folder where metadata (json files) for each file is stored.

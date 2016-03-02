@@ -37,11 +37,8 @@ package be.panako.ui.syncsink;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
-import java.io.File;
 
 import javax.swing.UIManager;
-
-import be.panako.cli.Panako;
 
 /**
  * This just starts the syncsink application it serves as

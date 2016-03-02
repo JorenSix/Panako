@@ -66,16 +66,12 @@ import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.DefaultCaret;
 
-import be.panako.ui.syncsink.CrossCorrelation.CrossCorrelationHandler;
 import be.panako.util.Config;
 import be.panako.util.Key;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
-import be.tarsos.dsp.SilenceDetector;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
-import be.tarsos.dsp.pitch.GeneralizedGoertzel;
-import be.tarsos.dsp.pitch.Goertzel.FrequenciesDetectedHandler;
 import be.tarsos.dsp.ui.Axis;
 import be.tarsos.dsp.ui.AxisUnit;
 import be.tarsos.dsp.ui.CoordinateSystem;
@@ -100,7 +96,6 @@ public class SyncSinkMarkerFrame extends JFrame implements ViewPortChangedListen
 	private final List<Double> markerPositions;
 	private final List<StreamLayer> streamLayers;
 	private final ResetCursorLayer resetCursorLayer = new ResetCursorLayer();
-	private float[] marker;
 	private float maxDuration;
 	
 	private JButton syncButton;
@@ -142,27 +137,7 @@ public class SyncSinkMarkerFrame extends JFrame implements ViewPortChangedListen
 		DefaultCaret caret = (DefaultCaret)logTextField.getCaret();
 		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 		
-		try{
-		AudioDispatcher q = AudioDispatcherFactory.fromFile(new File("/home/joren/Desktop/44kHz_1024_samples.wav"), 1024, 0);
-		
-		q.addAudioProcessor(new AudioProcessor() {
-			
-			@Override
-			public void processingFinished() {
-				// TODO Auto-generated method stub
-			}
-			
-			@Override
-			public boolean process(AudioEvent audioEvent) {
-				marker = audioEvent.getFloatBuffer().clone();
-				return false;
-			}
-		});
-		q.run();
-		}catch (Exception e) {
-			// TODO: handle exception
-		}
-		
+
 		StringBuilder sb = new StringBuilder();
 		sb.append("----------------------------------------\n");
 		sb.append("Configuration currently in use: \n");
@@ -276,13 +251,13 @@ public class SyncSinkMarkerFrame extends JFrame implements ViewPortChangedListen
 	private void synchronizeMedia(){
 		//float referenceFileDuration = getMediaDuration(streamFiles.get(0).getAbsolutePath());
 		String commandFile = streamFiles.get(0).getParent() + File.separator + "sync_ffmpeg_commands.bash";
-		for(int i = 1 ; i < streamFiles.size() ; i++){
+		for(int i = 0 ; i < streamFiles.size() ; i++){
 			//float otherFileDuration = getMediaDuration(streamFiles.get(i).getAbsolutePath());
 			
 			
 			boolean isVideo = streamFiles.get(i).getName().matches("(?i).*(mpg|avi|mp4|mkv|mpeg)");
 			
-			float guessedStartTimeOfStream = (float) (markerPositions.get(0)-markerPositions.get(i));
+			float guessedStartTimeOfStream = (float) (-markerPositions.get(i));
 			String command;
 			if(guessedStartTimeOfStream >= 0){
 				//generate silence				
@@ -330,11 +305,11 @@ public class SyncSinkMarkerFrame extends JFrame implements ViewPortChangedListen
 		if(streamIndex==0){
     	 	streamFiles.add(file);
     		float duration = getMediaDuration(file.getAbsolutePath());
-    		findMarker(0);
+    		float marker = (float) findMarker(0);
     		
-    		StreamLayer refLayer = new StreamLayer(cs,streamIndex,colorMap[streamIndex],fileName,true,duration*1000,this.streamFiles);
+    		StreamLayer refLayer = new StreamLayer(cs,streamIndex,colorMap[streamIndex],fileName,false,duration*1000,this.streamFiles);
     		
-			refLayer.addInterval(0, duration*1000,0,0);
+			refLayer.addInterval(0-marker*1000, duration*1000-marker*1000,0,0);
 			maxDuration = duration;
 			
 			cs.setMax(Axis.X,maxDuration*1.1f);
@@ -356,7 +331,6 @@ public class SyncSinkMarkerFrame extends JFrame implements ViewPortChangedListen
     	}else{
     		streamFiles.add(file);
     		
-    		
     		float duration = getMediaDuration(file.getAbsolutePath());
     		if(duration > maxDuration){
     			maxDuration = duration;
@@ -372,14 +346,12 @@ public class SyncSinkMarkerFrame extends JFrame implements ViewPortChangedListen
     	
     		StreamLayer otherLayer = new StreamLayer(cs,streamIndex,colorMap[streamIndex%colorMap.length],fileName,false,duration*1000,this.streamFiles);
     		
-    		findMarker(streamFiles.size()-1);
-    		double timeDifference = markerPositions.get(0) - markerPositions.get(markerPositions.size()-1);
-    		float startTimeInRef = (float) timeDifference;
-    		float stopTimeInRef = (float) (duration+timeDifference);
+    		float marker = (float) findMarker(streamFiles.size()-1);
     		
-    		otherLayer.addInterval(startTimeInRef*1000,stopTimeInRef*1000,0*1000,duration*1000);
     		
-    		logMessage(String.format("Determined offset of %s with respect to reference audio of %.04f ",fileName,startTimeInRef));
+    		otherLayer.addInterval(0-marker*1000, duration*1000-marker*1000,0,0);
+    		
+    		logMessage(String.format("Determined offset of %s with respect to reference audio of %.04f ",fileName,marker-markerPositions.get(0)));
     	
 			linkedPanel.addLayer(otherLayer);
 			streamLayers.add(otherLayer);
@@ -470,110 +442,23 @@ public class SyncSinkMarkerFrame extends JFrame implements ViewPortChangedListen
 	private double findMarker(int streamIndex){
 		double match = 0.0;
 		
-		final List<Float> potentialMatch = new ArrayList<Float>();
-		
-		
-		AudioDispatcher ref; 
-			ref = AudioDispatcherFactory.fromPipe(streamFiles.get(streamIndex).getAbsolutePath(),44100, 1024, 1024-128);
-	
-		double[] frequencies = {697,941,1209};
-		
-		CrossCorrelation crosscorr = new CrossCorrelation(marker,new CrossCorrelationHandler() {
-			@Override
-			public void handleCrossCorrelation(float audioBufferTime, float mTime,
-					float value) {
-				if(value > 500){
-				bufferTime = audioBufferTime;
-				maxTime = mTime;
-				//System.out.println(maxTime + " " + value);
-				}
-			}
-		});
-		GeneralizedGoertzel gengoe = new GeneralizedGoertzel(44100.0f, 1024, frequencies, new FrequenciesDetectedHandler() {
-			@Override
-			public void handleDetectedFrequencies(double time,double[] frequencies,
-					double[] powers, double[] allFrequencies, double[] allPowers) {
-				
-				if(powers[0] > 3 && powers[1] > 3 && powers[2] > 3 && powers[0] + powers[1] + powers[2] > 20  ){
-					if((float) time == bufferTime){
-						//System.out.println(time +  " " + powers[0] + " " + powers[1] + " " + powers[2]);
-						//System.out.println(maxTime);
-						potentialMatch.add( maxTime);
-					}
-				}
-			}
-		});
-		ref.addAudioProcessor(new SilenceDetector(-45, true));
-		ref.addAudioProcessor(crosscorr);
-		ref.addAudioProcessor(gengoe);
+		double loudnessDelta = Config.getFloat(Key.SYNC_MARKER_LOUDNESS_DELTA);
+		double errorAllowed = Config.getFloat(Key.SYNC_MARKER_TIME_ERROR_ALLOWED);
+		MarkDetector d = new MarkDetector(300, errorAllowed, loudnessDelta);
+		AudioDispatcher ref = AudioDispatcherFactory.fromPipe(streamFiles.get(streamIndex).getAbsolutePath(),10000, 10,0);
+		ref.addAudioProcessor(d);
 		ref.run();
 		
-		float maxMsDifference = 207.5f;
-		float minDifference = 193.5f;
-		float minI = -1000;
-		for(int i = 0 ; i < potentialMatch.size();i++){
-			if(minI < potentialMatch.get(i) ){
-				float max = potentialMatch.get(i) + maxMsDifference/1000.0f;
-				float min = potentialMatch.get(i) + minDifference/1000.0f;
-				
-				for(int j = i+1 ; j < potentialMatch.size(); j++ ){
-					if( potentialMatch.get(j) >= min && potentialMatch.get(j) <= max){
-						System.out.println("Match at: " +   potentialMatch.get(i));
-						if(match==0){
-							match = potentialMatch.get(i);
-						}
-						minI = max;
-						break;
-					}
-				}
-			}
+		List<Double> markers = d.getMarkers();
+		if(markers.size()>0){
+			match = markers.get(0);
 		}
-		refineMatch(streamIndex,match);
+		
 		markerPositions.add(match);
 		logMessage("Marker found at  " + match  + "s");
 		return match;
 	}
 	
-	private void refineMatch(int streamIndex, final double matchToRefine){
-		final int bufferSize = 1024*5;
-		final int stepSize = 1024;
-		final int sampleRate = 44100;
-		AudioDispatcher ref; 
-		ref = AudioDispatcherFactory.fromPipe(streamFiles.get(streamIndex).getAbsolutePath(),sampleRate, bufferSize, bufferSize - stepSize);
-		ref.addAudioProcessor(new AudioProcessor() {
-			
-			@Override
-			public void processingFinished() {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			float diff = stepSize/(float)sampleRate;
-			@Override
-			public boolean process(AudioEvent audioEvent) {
-				if(audioEvent.getTimeStamp() + diff  < matchToRefine &&  audioEvent.getTimeStamp() + audioEvent.getBufferSize()/44100.0f - diff > matchToRefine  ){
-					System.out.println("Refine");
-					float[] audiobuffer = audioEvent.getFloatBuffer();
-					float maxCorr=-1000;
-					float indexMax=-1;
-					for(int i = 0 ; i < audiobuffer.length - marker.length;i++){
-						float corr = 0;
-						for(int j = 0 ; j<marker.length;j++){
-							corr += audiobuffer[i+j] * marker[j];
-						}
-						if(corr > maxCorr){
-							indexMax=i;
-							maxCorr=corr;
-						}
-					}
-					System.out.println(maxCorr + "Marker refined at:" + (audioEvent.getTimeStamp() + indexMax/(float)sampleRate));
-				}
-				return true;
-			}
-		});
-		ref.run();
-		
-	}
 
 	@Override
 	public void viewPortChanged(ViewPort newViewPort) {
