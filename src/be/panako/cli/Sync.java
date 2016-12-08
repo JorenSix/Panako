@@ -64,7 +64,9 @@ public class Sync extends Application{
 			for(int i = 1 ; i< files.size();i++){
 				others[i-1]=files.get(i).getAbsolutePath();
 			}
-			strat.sync(reference, others);			
+			for(String other : others){
+				strat.sync(reference, other);
+			}			
 		}else{
 			System.err.println("Currently only NFFT supports the sync operation!");
 		}		

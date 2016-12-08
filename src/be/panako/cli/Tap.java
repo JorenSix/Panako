@@ -80,7 +80,7 @@ public class Tap extends Application  {
 
 	@Override
 	public void run(String... args) {
-		
+		gen = new Generator();
 		client = new PanakoWebserviceClient();
 		AudioDispatcher d = null;
 		if (args.length > 0){
@@ -249,7 +249,7 @@ public class Tap extends Application  {
 		}
 	}
 	
-	private final static Generator gen = new Generator();
+	private static Generator gen = null;
 	
 	private static class Waiter implements Runnable {
 		

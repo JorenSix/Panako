@@ -53,18 +53,18 @@ public class NFFTStreamSync {
 	private static List<NFFTFingerprint> prevReferencePrints;
 
 	private final String reference;
-	private final String[] others;
+	private final String other;
 
-	private final List<NFFTSyncMatch> matches;
+	private NFFTSyncMatch match;
 
 	// fingerprints to sync are only used between 100 and 4000Hz.
-	private static final float minFrequency = 100;// hz
-	private static final float maxFrequency = 4000;// hz
+	private static final float minFrequency = 100;// Hz
+	private static final float maxFrequency = 4000;// Hz
 
-	public NFFTStreamSync(String reference, String[] others) {
+	public NFFTStreamSync(String reference, String other) {
 		this.reference = reference;
-		this.others = others;
-		matches = new ArrayList<NFFTSyncMatch>();
+		this.other = other;
+		match = null;
 	}
 
 	private List<NFFTFingerprint> extractFingerprints(String resource) {
@@ -73,7 +73,6 @@ public class NFFTStreamSync {
 		int overlap = size - Config.getInt(Key.NFFT_STEP_SIZE);
 
 		AudioDispatcher d = AudioDispatcherFactory.fromPipe(resource, samplerate, size, overlap);
-		// d.skip(millisecondsSkipped/1000.0f);
 		final NFFTEventPointProcessor minMaxProcessor = new NFFTEventPointProcessor(size, overlap, samplerate);
 		d.addAudioProcessor(minMaxProcessor);
 		d.run();
@@ -84,7 +83,7 @@ public class NFFTStreamSync {
 		// extract fingerprints for reference audio
 		// if needed, the reference prints are cached.
 		List<NFFTFingerprint> referencePrints;
-		if (reference == prevReference) {
+		if (reference.equals(prevReference)) {
 			referencePrints = prevReferencePrints;
 			System.out.println("Using cached reference prints");
 		} else {
@@ -94,16 +93,11 @@ public class NFFTStreamSync {
 			prevReference = reference;
 		}
 
-		// extract fingerprints for other audio streams
-		List<List<NFFTFingerprint>> otherPrints = new ArrayList<List<NFFTFingerprint>>();
-		for (String other : others) {
-			List<NFFTFingerprint> extracted = extractFingerprints(other);
-			filterPrints(extracted);
-			otherPrints.add(extracted);
-		}
-		// match the reference with all other streams
-
-		match(referencePrints, otherPrints);
+		// extract fingerprints for other audio stream				
+		List<NFFTFingerprint> extracted = extractFingerprints(other);
+		filterPrints(extracted);
+		
+		match(referencePrints, extracted);
 	}
 
 	private void filterPrints(List<NFFTFingerprint> prints) {
@@ -117,7 +111,6 @@ public class NFFTStreamSync {
 			NFFTFingerprint print = prints.get(i);
 			boolean smallerThanMin = print.f1 <= minf || print.f2 <= minf;
 			boolean biggerThanMax = print.f1 >= maxf || print.f2 >= maxf;
-
 			if (smallerThanMin || biggerThanMax) {
 				prints.remove(i);
 				i--;
@@ -127,29 +120,26 @@ public class NFFTStreamSync {
 		System.out.println("Filtered " + numberRemoved + " of " + prevSize + " fingerprints");
 	}
 
-	private void match(List<NFFTFingerprint> referencePrints, List<List<NFFTFingerprint>> otherPrints) {
+	private void match(List<NFFTFingerprint> referencePrints,List<NFFTFingerprint> otherPrints) {
 		// create a map with the fingerprint hash as key, and fingerprint object
 		// as value.
 		// Warning: only a single object is kept for each hash.
 		HashMap<Integer, NFFTFingerprint> referenceHash = fingerprintsToHash(referencePrints);
 
-		int otherIndex = 0;
-		for (List<NFFTFingerprint> otherPrint : otherPrints) {
-			HashMap<Integer, NFFTFingerprint> otherHash = fingerprintsToHash(otherPrint);
-			printOffset(referenceHash, otherHash, otherIndex);
-			otherIndex++;
-		}
+		HashMap<Integer, NFFTFingerprint> otherHash = fingerprintsToHash(otherPrints);
+		printOffset(referenceHash, otherHash);		
 	}
 
 	private void printOffset(HashMap<Integer, NFFTFingerprint> referenceHash,
-			HashMap<Integer, NFFTFingerprint> otherHash, int otherIndex) {
+			HashMap<Integer, NFFTFingerprint> otherHash) {
 		// key is the offset, value a list of fingerprint objects.
 		HashMap<Integer, List<NFFTFingerprint>> mostPopularOffsets = new HashMap<Integer, List<NFFTFingerprint>>();
+		
 		int minimumAlignedMatchesThreshold = Config.getInt(Key.SYNC_MIN_ALIGNED_MATCHES);
 		int maxAlignedOffsets = 0;
 
-		NFFTSyncMatch match = new NFFTSyncMatch(reference, others[otherIndex]);
-		matches.add(match);
+		List<NFFTFingerprint> matchingPairs = null;
+		int bestOffset = -1;
 
 		int numberOfMatchingHashes = 0;
 		// iterate each fingerprint in the reference stream
@@ -174,124 +164,68 @@ public class NFFTStreamSync {
 				// keep a max count
 				if (mostPopularOffsets.get(offset).size() / 2 > maxAlignedOffsets) {
 					maxAlignedOffsets = mostPopularOffsets.get(offset).size() / 2;
+					//keep a reference to the best offset, matching pairs
+					matchingPairs = mostPopularOffsets.get(offset);
+					bestOffset = offset;
 				}
 				numberOfMatchingHashes++;
 			}
 		}
-		System.out.println("Number of matching hashes between reference and query: " + numberOfMatchingHashes
-				+ " aligned: " + maxAlignedOffsets);
-
-		boolean onlyKeepBestAlignedMatch = true;
-		int removeBelow = minimumAlignedMatchesThreshold;
-		if (onlyKeepBestAlignedMatch) {
-			removeBelow = maxAlignedOffsets;
-		}
+		System.out.println("Number of matching hashes between reference and query: " + numberOfMatchingHashes + " aligned: " + maxAlignedOffsets);
+		
 		if (maxAlignedOffsets >= minimumAlignedMatchesThreshold) {
-			// remove each offset below the minimum threshold
-			List<Integer> offsetsToRemove = new ArrayList<Integer>();
-			for (Map.Entry<Integer, List<NFFTFingerprint>> entry : mostPopularOffsets.entrySet()) {
-				if (entry.getValue().size() / 2 < removeBelow) {
-					offsetsToRemove.add(entry.getKey());
-				}
+
+			int minReferenceFingerprintTimeIndex = Integer.MAX_VALUE;
+			int minOtherFingerprintTimeIndex = Integer.MAX_VALUE;
+			int maxReferenceFingerprintTimeIndex = Integer.MIN_VALUE;
+			int maxOtherFingerprintTimeIndex = Integer.MIN_VALUE;
+			// find where the offset matches start and stop
+			for (int i = 0; i < matchingPairs.size(); i += 2) {
+				NFFTFingerprint refFingerprint = matchingPairs.get(i);
+				NFFTFingerprint otherFingerprint = matchingPairs.get(i + 1);
+				minReferenceFingerprintTimeIndex = Math.min(refFingerprint.t1, minReferenceFingerprintTimeIndex);
+				minOtherFingerprintTimeIndex = Math.min(otherFingerprint.t1, minOtherFingerprintTimeIndex);
+				maxReferenceFingerprintTimeIndex = Math.max(refFingerprint.t1, maxReferenceFingerprintTimeIndex);
+				maxOtherFingerprintTimeIndex = Math.max(otherFingerprint.t1, maxOtherFingerprintTimeIndex);
 			}
-			for (Integer offsetToRemove : offsetsToRemove) {
-				mostPopularOffsets.remove(offsetToRemove);
-			}
 
-			// now only 'real' matching offsets remain in the list. These need
-			// to be refined and reported.
-			for (Map.Entry<Integer, List<NFFTFingerprint>> entry : mostPopularOffsets.entrySet()) {
-				// int offset = entry.getKey();//offset in blocks
-				List<NFFTFingerprint> matchingPairs = entry.getValue();
+			int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
+			float fftHopSizesS = Config.getInt(Key.NFFT_STEP_SIZE) / (float) samplerate;
 
-				int minReferenceFingerprintTimeIndex = Integer.MAX_VALUE;
-				int minOtherFingerprintTimeIndex = Integer.MAX_VALUE;
-				int maxReferenceFingerprintTimeIndex = Integer.MIN_VALUE;
-				int maxOtherFingerprintTimeIndex = Integer.MIN_VALUE;
-				// find where the offset matches start and stop
-				for (int i = 0; i < matchingPairs.size(); i += 2) {
-					NFFTFingerprint refFingerprint = matchingPairs.get(i);
-					NFFTFingerprint otherFingerprint = matchingPairs.get(i + 1);
-					minReferenceFingerprintTimeIndex = Math.min(refFingerprint.t1, minReferenceFingerprintTimeIndex);
-					minOtherFingerprintTimeIndex = Math.min(otherFingerprint.t1, minOtherFingerprintTimeIndex);
-					maxReferenceFingerprintTimeIndex = Math.max(refFingerprint.t1, maxReferenceFingerprintTimeIndex);
-					maxOtherFingerprintTimeIndex = Math.max(otherFingerprint.t1, maxOtherFingerprintTimeIndex);
-				}
+			double minReferenceFingerprintTime = minReferenceFingerprintTimeIndex * fftHopSizesS;
+			double minOtherFingerprintTime = minOtherFingerprintTimeIndex * fftHopSizesS;
+			
+			double maxReferenceFingerprintTime = maxReferenceFingerprintTimeIndex * fftHopSizesS;
+			double maxOtherFingerprintTime = maxOtherFingerprintTimeIndex * fftHopSizesS;
+			
 
-				double offsetAtStart = refineMatchWithCrossCovariance(minReferenceFingerprintTimeIndex,
-						minOtherFingerprintTimeIndex, otherIndex);
-				double offsetAtEnd = refineMatchWithCrossCovariance(maxReferenceFingerprintTimeIndex,
-						maxOtherFingerprintTimeIndex, otherIndex);
-				double refinedOffset = -100000;
+			String referenceFileName = new File(reference).getName();
+			String otherFileName = new File(other).getName();
 
-				int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
-				float fftHopSizesS = Config.getInt(Key.NFFT_STEP_SIZE) / (float) samplerate;
+			// This method doesn't use the refined offset:
+			// match.addMatch((float) minReferenceFingerprintTime, (float)
+			// maxReferenceFingerprintTime, (float) minOtherFingerprintTime,
+			// (float) maxOtherFingerprintTime,matchingPairs.size()/2);
 
-				double refinedOffsetErrorAllowed = 4 / (float) samplerate;
+			// Adding the refined result from the
+			// refineMatchWithCrossCovariance method.
+			double roughOffsetInSeconds = bestOffset * fftHopSizesS;
+			
+			double refinedOffset = refineMatchWithCrossCovariance(minReferenceFingerprintTimeIndex, minOtherFingerprintTimeIndex,0);
+			
+			NFFTSyncMatch match = new NFFTSyncMatch(reference, other,
+					minReferenceFingerprintTime,maxReferenceFingerprintTime,
+					minOtherFingerprintTime,maxOtherFingerprintTime,
+					matchingPairs.size() / 2,
+					roughOffsetInSeconds,
+					refinedOffset);
+			this.match = match;
 
-				// allow 4 samples error
-				if (Math.abs(offsetAtEnd - offsetAtStart) > refinedOffsetErrorAllowed) {
-					System.out.println("Offset at start not the same as offset at end of match!");
-
-					// Look for a refined offset that appears more than once.
-					// If it is within an error of 4 samples it is probably
-					// correct.
-					List<Double> refinedOffsets = new ArrayList<Double>();
-					refinedOffsets.add(offsetAtStart);
-					refinedOffsets.add(offsetAtEnd);
-					for (int i = 2; i < matchingPairs.size() - 2; i += 2) {
-						NFFTFingerprint refFingerprint = matchingPairs.get(i);
-						NFFTFingerprint otherFingerprint = matchingPairs.get(i + 1);
-						double refinedOffsetAtIndex = refineMatchWithCrossCovariance(refFingerprint.t1,
-								otherFingerprint.t1, otherIndex);
-						boolean matchesOtherOffset = false;
-						for (Double alreadyFoundRefindOffsets : refinedOffsets) {
-							if (Math.abs(
-									refinedOffsetAtIndex - alreadyFoundRefindOffsets) <= refinedOffsetErrorAllowed) {
-								matchesOtherOffset = true;
-							}
-						}
-						if (matchesOtherOffset) {
-							refinedOffset = refinedOffsetAtIndex;
-							break;
-						}
-						refinedOffsets.add(refinedOffsetAtIndex);
-					}
-				} else {
-					refinedOffset = (offsetAtEnd + offsetAtStart) / 2.0;
-				}
-
-				if (refinedOffset == -100000) {
-					System.out.println("No matching offset found using crosscovariance.");
-					refinedOffset = offsetAtStart;
-				}
-
-				double minReferenceFingerprintTime = minReferenceFingerprintTimeIndex * fftHopSizesS;
-				double minOtherFingerprintTime = minOtherFingerprintTimeIndex * fftHopSizesS;
-				double maxReferenceFingerprintTime = maxReferenceFingerprintTimeIndex * fftHopSizesS;
-				double maxOtherFingerprintTime = maxOtherFingerprintTimeIndex * fftHopSizesS;
-
-				String referenceFileName = new File(reference).getName();
-				String otherFileName = new File(others[otherIndex]).getName();
-
-				// This method doesn't use the refined offset:
-				// match.addMatch((float) minReferenceFingerprintTime, (float)
-				// maxReferenceFingerprintTime, (float) minOtherFingerprintTime,
-				// (float) maxOtherFingerprintTime,matchingPairs.size()/2);
-
-				// Adding the refined result from the
-				// refineMatchWithCrossCovariance method.
-				match.addMatch((float) minReferenceFingerprintTime, (float) maxReferenceFingerprintTime,
-						(float) (minReferenceFingerprintTime - refinedOffset),
-						(float) (maxReferenceFingerprintTime - refinedOffset), matchingPairs.size() / 2);
-
-				String message = String.format(
-						"%s [%.1fs - %.1fs] matches %s [%.1fs - %.1fs] with an offset of %.4fs (%d matches)",
-						referenceFileName, minReferenceFingerprintTime, maxReferenceFingerprintTime, otherFileName,
-						minOtherFingerprintTime, maxOtherFingerprintTime, refinedOffset, matchingPairs.size() / 2);
-				System.out.println(message);
-
-			}
+			String message = String.format(
+					"%s [%.1fs - %.1fs] matches %s [%.1fs - %.1fs] with an offset of %.4fs (%d matches) - fingerprint offset: %.4fs",
+					referenceFileName, minReferenceFingerprintTime, maxReferenceFingerprintTime, otherFileName,
+					minOtherFingerprintTime, maxOtherFingerprintTime, refinedOffset, matchingPairs.size() / 2, roughOffsetInSeconds);
+			System.out.println(message);
 
 		} else {
 			System.out.println("No alignment found");
@@ -306,141 +240,129 @@ public class NFFTStreamSync {
 		return hash;
 	}
 
-	public List<NFFTSyncMatch> getMatches() {
-		return matches;
+	public NFFTSyncMatch getMatch() {
+		return match;
 	}
 
 	double referenceAudioStart = 0;
 	double otherAudioStart = 0;
-
-	private double refineMatchWithCrossCovariance(int referenceTime, int otherTime, int otherIndex) {
-		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
-		int size = Config.getInt(Key.NFFT_SIZE);
-
-		int overlap = size - Config.getInt(Key.NFFT_STEP_SIZE);
-
-		float sizeS = size / (float) samplerate;
-		float fftHopSizesS = Config.getInt(Key.NFFT_STEP_SIZE) / (float) samplerate;
-
-		final float[] referenceAudioFrame = new float[size];
-		final double referenceAudioToSkip = sizeS + referenceTime * fftHopSizesS;
-
-		AudioDispatcher d = AudioDispatcherFactory.fromPipe(reference, samplerate, size, overlap);
+	
+	public static float[] getAudioData(String fileName, int sampleRate, double startTime, double duration){
+	
+		int durationInSamples = (int) Math.round(duration * sampleRate);
+		final float[] audioData = new float[durationInSamples];
+		AudioDispatcher d = AudioDispatcherFactory.fromPipe(fileName, sampleRate, durationInSamples, 0,startTime,duration);
 		d.addAudioProcessor(new AudioProcessor() {
-
+			int counter = 0;
 			@Override
 			public void processingFinished() {
+				//only one pass is expected!
+				assert counter == 1;
 			}
-
+			
 			@Override
 			public boolean process(AudioEvent audioEvent) {
-
-				if (Math.abs(audioEvent.getTimeStamp() - referenceAudioToSkip) < 0.00001) {
-					referenceAudioStart = audioEvent.getTimeStamp();
-					// System.out.println("r " + audioEvent.getTimeStamp() + " "
-					// + referenceAudioStart);
-					float[] buffer = audioEvent.getFloatBuffer();
-					for (int i = 0; i < buffer.length; i++) {
-						referenceAudioFrame[i] = buffer[i];
-					}
-					return false;
+				float[] audioBuffer = audioEvent.getFloatBuffer();
+				for(int i  = 0 ; i < audioBuffer.length ; i++){
+					audioData[i] = audioBuffer[i];
 				}
+				counter ++;
 				return true;
 			}
 		});
 		d.run();
-
-		final float[] otherAudioFrame = new float[size];
-		final double otherAudioToSkip = sizeS + otherTime * fftHopSizesS;
-
-		d = AudioDispatcherFactory.fromPipe(others[otherIndex], samplerate, size, overlap);
-		d.addAudioProcessor(new AudioProcessor() {
-			@Override
-			public void processingFinished() {
-			}
-
-			@Override
-			public boolean process(AudioEvent audioEvent) {
-				if (Math.abs(audioEvent.getTimeStamp() - otherAudioToSkip) < 0.00001) {
-					// System.out.println("o " + audioEvent.getTimeStamp() + " "
-					// + otherAudioToSkip);
-					otherAudioStart = audioEvent.getTimeStamp();
-					float[] buffer = audioEvent.getFloatBuffer();
-					for (int i = 0; i < buffer.length; i++) {
-						otherAudioFrame[i] = buffer[i];
-					}
-					return false;
-				}
-				return true;
-
-			}
-		});
-
-		d.run();
-
-		// lag in samples, determines how many samples the other audio frame
-		// lags with respect to the reference audio frame.
-		int lag = bestCrossCovarianceLag(referenceAudioFrame, otherAudioFrame);
-
-		// double offsetFramesInSeconds = (referenceTime - otherTime) *
-		// fftHopSizesS;
-		double offsetStartEvent = referenceAudioStart - otherAudioStart;
-
-		// lag in seconds
-		double offsetLagInSeconds = (size - lag) / (float) samplerate;
-		double offsetLagInSeconds2 = lag / (float) samplerate;
-
-		// Happens when the fingerprint algorithm underestimated the real latency
-		double offsetTotalInSeconds1 = offsetStartEvent + offsetLagInSeconds; 
-		
-		// Happens when the fingerprint algorithm overestimated the real latency
-		double offsetTotalInSeconds2 = offsetStartEvent - offsetLagInSeconds2; 
-		double offsetFromMatching = (referenceTime - otherTime) * fftHopSizesS;
-
-		// Calculating the difference between the fingerprint match and the
-		// covariance results.
-		double dif1 = Math.abs(offsetTotalInSeconds1 - offsetFromMatching);
-		double dif2 = Math.abs(offsetTotalInSeconds2 - offsetFromMatching);
-
-		double offsetTotalInSeconds = dif1 < dif2 ? offsetTotalInSeconds1 : offsetTotalInSeconds2;
-
-		// lag is wrong if lag introduces a larger offset than algorithm:
-		if (Math.abs(offsetFromMatching - offsetTotalInSeconds) >= 2 * fftHopSizesS) {
-			offsetTotalInSeconds = offsetFromMatching;
-			System.err.println("Covariance lag incorrect!");
-		}
-
-		return offsetTotalInSeconds;
-
+		return audioData;
 	}
 
-	public int bestCrossCovarianceLag(float[] reference, float[] target) {
-		double[] covariances = crossCovariance(reference, target);
+	private double refineMatchWithCrossCovariance(int referenceBlockIndex, int otherBlockIndex,int retry) {
+		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
+		int size = Config.getInt(Key.NFFT_SIZE);
+		
+		float sizeS = size / (float) samplerate;//in seconds
+		float fftHopSizesS = Config.getInt(Key.NFFT_STEP_SIZE) / (float) samplerate;//in seconds
+		
+		int sampleRateForCovariance = 10000;
+		
+		//start a bit a 'sizeS' early so that the other audio always starts later
+		// or the covariance lag is always positive
+		final double referenceAudioStart = referenceBlockIndex * fftHopSizesS + retry;
+		final double referenceAudioDuration = 0.5; //make sure the other audio is included
+		final float[] referenceAudioFrame = getAudioData(reference, sampleRateForCovariance, referenceAudioStart, referenceAudioDuration);		
+		
+		final double otherAudioStart = sizeS + otherBlockIndex * fftHopSizesS + retry;
+		final double otherAudioDuration = 0.2;
+		final float[] otherAudioFrame = getAudioData(other, sampleRateForCovariance, otherAudioStart, otherAudioDuration);
+		
+		// lag in samples, determines how many samples the other audio frame
+		// lags with respect to the reference audio frame.
+		// is always positive or zero
+		int lag = bestCrossCovarianceLag(referenceAudioFrame, otherAudioFrame);
+		assert lag >= 0;
+		
+		//subtract the sizeS value that was added to the reference start
+		// the lag in seconds can be negative again
+		double lagInSeconds = lag/10000.0 - sizeS;
+		
+		double offsetFromMatching = (referenceBlockIndex - otherBlockIndex) * fftHopSizesS; //in seconds
+		double refinedOffset = offsetFromMatching + lagInSeconds;
+		
+		// if the difference between offset and refined offset
+		// is bigger than one fft block step then something went
+		// wrong during calculation of cross covariance
+		if( Math.abs(offsetFromMatching - refinedOffset) > 2 * sizeS){
+			System.err.println(String.format("Refined offset %.4fs differs more than two blocks (%.4fs) from fft offset  %.4fs. Retry %d ",refinedOffset,2*sizeS,offsetFromMatching,retry));
+			if(retry < 5){
+				refinedOffset = refineMatchWithCrossCovariance(referenceBlockIndex,otherBlockIndex,retry+1);
+			}else{
+				System.err.println(String.format("Did not find correct cross covar after 5 retries => fall back to fft offset"));
+				refinedOffset = offsetFromMatching;
+			}			
+		}
+		return refinedOffset;
+	}
+
+	/**
+	 * Finds the index of the best match of target in reference as defined by the cross covariance. 
+	 * @param reference The buffer with the reference time value signal.
+	 * @param target The target time value signal.
+	 * @return The index at which target is most similar to reference (as defined by the cross covariance).
+	 */
+	public static int bestCrossCovarianceLag(float[] reference, float[] target) {
+		
 		double maxCovariance = -10000000;
 		int maxCovarianceIndex = -1;
-		for (int i = 0; i < covariances.length; i++) {
-			if (maxCovariance < covariances[i]) {
+	
+		for (int i = 0; i < reference.length; i++) {
+			double covariance = covariance(reference, target, i);
+			if (covariance > maxCovariance) {
 				maxCovarianceIndex = i;
-				maxCovariance = covariances[i];
+				maxCovariance = covariance;
 			}
-		}
+		}		
 		return maxCovarianceIndex;
 	}
 
-	public double[] crossCovariance(float[] reference, float[] target) {
-		double[] covariances = new double[reference.length];
-		for (int i = 0; i < reference.length; i++) {
-			covariances[i] = covariance(reference, target, i);
-		}
-		return covariances;
-	}
 
-	public double covariance(float[] reference, float[] target, int lag) {
+	public static double covariance(float[] reference, float[] target, int lag) {
 		double covariance = 0.0;
-		for (int i = 0; i < reference.length; i++) {
-			int targetIndex = (i + lag) % reference.length;
-			covariance += reference[i] * target[targetIndex];
+		//int i; 
+		for (int i= 0; i < target.length && lag + i < reference.length; i++) {
+			covariance += reference[lag+i] * target[i];
 		}
+		/*
+		// The factor multiplies the covariance with the number of samples
+		// processed divided by the total number of samples in the query. This
+		// is to allow matches without using the complete query information.
+		// This can be seen as a kind of normalisation operation.
+		// Do not allow less than 50 samples to prevent false positives (if i =
+		// 0 then factor (and covariance) is infinite.
+		final double factor;
+		if(i < 50){
+			factor = 0;
+		}else{
+			factor = target.length / (double)i;	
+		}
+		 */
 		return covariance;
 	}
 }

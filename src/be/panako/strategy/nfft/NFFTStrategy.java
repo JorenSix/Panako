@@ -449,8 +449,8 @@ public class NFFTStrategy extends Strategy {
 		
 	}
 
-	public NFFTStreamSync sync(String reference, String[] others){
-		NFFTStreamSync syncObject = new NFFTStreamSync(reference, others);
+	public NFFTStreamSync sync(String reference,String other){
+		NFFTStreamSync syncObject = new NFFTStreamSync(reference, other);
 		syncObject.synchronize();
 		return syncObject;
 	}

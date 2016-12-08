@@ -461,10 +461,17 @@ bc. @inproceedings{six2014panako,
 
 If you use the synchronization algorithms for research purposes, please cite the following work:
 
-bc. @article{six2015synksink_jmui,
-  author = {Six, Joren and Leman, Marc},
-  title = {Synchronizing Multimodal Recordings Using Audio-To-Audio Alignment - In Press},
-  journal = {Journal on Multimodal User Interfaces}
+bc. @article{six2015multimodal,
+  author      = {Joren Six and Marc Leman},
+  title       = {{Synchronizing Multimodal Recordings Using Audio-To-Audio Alignment}},
+  issn        = {1783-7677},
+  volume      = {9},
+  number      = {3},
+  pages       = {223-229},
+  doi         = {10.1007/s12193-015-0196-1},
+  journal     = {{Journal of Multimodal User Interfaces}}, 
+  publisher   = {Springer Berlin Heidelberg},
+  year        = 2015
 }
 
 
@@ -496,5 +503,9 @@ The configuration used during the test is also included in the @doc/Reproducibil
 
 If all requirements are met, running the test is done using @bash run_experiment.bash@
 
+
+h2. Changelog
+
+<dt>Version 1.5</dt><dd>2016-12-08</dd> Improvements to SyncSink. The cross correlation now behaves well also in edge cases. The Sync code has been simplified to allow maintenance. Included unit tests. Updated to TarsosDSP version 2.4.
 
  

@@ -4,7 +4,6 @@ require 'uri'
 require 'net/http'
 require 'fileutils'
 
-
 class Jamendo
 
   def download_audio_files(json_file)  	

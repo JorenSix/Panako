@@ -94,7 +94,7 @@ public enum Key{
 	/**
 	 * The command that streams PCM audio to a pipe
 	 */
-	DECODER_PIPE_COMMAND("ffmpeg -i \"%resource%\" -vn -ar %sample_rate% -ac %channels% -sample_fmt s16 -f wav pipe:1"),
+	DECODER_PIPE_COMMAND("ffmpeg -ss %input_seeking%  %number_of_seconds% -i \"%resource%\" -vn -ar %sample_rate% -ac %channels% -sample_fmt s16 -f s16le pipe:1"),
 
 	/**
 	 * The buffer used to cache the results from 
@@ -268,7 +268,12 @@ public enum Key{
 	/**
 	 * The loudness delta in dB
 	 */
-	SYNC_MARKER_LOUDNESS_DELTA(20),
+	SYNC_MARKER_LOUDNESS_DELTA(17),
+	
+	/**
+	 * Max time stamp for marker (in seconds)
+	 */
+	SYNC_MARKER_MAX_TIMESTAMP(3),
 	
 	/**
 	 * Difference allowed in ms

@@ -390,7 +390,7 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 			for(int j = 0; j < eventPoints.size() ;j++){
 				int t2 = eventPoints.get(j).t;
 				float f2 = binStartingPointsInCents[eventPoints.get(j).f];
-				if(t1 > t2 && f1 != f2 &&  Math.abs(t2-t1) * frameDurationInMS > minEventPointDeltaTInMs &&  Math.abs(t2-t1) * frameDurationInMS < maxEventPointDeltaTInMs && f2 > minfFirstLevel && f2 < maxfFirstLevel){
+				if(t1 < t2 && f1 != f2 &&  Math.abs(t2-t1) * frameDurationInMS > minEventPointDeltaTInMs &&  Math.abs(t2-t1) * frameDurationInMS < maxEventPointDeltaTInMs && f2 > minfFirstLevel && f2 < maxfFirstLevel){
 					float energy = eventPoints.get(i).contrast + eventPoints.get(j).contrast;
 					
 					NFFTFingerprint fingerprint;

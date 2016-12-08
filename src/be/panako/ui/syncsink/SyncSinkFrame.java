@@ -66,16 +66,11 @@ import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.DefaultCaret;
 
-import be.panako.strategy.Strategy;
-import be.panako.strategy.nfft.NFFTStrategy;
 import be.panako.strategy.nfft.NFFTStreamSync;
 import be.panako.strategy.nfft.NFFTSyncMatch;
 import be.panako.util.Config;
 import be.panako.util.Key;
-import be.tarsos.dsp.AudioDispatcher;
-import be.tarsos.dsp.AudioEvent;
-import be.tarsos.dsp.AudioProcessor;
-import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
+import be.tarsos.dsp.io.PipeDecoder;
 import be.tarsos.dsp.ui.Axis;
 import be.tarsos.dsp.ui.AxisUnit;
 import be.tarsos.dsp.ui.CoordinateSystem;
@@ -190,21 +185,17 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 		this.add(createStatusBarPanel(),BorderLayout.SOUTH);
 		
 		new FileDrop(null, tabbedPane, /*dragBorder,*/ new FileDrop.Listener(){   
-			public void filesDropped( java.io.File[] files ){   
-				for( int i = 0; i < files.length; i++) {   
-					final File fileToAdd = files[i];
-					new Thread(new Runnable(){
-						@Override
-						public void run() {
+			public void filesDropped( final File[] files ){  
+				new Thread(new Runnable(){
+					@Override
+					public void run() {
+						for( int i = 0; i < files.length; i++) {   
+							final File fileToAdd = files[i];
 							logMessage("Adding " + fileToAdd.getPath()  + "...");							
-		                	openFile(fileToAdd,streamFiles.size());
-		                	logMessage("Added " + fileToAdd.getPath()  + ".");
-						}}).start();
-					try {
-						Thread.sleep(60);
-					} catch (InterruptedException e) {
-					}
-                }
+				            openFile(fileToAdd,streamFiles.size());
+				            logMessage("Added " + fileToAdd.getPath()  + ".");	
+		                }
+				}},"File adding thread").start();
 			}
         });
 	}
@@ -258,11 +249,11 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 			//float otherFileDuration = getMediaDuration(streamFiles.get(i).getAbsolutePath());
 			
 			NFFTSyncMatch match = matches.get(i-1);
-			float[] matchInfo = match.getMatch(0);
+			
 			
 			boolean isVideo = streamFiles.get(i).getName().matches("(?i).*(mpg|avi|mp4|mkv|mpeg)");
 			
-			float guessedStartTimeOfStream = (matchInfo[0] - matchInfo[2]);
+			float guessedStartTimeOfStream = (float) (match.getStartInReference() - match.getStartInMatchingStream());
 			String command;
 			if(guessedStartTimeOfStream >= 0){
 				//generate silence				
@@ -335,9 +326,7 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
     	}else{
     		streamFiles.add(file);
     		NFFTSyncMatch match = sync(streamIndex);
-    		
-    		matches.add(match);
-    		
+
     		float duration = getMediaDuration(file.getAbsolutePath());
     		if(duration > maxDuration){
     			maxDuration = duration;
@@ -349,25 +338,32 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 			cs.setMin(Axis.Y,-500);
     		
     		cs.setStartPoint(-2000, 30);
-			cs.setEndPoint(1000*maxDuration+2000,-500);				
-    	
-    		StreamLayer otherLayer = new StreamLayer(cs,streamIndex,colorMap[streamIndex%colorMap.length],fileName,false,duration*1000,this.streamFiles);
+			cs.setEndPoint(1000*maxDuration+2000,-500);
     		
-    		for(int i = 0 ; i < match.getNumberOfMatches();i++){
-    			float[] matchInfo = match.getMatch(i);
-    			float startTimeInRef = matchInfo[0];
-    			float stopTimeInRef = matchInfo[1];
-    			otherLayer.addInterval(startTimeInRef*1000,stopTimeInRef*1000,matchInfo[2]*1000,matchInfo[3]*1000);
-    			logMessage(String.format("Determined offset of %s with respect to reference audio of %.04f ",fileName,startTimeInRef));
-    			
+    		if(match != null){
+    			matches.add(match);	
+    			StreamLayer otherLayer = new StreamLayer(cs,streamIndex,colorMap[streamIndex%colorMap.length],fileName,false,duration*1000,this.streamFiles);
+    			float startTimeInRef = (float) match.getStartInReference();
+    			float stopTimeInRef = (float) match.getStopInReference();
+    			float startInResource = (float) match.getStartInMatchingStream();
+    			float stopInResource = (float) match.getStopInMatchinStream();
+    			otherLayer.addInterval(startTimeInRef*1000,stopTimeInRef*1000,startInResource*1000,stopInResource*1000);
+    			logMessage(String.format("Determined offset of %s with respect to reference audio of %.04f ",fileName,match.getRefinedOffset()));	
+    			linkedPanel.addLayer(otherLayer);
+    			streamLayers.add(otherLayer);
+    		}else{
+    			//No Match found
+    			logMessage("No Match found between  " + streamFiles.get(0).getName() + " and " + file.getName());
+    			streamFiles.remove(file);
+    			streamIndex--;
     		}
-			linkedPanel.addLayer(otherLayer);
-			streamLayers.add(otherLayer);
+	
 			linkedPanel.getViewPort().zoomToSelection();
 			syncButton.setEnabled(true);
 			
 			linkedPanel.removeLayer(resetCursorLayer);
 			linkedPanel.addLayer(resetCursorLayer);
+			
     	}
     	streamIndex++;
 	}
@@ -386,25 +382,10 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 	}
 
 	private float getMediaDuration(String absoluteFileName){
-		
-		AudioDispatcher adp = AudioDispatcherFactory.fromPipe(absoluteFileName, 44100, 1024, 0);
-		//bit hackish...
-		final double[] duration = {0.0};
-		adp.addAudioProcessor(new AudioProcessor() {
-			
-			@Override
-			public void processingFinished() {
-			}
-			
-			@Override
-			public boolean process(AudioEvent audioEvent) {
-				duration[0] = audioEvent.getTimeStamp();
-				return true;
-			}
-		});
-		adp.run();
-		LOG.info(String.format("Duration of file %s is %.02fs",absoluteFileName,duration[0]));
-		return (float) duration[0];
+		//uses ffmpeg duration
+		float duration = (float) new PipeDecoder().getDuration(absoluteFileName);
+		LOG.info(String.format("Duration of file %s is %.02fs",absoluteFileName,duration));
+		return duration;
 	}
 	
 	private void appendToCommandFile(String commandFile,String command){
@@ -446,16 +427,12 @@ public class SyncSinkFrame extends JFrame implements ViewPortChangedListener{
 	}
 	
 	private NFFTSyncMatch sync(int streamIndex){
-		Strategy strategy = Strategy.getInstance();
-		NFFTStrategy strat = (NFFTStrategy) strategy;
 		String reference = streamFiles.get(0).getAbsolutePath();
-		String[] others = {streamFiles.get(streamIndex).getAbsolutePath()};
-		NFFTStreamSync sync = strat.sync(reference, others);
-		//others is only one, so get the first Match list:
-		NFFTSyncMatch match = sync.getMatches().get(0);
-		//match.removeOverlappingMatchesWithLowerScores();
-		//match.removeMatchesWithLowerScores(0.5f);
-		return match;
+		String other = streamFiles.get(streamIndex).getAbsolutePath();		
+		NFFTStreamSync syncer = new NFFTStreamSync(reference,other);
+		syncer.synchronize();
+		//can be null when no match is found
+		return syncer.getMatch();
 	}
 
 	@Override
