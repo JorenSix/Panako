@@ -30,7 +30,7 @@
 	<target name="javadoc">
 		<javadoc access="public" 
 			author="true" 
-			classpath="${junit_jar}:../lib/TarsosDSP-2.4.jar:../lib/redisson/redisson-2.2.3.jar:../lib/json-20140107.jar:../lib/commons-exec-1.3.jar:../lib/mapdb-1.0.7.jar:../lib/webserver.jar:../lib/servlet-2-3.jar" 
+			classpath="${junit_jar}:../lib/TarsosDSP-2.4.jar:../lib/redisson/redisson-2.2.3.jar:../lib/json-20140107.jar:../lib/commons-exec-1.3.jar:../lib/mapdb-1.0.9.jar.7.jar:../lib/webserver.jar:../lib/servlet-2-3.jar" 
 			destdir="../doc/javadoc"
 			doctitle="Panako ${version}-${DSTAMP}" 
 			nodeprecated="false" 
@@ -64,7 +64,7 @@
 			</manifest>
 			
 			<!-- mapdb jar files -->
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb-1.0.7.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb-1.0.9.jar"/>
 			
 			<!-- JSON lib -->
 			<zipfileset excludes="META-INF/**" src="../lib/json-20140107.jar"/>
@@ -115,7 +115,7 @@
 			</manifest>
 			
 			<!-- mapdb jar files -->
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb-1.0.7.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb-1.0.9.jar"/>
 			
 			<!-- JSON lib -->
 			<zipfileset excludes="META-INF/**" src="../lib/json-20140107.jar"/>
