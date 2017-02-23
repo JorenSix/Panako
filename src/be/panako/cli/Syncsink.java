@@ -41,32 +41,52 @@ import java.io.File;
 
 import javax.swing.UIManager;
 
+import be.panako.strategy.nfft.NFFTStreamSync;
+import be.panako.strategy.nfft.NFFTSyncMatch;
 import be.panako.ui.syncsink.SyncSinkFrame;
 
 public class Syncsink extends Application {
 	
 	@Override
 	public void run(final String... args) {
-		javax.swing.SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-				} catch (Exception e) {
+		if(args.length == 0){
+			javax.swing.SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					try {
+						UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+					} catch (Exception e) {
+					}
+					SyncSinkFrame frame = new SyncSinkFrame();
+					frame.setSize(800, 600);
+					frame.setVisible(true);
+					Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+					frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
+					
+					//add the files
+					int i = 0;
+					for(File file : getFilesFromArguments(args)){
+						frame.openFile(file,i);
+						i++;
+					}
 				}
-				SyncSinkFrame frame = new SyncSinkFrame();
-				frame.setSize(800, 600);
-				frame.setVisible(true);
-				Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-				frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
-				
-				//add the files
-				int i = 0;
-				for(File file : getFilesFromArguments(args)){
-					frame.openFile(file,i);
-					i++;
+			});
+		}else if(args.length > 1){
+			String reference = new File(args[0]).getAbsolutePath();
+			for(int i = 1 ; i < args.length;i++){
+				String other = new File(args[i]).getAbsolutePath();
+				NFFTStreamSync syncer = new NFFTStreamSync(reference,other);
+				syncer.synchronize();
+				//can be null when no match is found
+				NFFTSyncMatch match = syncer.getMatch();
+				if(match == null){
+					System.out.println(String.format("%s;%s;NaN",args[0],args[1]));
+				}else{
+					System.out.println(String.format("%s;%s;%.3f",args[0],args[1],match.getRefinedOffset()));
 				}
 			}
-		});
+		}else{
+			System.err.print(synopsis());
+		}
 	}
 	
 	@Override
