@@ -7,8 +7,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.util.Map;
 
-import be.panako.strategy.nfft.NFFTEventPoint;
 import be.panako.strategy.nfft.NFFTFingerprint;
+import be.panako.strategy.qifft.QIFFTEventPoint;
+import be.panako.strategy.qifft.QIFFTFingerprint;
 import be.panako.util.Config;
 import be.panako.util.Key;
 import be.tarsos.dsp.ui.Axis;
@@ -17,27 +18,23 @@ import be.tarsos.dsp.ui.LinkedPanel;
 import be.tarsos.dsp.ui.layers.Layer;
 import be.tarsos.dsp.ui.layers.LayerUtilities;
 import be.tarsos.dsp.util.PitchConverter;
-import be.tarsos.dsp.util.fft.FFT;
 
-public class NFFTAudioInfoLayer implements Layer, MouseMotionListener {
+public class QIFFTAudioInfoLayer implements Layer, MouseMotionListener {
 	
 	final float[] binStartingPointsInCents;
 	final float[] binHeightsInCents;
 	private final CoordinateSystem cs;
-	private final NFFTAudioFileInfo fileInfo;
+	private final QIFFTAudioFileInfo fileInfo;
 	private boolean drawFFT;
 	
 	private Graphics2D graphics;
 	
-	private NFFTEventPoint selectedEventPoint=null;
-	
-	public NFFTAudioInfoLayer(CoordinateSystem cs,NFFTAudioFileInfo fileInfo) {
+	public QIFFTAudioInfoLayer(CoordinateSystem cs,QIFFTAudioFileInfo fileInfo) {
 		int size = Config.getInt(Key.NFFT_SIZE);
-		FFT fft = new FFT(size);
-		binStartingPointsInCents = new float[size];
-		binHeightsInCents = new float[size];
-		for (int i = 1; i < size; i++) {
-			binStartingPointsInCents[i] = (float) PitchConverter.hertzToAbsoluteCent(fft.binToHz(i,8000));
+		binStartingPointsInCents = new float[size*4];
+		binHeightsInCents = new float[size*4];
+		for (int i = 1; i < size * 4; i++) {
+			binStartingPointsInCents[i] = (float) PitchConverter.hertzToAbsoluteCent(i * 8000 / (double) binStartingPointsInCents.length);
 			binHeightsInCents[i] = binStartingPointsInCents[i] - binStartingPointsInCents[i-1];
 		}
 		this.cs = cs;
@@ -82,83 +79,53 @@ public class NFFTAudioInfoLayer implements Layer, MouseMotionListener {
 			}
 		}
 		
-
-		
-		for(NFFTEventPoint point : fileInfo.eventpoints){
+		for(QIFFTEventPoint point : fileInfo.eventpoints){
 			int timeInMs = (int) (point.t * frameDurationInMS + frameOffsetInMS + fileInfo.getTimeOffset() * 1000) ;
-			if(point == selectedEventPoint){
-				graphics.setColor(Color.RED);
-			}else{
-				graphics.setColor(Color.BLUE);
-			}
+			graphics.setColor(Color.BLUE);			
 			if(timeInMs > cs.getMin(Axis.X) && timeInMs <  cs.getMax(Axis.X)){
-				float cents = binStartingPointsInCents[point.f] + binHeightsInCents[point.f]/2.0f;
+				float cents = point.getFrequencyInCents();
 				float timeDiameter = LayerUtilities.pixelsToUnits(graphics, 10, true);
 				float frequencyDiameter = LayerUtilities.pixelsToUnits(graphics, 10, false);
-				
 				graphics.drawOval(Math.round(timeInMs-timeDiameter/2.0f) , Math.round(cents - frequencyDiameter/2.0f), Math.round(timeDiameter), Math.round(frequencyDiameter));
 			}
 		}
 		
-		for(NFFTEventPoint point : fileInfo.matchingEventPoints){
-			int timeInMs = (int) (point.t * frameDurationInMS + frameOffsetInMS + fileInfo.getTimeOffset() * 1000 );
-			if(selectedEventPoint == point){
-				graphics.setColor(Color.RED);
-			}else{
-				graphics.setColor(Color.GREEN);
+		
+		for(QIFFTFingerprint print : fileInfo.fingerprints){
+			int timeInMsT1 = (int) (print.t1 * frameDurationInMS + frameOffsetInMS + fileInfo.getTimeOffset() * 1000);
+			int timeInMsT2 = (int) (print.t2 * frameDurationInMS + frameOffsetInMS + fileInfo.getTimeOffset() * 1000);
+			graphics.setColor(Color.ORANGE);
+			if(timeInMsT1 > cs.getMin(Axis.X) && timeInMsT1 <  cs.getMax(Axis.X)){
+				graphics.drawLine(Math.round(timeInMsT1), (int) Math.round(print.f1Estimate), Math.round(timeInMsT2),(int) Math.round(print.f2Estimate));
 			}
+		}
+		
+		for(QIFFTEventPoint point : fileInfo.matchingEventPoints){
+			int timeInMs = (int) (point.t * frameDurationInMS + frameOffsetInMS + fileInfo.getTimeOffset() * 1000 );
+			graphics.setColor(Color.GREEN);
 			if(timeInMs > cs.getMin(Axis.X) && timeInMs <  cs.getMax(Axis.X)){
-				float cents = binStartingPointsInCents[point.f] + binHeightsInCents[point.f]/2.0f;
+				float cents = point.getFrequencyInCents();
 				float timeDiameter = LayerUtilities.pixelsToUnits(graphics, 10, true);
 				float frequencyDiameter = LayerUtilities.pixelsToUnits(graphics, 10, false);
-				
 				graphics.drawOval(Math.round(timeInMs-timeDiameter/2.0f) , Math.round(cents - frequencyDiameter/2.0f), Math.round(timeDiameter), Math.round(frequencyDiameter));
 			}
-		}	
+		}
 		
-		for(NFFTFingerprint print : fileInfo.fingerprints){
+		for(QIFFTFingerprint print : fileInfo.matchingPrints){
 			int timeInMsT1 = (int) (print.t1 * frameDurationInMS + frameOffsetInMS + fileInfo.getTimeOffset() * 1000);
 			int timeInMsT2 = (int) (print.t2 * frameDurationInMS + frameOffsetInMS + fileInfo.getTimeOffset() * 1000);
-			if(NFFTAudioFileInfo.isFingerprintSelected(print)){
-				graphics.setColor(Color.RED);
-			}else{
-				graphics.setColor(Color.ORANGE);
-			}
-			
+			graphics.setColor(Color.GREEN);
 			if(timeInMsT1 > cs.getMin(Axis.X) && timeInMsT1 <  cs.getMax(Axis.X)){
-				float centsF1 = binStartingPointsInCents[print.f1] + binHeightsInCents[print.f1]/2.0f;
-				
-				float centsF2 = binStartingPointsInCents[print.f2] + binHeightsInCents[print.f2]/2.0f;
-				
-				graphics.drawLine(Math.round(timeInMsT1), Math.round(centsF1), Math.round(timeInMsT2), Math.round(centsF2));
+				graphics.drawLine(Math.round(timeInMsT1), (int) Math.round(print.f1Estimate), Math.round(timeInMsT2),(int) Math.round(print.f2Estimate));
 			}
-		}	
-		
-		
-		for(NFFTFingerprint print : fileInfo.matchingPrints){
-			int timeInMsT1 = (int) (print.t1 * frameDurationInMS + frameOffsetInMS + fileInfo.getTimeOffset() * 1000);
-			int timeInMsT2 = (int) (print.t2 * frameDurationInMS + frameOffsetInMS + fileInfo.getTimeOffset() * 1000);
-			
-			if(NFFTAudioFileInfo.isFingerprintSelected(print)){
-				graphics.setColor(Color.RED);
-			}else{
-				graphics.setColor(Color.GREEN);
-			}
-			if(timeInMsT1 > cs.getMin(Axis.X) && timeInMsT1 <  cs.getMax(Axis.X)){
-				float centsF1 = binStartingPointsInCents[print.f1] + binHeightsInCents[print.f1]/2.0f;
-				
-				float centsF2 = binStartingPointsInCents[print.f2] + binHeightsInCents[print.f2]/2.0f;
-				
-				graphics.drawLine(Math.round(timeInMsT1), Math.round(centsF1), Math.round(timeInMsT2), Math.round(centsF2));
-			}
-		} 
+		}
 	}
 	
 	
 
 	@Override
 	public String getName() {		
-		return "NFFT Audio Info Layer";
+		return "QIFFT Audio Info Layer";
 	}
 
 	public void drawFFT(boolean selected) {
@@ -185,32 +152,6 @@ public class NFFTAudioInfoLayer implements Layer, MouseMotionListener {
 			float timeDiameter = LayerUtilities.pixelsToUnits(g, 10, true) * 2f;
 			float frequencyDiameter = LayerUtilities.pixelsToUnits(g, 10, false)* 2f;
 			
-			selectedEventPoint = null;
-			for(NFFTEventPoint eventPoint : fileInfo.eventpoints){
-				float time1 = timeIndexToTime(eventPoint.t) - timeDiameter/2.0f ;
-				float frequencyInCents1 = (frequencyIndexToCents(eventPoint.f)) - frequencyDiameter/2.0f;	
-				
-				if( time >= time1 && time <= time1+timeDiameter && 
-					frequency >= frequencyInCents1 && frequency <= frequencyInCents1 + frequencyDiameter
-					){
-					selectedEventPoint = eventPoint;
-				}	
-			}
-			
-			if(selectedEventPoint!=null){
-				NFFTAudioFileInfo.clearSelectedFingerprints();
-				for(NFFTFingerprint print: fileInfo.fingerprints){
-					if((print.t1==selectedEventPoint.t && print.f1==selectedEventPoint.f) || (print.t2==selectedEventPoint.t && print.f2==selectedEventPoint.f)){
-						NFFTAudioFileInfo.addFingerprintToSelection(print);
-					}
-				}
-				e.getComponent().getParent().invalidate();
-				for(Component c : e.getComponent().getParent().getComponents()){
-					if(c instanceof LinkedPanel){
-						c.repaint();
-					}
-				}
-			}
 		}
 		
 	}
