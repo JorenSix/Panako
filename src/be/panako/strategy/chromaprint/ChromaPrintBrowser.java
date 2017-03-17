@@ -52,6 +52,7 @@ import javax.swing.SwingUtilities;
 
 import be.panako.ui.FrequencyAxisLayer;
 import be.panako.ui.syncsink.FileDrop;
+import be.panako.util.Hamming;
 import be.tarsos.dsp.ui.AxisUnit;
 import be.tarsos.dsp.ui.CoordinateSystem;
 import be.tarsos.dsp.ui.LinkedPanel;

@@ -103,7 +103,7 @@ public abstract class Application {
 	 * @param arguments the list of command line arguments
 	 * @return A list of checked file.
 	 */
-	protected List<File> getFilesFromArguments(String[] arguments){
+	public List<File> getFilesFromArguments(String[] arguments){
 		final List<File> files = new ArrayList<File>();
 		for(final String queryFile : arguments){
 			//skip options, starting with a -

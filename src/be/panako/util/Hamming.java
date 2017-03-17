@@ -1,4 +1,6 @@
-package be.panako.strategy.chromaprint;
+package be.panako.util;
+
+import java.util.BitSet;
 
 public class Hamming {
 
@@ -30,12 +32,15 @@ public class Hamming {
 
 	        return dist;
 	    }
-
-	 public static void main(String args[]) throws Exception {
-
-	  int a = 3, b = 255;
-	  System.out.println("hamming distance between " + a + " and " + b + " is " + d(a, b));
-	 }
-
+	    
+	    public static int d(BitSet x, BitSet y){
+    		//clone the bit set x
+    		BitSet xored = (BitSet) x.clone();
+    		//xor (modifies) the bit set
+    		xored.xor(y);
+    		//return the number of 1's in the 
+    		//xored set
+    		return xored.cardinality();	    	
+	    }
 	}
 	       
