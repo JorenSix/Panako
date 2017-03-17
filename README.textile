@@ -508,4 +508,6 @@ h2. Changelog
 
 <dt>Version 1.5</dt><dd>2016-12-08</dd> Improvements to SyncSink. The cross correlation now behaves well also in edge cases. The Sync code has been simplified to allow maintenance. Included unit tests. Updated to TarsosDSP version 2.4.
 
+<dt>Version 1.6</dt><dd>2017-03-17</dd> This release adds a simplified version of chromaprint and an implementation of "'A Highly Robust Audio Fingerprinting System' by Haitsma and Kalker":http://www.ismir2002.ismir.net/proceedings/02-FP04-2.pdf
+
  
