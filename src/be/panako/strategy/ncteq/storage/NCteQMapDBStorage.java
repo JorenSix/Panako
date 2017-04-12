@@ -52,11 +52,9 @@ import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.logging.Logger;
 
 import org.mapdb.Atomic;
-import org.mapdb.BTreeKeySerializer;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
-import org.mapdb.Fun;
-import org.mapdb.Fun.Tuple4;
+import org.mapdb.Serializer;
 
 import be.panako.cli.Panako;
 import be.panako.strategy.ncteq.NCteQFingerprint;
@@ -96,8 +94,9 @@ public class NCteQMapDBStorage {
 
 	private final ConcurrentNavigableMap<Integer, String> audioNameStore;
 
-	private final NavigableSet<Fun.Tuple4<Integer, Integer, Integer, Integer>> cteqFingerprintStore;
+	private final NavigableSet<int[]> cteqFingerprintStore;
 
+	
 	private final Atomic.Long secondsCounter;
 
 	private final DB db;
@@ -116,30 +115,31 @@ public class NCteQMapDBStorage {
 		if (Panako.getCurrentApplication().writesToStorage()) {
 			// check for and create a lock.
 			checkAndCreateLock(dbFile);
-			db = DBMaker.newFileDB(dbFile)
+			db = DBMaker.fileDB(dbFile)
 					.closeOnJvmShutdown() // close the database automatically
 					.make();
 		} else {
 			// read only
-			db = DBMaker.newFileDB(dbFile)
+			db = DBMaker.fileDB(dbFile)
 					.closeOnJvmShutdown() // close the database automatically
-					.readOnly() // make the database read only
+					.readOnly() //mark readonly
 					.make();
 		}
 
-		secondsCounter = db.getAtomicLong("seconds_counter");
-
+		secondsCounter = db.atomicLong("seconds_counter").createOrOpen();
+		
 		String audioStore = "audio_store";
-
-		audioNameStore = db.createTreeMap(audioStore)
+		
+		audioNameStore = db.treeMap(audioStore).keySerializer(Serializer.INTEGER)
+				.valueSerializer(Serializer.STRING)
 				.counterEnable() // enable size counter
-				.makeOrGet();
+				.createOrOpen();
+		
 
 		String cteqStore = "cteq_store";
-		cteqFingerprintStore = db.createTreeSet(cteqStore)
-				.counterEnable() // enable size counter
-				.serializer(BTreeKeySerializer.TUPLE4)
-				.makeOrGet();
+		cteqFingerprintStore = db.treeSet(cteqStore,Serializer.INT_ARRAY)
+				.counterEnable()
+				.createOrOpen();
 	}
 
 	private void checkAndCreateLock(File dbFile) {
@@ -211,8 +211,9 @@ public class NCteQMapDBStorage {
 	public float addFingerprint(int identifier, int time, int landmarkHash,
 			int timeDelta, int frequency) {
 		int timeDeltaAndFrequency = timeDelta + (frequency << 16);
-		cteqFingerprintStore.add(Fun.t4(landmarkHash, time, identifier,
-				timeDeltaAndFrequency));
+		int[] value = {landmarkHash, time, identifier,
+				timeDeltaAndFrequency};
+		cteqFingerprintStore.add(value);
 		return 0.0f;
 	}
 
@@ -242,14 +243,13 @@ public class NCteQMapDBStorage {
 
 		for (NCteQFingerprint fingerprint : fingerprints) {
 			int hash = fingerprint.hash();
-			Tuple4<Integer, Integer, Integer, Integer> fromElement = Fun.t4(
-					hash, null, null, null);
-			Tuple4<Integer, Integer, Integer, Integer> toElement = Fun.t4(hash,
-					Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
-			Iterator<Tuple4<Integer, Integer, Integer, Integer>> it = cteqFingerprintStore
+			int[] fromElement = {hash,Integer.MIN_VALUE,Integer.MIN_VALUE,Integer.MIN_VALUE};
+			int[] toElement = {hash,Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE};
+			
+			Iterator<int[] > it = cteqFingerprintStore
 					.subSet(fromElement, toElement).iterator();
 			while (it.hasNext()) {
-				Tuple4<Integer, Integer, Integer, Integer> hit = it.next();
+				int[] hit = it.next();
 				int fingerprintHash = hash;
 				Integer[] queryInfo = queryInfoForHash.get(fingerprintHash);
 				int queryTime = queryInfo[0];
@@ -259,12 +259,12 @@ public class NCteQMapDBStorage {
 
 				lh.hash = fingerprintHash;
 
-				lh.matchTime = hit.b;
-				lh.identifier = hit.c;
+				lh.matchTime = hit[1];
+				lh.identifier = hit[2];
 				// Time delta and frequency are packed into one integer.
 				// Each have 16 bits at their disposal, so split the
 				// values.
-				int combinedTimeDeltaAndFrequency = hit.d;
+				int combinedTimeDeltaAndFrequency = hit[3];
 				int reconstructedFrequency = (combinedTimeDeltaAndFrequency >> 16);
 				int reconstructedTimeDelta = combinedTimeDeltaAndFrequency
 						- (reconstructedFrequency << 16);
@@ -465,15 +465,15 @@ public class NCteQMapDBStorage {
 			int hashCount = 1;
 			int recordCount = 0;
 			int recordCountForIf = 0;// to avoid modulo
-			Iterator<Tuple4<Integer, Integer, Integer, Integer>> it = cteqFingerprintStore
+			Iterator<int[]> it = cteqFingerprintStore
 					.iterator();
 			if (it.hasNext()) {
-				int prevHash = it.next().a;
+				int prevHash = it.next()[0];
 				recordCount++;
 				recordCountForIf++;
 				int currentHashCount = 1;
 				while (it.hasNext()) {
-					int currentHash = it.next().a;
+					int currentHash = it.next()[0];
 					recordCount++;
 					recordCountForIf++;
 					if (recordCountForIf == 1000000) {
@@ -510,7 +510,7 @@ public class NCteQMapDBStorage {
 
 	public void polluteDB(final int hashes) {
 
-		Iterator<Tuple4<Integer, Integer, Integer, Integer>> source = new Iterator<Tuple4<Integer, Integer, Integer, Integer>>() {
+		Iterator<int[]> source = new Iterator<int[]>() {
 
 			long counter = 0;
 			int hash = hashes * 4;
@@ -522,11 +522,12 @@ public class NCteQMapDBStorage {
 			}
 
 			@Override
-			public Tuple4<Integer, Integer, Integer, Integer> next() {
+			public int[] next() {
 				counter++;
 				hash = hash - 1 - rnd.nextInt(4);
-				return new Fun.Tuple4<>(hash, rnd.nextInt(), rnd.nextInt(),
-						rnd.nextInt());
+				int[] value = {hash, rnd.nextInt(), rnd.nextInt(),
+				rnd.nextInt()};
+				return value;
 			}
 
 			@Override
@@ -543,13 +544,12 @@ public class NCteQMapDBStorage {
 		String cteqStore = "cteq_store";
 
 		if (db.exists(cteqStore)) {
-			db.delete(cteqStore);
+			//db.delete(cteqStore)
 		}
 
-		db.createTreeSet(cteqStore).counterEnable()
-				// enable size counter
-				.serializer(BTreeKeySerializer.TUPLE4).pumpSource(source)
-				.make();
+		db.treeSet(cteqStore,Serializer.INT_ARRAY)
+		.counterEnable()
+		.create();
 
 		db.close();
 	}

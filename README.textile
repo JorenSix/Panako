@@ -29,6 +29,7 @@ h2. Overview
 # "Further reading":#read
 # "Credits":#credits
 # "Reproduce the ISMIR Paper Results":#ismir
+# "Changelog":#changelog
 
 h2(#why). Why Panako?
 
@@ -504,7 +505,7 @@ The configuration used during the test is also included in the @doc/Reproducibil
 If all requirements are met, running the test is done using @bash run_experiment.bash@
 
 
-h2. Changelog
+h2(#changelog). Changelog
 
 <dt>Version 1.5</dt><dd>2016-12-08</dd> Improvements to SyncSink. The cross correlation now behaves well also in edge cases. The Sync code has been simplified to allow maintenance. Included unit tests. Updated to TarsosDSP version 2.4.
 

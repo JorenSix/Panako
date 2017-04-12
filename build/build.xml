@@ -22,6 +22,7 @@
 			<classpath>
 				<fileset dir="../lib" includes="*.jar" excludes="*src*.jar"  />
 				<fileset dir="../lib/redisson" includes="redisson*.jar" excludes="*src*.jar"  />
+				<fileset dir="../lib/mapdb" includes="*.jar" excludes="*src*.jar"  />
 			</classpath>
 		</javac>
 	</target>
@@ -30,7 +31,7 @@
 	<target name="javadoc">
 		<javadoc access="public" 
 			author="true" 
-			classpath="${junit_jar}:../lib/TarsosDSP-2.4.jar:../lib/TarsosLSH-0.8.jar:../lib/redisson/redisson-2.2.3.jar:../lib/json-20140107.jar:../lib/commons-exec-1.3.jar:../lib/mapdb-1.0.9.jar.7.jar:../lib/webserver.jar:../lib/servlet-2-3.jar" 
+			classpath="${junit_jar}:../lib/TarsosDSP-2.4.jar:../lib/TarsosLSH-0.8.jar:../lib/redisson/redisson-2.2.3.jar:../lib/json-20140107.jar:../lib/commons-exec-1.3.jar:../lib/webserver.jar:../lib/servlet-2-3.jar" 
 			destdir="../doc/javadoc"
 			doctitle="Panako ${version}-${DSTAMP}" 
 			nodeprecated="false" 
@@ -64,7 +65,15 @@
 			</manifest>
 			
 			<!-- mapdb jar files -->
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb-1.0.9.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb/eclipse-collections-7.1.1.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb/eclipse-collections-api-7.1.1.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb/eclipse-collections-forkjoin-7.1.1.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb/elsa-3.0.0-M5.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb/guava-19.0.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb/kotlin-runtime-1.0.6.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb/kotlin-stdlib-1.0.6.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb/lz4-1.3.0.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb/mapdb-3.0.3.jar"/>
 			
 			<!-- JSON lib -->
 			<zipfileset excludes="META-INF/**" src="../lib/json-20140107.jar"/>
@@ -115,7 +124,15 @@
 			</manifest>
 			
 			<!-- mapdb jar files -->
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb-1.0.9.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb/eclipse-collections-7.1.1.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb/eclipse-collections-api-7.1.1.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb/eclipse-collections-forkjoin-7.1.1.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb/elsa-3.0.0-M5.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb/guava-19.0.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb/kotlin-runtime-1.0.6.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb/kotlin-stdlib-1.0.6.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb/lz4-1.3.0.jar"/>
+			<zipfileset excludes="META-INF/**" src="../lib/mapdb/mapdb-3.0.3.jar"/>
 			
 			<!-- JSON lib -->
 			<zipfileset excludes="META-INF/**" src="../lib/json-20140107.jar"/>

@@ -44,18 +44,15 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.logging.Logger;
 
-import org.mapdb.Atomic;
-import org.mapdb.BTreeKeySerializer;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
-import org.mapdb.Fun;
-import org.mapdb.Fun.Tuple3;
+import org.mapdb.Serializer;
 
 import be.panako.cli.Panako;
 import be.panako.strategy.nfft.NFFTFingerprint;
@@ -94,11 +91,11 @@ public class NFFTMapDBStorage implements Storage {
 	
 	
 
-	private final ConcurrentNavigableMap<Integer, String> audioNameStore;
+	private final NavigableMap<Integer, String> audioNameStore;
 
-	private final NavigableSet<Fun.Tuple3<Integer, Integer, Integer>> fftFingerprintStore;
+	private final NavigableSet<int []> fftFingerprintStore;
 
-	private final Atomic.Long secondsCounter;
+	private static final String SECONDS_COUNTER = "seconds_counter";
 
 	private final DB db;
 
@@ -114,43 +111,38 @@ public class NFFTMapDBStorage implements Storage {
 		if (Panako.getCurrentApplication() == null || (Panako.getCurrentApplication().writesToStorage() && !dbFile.exists())) {
 			// Check for and create a lock.
 			checkAndCreateLock(dbFile);
-			db = DBMaker.newFileDB(dbFile)
+			db = DBMaker.fileDB(dbFile)
 					.closeOnJvmShutdown() // close the database automatically
 					.make();
 			
 			// The meta-data store.
-			audioNameStore = db.createTreeMap(audioStore)
+			audioNameStore = db.treeMap(audioStore).keySerializer(Serializer.INTEGER).valueSerializer(Serializer.STRING)
 			.counterEnable() // enable size counter
-			.makeOrGet();
+			.createOrOpen();
 			
 			// The fingerprint store.
-			fftFingerprintStore = db.createTreeSet(fftStore)
-					.counterEnable() // enable size counter
-					.serializer(BTreeKeySerializer.TUPLE3)
-					.makeOrGet();
+			fftFingerprintStore = db.treeSet(fftStore, Serializer.INT_ARRAY).counterEnable().createOrOpen();
 			
 			// Create or get an atomic long
-			secondsCounter = db.getAtomicLong("seconds_counter");
+			 db.atomicLong(SECONDS_COUNTER).createOrOpen();
 		} else if(Panako.getCurrentApplication().needsStorage()){
 			// read only
 			if(Panako.getCurrentApplication().writesToStorage()){
-				db = DBMaker.newFileDB(dbFile)
+				db = DBMaker.fileDB(dbFile)
 						.closeOnJvmShutdown() // close the database automatically
 						.make();
 			}else{
-				db = DBMaker.newFileDB(dbFile)
+				db = DBMaker.fileDB(dbFile)
 						.closeOnJvmShutdown() // close the database automatically
-						.readOnly() // make the database read only
+						.readOnly() //mark readonly
 						.make();
 			}
 		
 
-			audioNameStore = db.getTreeMap(audioStore);
-			fftFingerprintStore = db.getTreeSet(fftStore);
-			secondsCounter = db.getAtomicLong("seconds_counter");
+			audioNameStore = db.treeMap(audioStore).keySerializer(Serializer.INTEGER).valueSerializer(Serializer.STRING).open();
+			fftFingerprintStore = db.treeSet(fftStore,Serializer.INT_ARRAY).counterEnable().createOrOpen();
 		}else{
 			// no database is needed
-			secondsCounter = null;
 			audioNameStore = null;
 			fftFingerprintStore = null;
 			db = null;
@@ -198,7 +190,7 @@ public class NFFTMapDBStorage implements Storage {
 	 */
 	@Override
 	public void audioObjectAdded(int numberOfSeconds) {
-		secondsCounter.addAndGet(numberOfSeconds);
+		db.atomicLong(SECONDS_COUNTER).open().addAndGet(numberOfSeconds);
 		db.commit();
 	}
 
@@ -213,7 +205,7 @@ public class NFFTMapDBStorage implements Storage {
 
 	public void checkNumberOfFingerprints() {
 
-    	Iterator<Tuple3<Integer,Integer,Integer>> it = fftFingerprintStore.iterator();
+    	Iterator<int[]> it = fftFingerprintStore.iterator();
     	int counter = 0 ; 
     	while(it.hasNext()){
     		counter++;
@@ -244,7 +236,7 @@ public class NFFTMapDBStorage implements Storage {
 	 */
 	@Override
 	public double getNumberOfSeconds() {
-		return secondsCounter.get();
+		return db.atomicLong(SECONDS_COUNTER).open().get();
 	}
 
 	/* (non-Javadoc)
@@ -261,7 +253,8 @@ public class NFFTMapDBStorage implements Storage {
 	 */
 	@Override
 	public float addFingerprint(int identifier, int time, int landmarkHash) {
-		fftFingerprintStore.add(Fun.t3(landmarkHash, time, identifier));
+		int[] value = {landmarkHash, time, identifier};
+		fftFingerprintStore.add(value);
 		return 0.0f;
 	}
 	
@@ -276,16 +269,16 @@ public class NFFTMapDBStorage implements Storage {
 		Set<NFFTFingerprintHit> allHits = new HashSet<NFFTFingerprintHit>();	
 	    for(NFFTFingerprint fingerprint: fingerprints){
 	    	int hash = fingerprint.hash();
-	    	Tuple3<Integer,Integer,Integer> fromElement = Fun.t3(hash, null, null);
-	    	Tuple3<Integer,Integer,Integer> toElement = Fun.t3(hash,Integer.MAX_VALUE, Integer.MAX_VALUE);
+	    	int[] fromElement = {hash,Integer.MIN_VALUE,Integer.MIN_VALUE};
+	    	int[] toElement = {hash,Integer.MAX_VALUE, Integer.MAX_VALUE};
 	    	
-	    	Iterator<Tuple3<Integer,Integer,Integer>> it = fftFingerprintStore.subSet(fromElement, toElement).iterator();
+	    	Iterator<int[]> it = fftFingerprintStore.subSet(fromElement, toElement).iterator();
 	    	while(it.hasNext()){
-	    		Tuple3<Integer,Integer,Integer> hit = it.next();
+	    		int[] hit = it.next();
 	    		NFFTFingerprintHit lh = new NFFTFingerprintHit();
 				int queryTime = fingerprint.t1;//queryTimeForHash.get(landmarkHash);
-				lh.matchTime = hit.b;
-				lh.identifier = hit.c;
+				lh.matchTime = hit[1];
+				lh.identifier = hit[2];
 				lh.timeDifference = lh.matchTime - queryTime;
 				lh.queryTime = queryTime;
 				allHits.add(lh);
