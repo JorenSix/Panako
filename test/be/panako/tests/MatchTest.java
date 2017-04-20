@@ -21,7 +21,7 @@ public class MatchTest {
 			
 			@Override
 			public boolean accept(File dir, String name) {
-				return name.endsWith("mp3") && name.startsWith("43383");
+				return name.endsWith("mp3") && name.startsWith("189211");
 			}
 		});
 		
@@ -37,14 +37,14 @@ public class MatchTest {
 		String[] queries = new File(queriesFolder).list(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				return name.endsWith("mp3") && name.startsWith("43383");
+				return name.endsWith("mp3") && name.startsWith("189211");
 			}
 		});
 		
 		for(final String queryFile : queries){
 			String resource = new File(queriesFolder,queryFile).getAbsolutePath();
 			
-			strategy.query(resource, 3,new QueryResultHandler() {
+			strategy.query(resource,3,new QueryResultHandler() {
 				
 				@Override
 				public void handleQueryResult(QueryResult result) {

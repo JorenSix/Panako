@@ -9,11 +9,11 @@ import java.util.List;
 import java.util.Map;
 
 import be.panako.cli.Play;
-import be.panako.util.Hamming;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
-import be.tarsosmih.BitSetWithID;
-import be.tarsosmih.MultiIndexHasher;
+import be.tarsos.mih.BitSetWithID;
+import be.tarsos.mih.MultiIndexHasher;
+import be.tarsos.mih.storage.MapDBStorage;
 
 
 public class RafsCliTest {
@@ -81,7 +81,7 @@ public class RafsCliTest {
 			
 			List<BitSetWithID> dataset = new ArrayList<>();
 			
-			MultiIndexHasher mih  = new MultiIndexHasher(128, 13, 4,true);
+			MultiIndexHasher mih  = new MultiIndexHasher(128, 13, 4,new MapDBStorage(4,"name.db"));
 			
 			if(mih.size() < 10000){
 				for(int i = 0 ; i < files.size() - 1 ; i++){
