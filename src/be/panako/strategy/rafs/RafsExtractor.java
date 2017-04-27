@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.TreeMap;
 
+import be.panako.util.cufft.CudaFFT;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
@@ -11,6 +12,7 @@ import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 import be.tarsos.dsp.util.PitchConverter;
 import be.tarsos.dsp.util.fft.FFT;
 import be.tarsos.dsp.util.fft.HammingWindow;
+
 
 /**
  * @author Joren Six
@@ -51,22 +53,28 @@ public class RafsExtractor implements AudioProcessor {
 	//represents a 32bit value in an easy to use interface, BitSet. 
 	BitSet currentFingerprint = new BitSet(32);
 	
-	
-	
 	float[] audioBuffer;
 	
 	float currentMedian;
 	
-	final FFT fft;
+	final CudaFFT fft;
+	//final cufftHandle plan;
+	
+	private final float[] window; 
+	
 	
 	String file;
+	
+
 	
 	public RafsExtractor(String file,RafsExtractor ref){
 		fingerprints = new TreeMap<>();
 		//magnitudes = new TreeMap<>();
 		
 		this.file = file;
-		fft = new FFT(size,new HammingWindow());
+		fft = new CudaFFT(size,new HammingWindow());
+		
+		 window = new HammingWindow().generateCurve(size);
 		
 		currentFFTMagnitudes = new float[size/2];
 		
@@ -76,6 +84,9 @@ public class RafsExtractor implements AudioProcessor {
 			binStartingPointsInCents[i] = (float) PitchConverter.hertzToAbsoluteCent(fft.binToHz(i,sampleRate));
 			binHeightsInCents[i] = binStartingPointsInCents[i] - binStartingPointsInCents[i-1];
 		}
+		
+		
+		
 	}
 	
 	public void starExtraction(){
@@ -93,7 +104,8 @@ public class RafsExtractor implements AudioProcessor {
 		audioBuffer = audioEvent.getFloatBuffer().clone();
 		
 		fft.forwardTransform(audioBuffer);
-		fft.modulus(audioBuffer, currentFFTMagnitudes);
+	    
+	    fft.modulus(audioBuffer, currentFFTMagnitudes);
 		
 		//clear
 		Arrays.fill(currentMagnitudes, 0);
@@ -131,7 +143,7 @@ public class RafsExtractor implements AudioProcessor {
 
 	@Override
 	public void processingFinished() {
-		
+		 fft.destroy();
 	}
 	/*
 	public void printLSHdbEntry(){

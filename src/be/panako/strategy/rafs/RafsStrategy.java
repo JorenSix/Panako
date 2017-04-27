@@ -42,22 +42,27 @@ public class RafsStrategy extends Strategy {
 		
 		TreeMap<Long, ArrayList<BitSetWithID>> mostPopularOffsets = new TreeMap<>();
 		
+		int maxMatches = 200;
+		int numMatches = -1000;
 		for(BitSetWithID print : prints){
+			if(numMatches < maxMatches){
 			Collection<BitSetWithID> response = mih.query(print);	
-			if(!response.isEmpty()){
-				BitSetWithID closest = response.iterator().next();
-				long queryIdentifier = closest.getIdentifier() >> 32;
-				long queryOffset = closest.getIdentifier() - (queryIdentifier<<32);
-				
-				long printIdentifier = print.getIdentifier() >> 32;
-				long printOffset = print.getIdentifier() - (printIdentifier<<32);
-				
-				queryOffset = queryOffset - printOffset;
-				if(!mostPopularOffsets.containsKey(queryOffset)){
-					mostPopularOffsets.put(queryOffset, new ArrayList<BitSetWithID>());
+				if(!response.isEmpty()  ){
+					BitSetWithID closest = response.iterator().next();
+					long queryIdentifier = closest.getIdentifier() >> 32;
+					long queryOffset = closest.getIdentifier() - (queryIdentifier<<32);
+					
+					long printIdentifier = print.getIdentifier() >> 32;
+					long printOffset = print.getIdentifier() - (printIdentifier<<32);
+					
+					queryOffset = queryOffset - printOffset;
+					if(!mostPopularOffsets.containsKey(queryOffset)){
+						mostPopularOffsets.put(queryOffset, new ArrayList<BitSetWithID>());
+					}
+					mostPopularOffsets.get(queryOffset).add(closest);
+					numMatches = Math.max(mostPopularOffsets.get(queryOffset).size(),numMatches);
+					//System.out.println(queryOffset);
 				}
-				mostPopularOffsets.get(queryOffset).add(closest);
-				System.out.println(queryOffset);
 			}
 		}
 		

@@ -104,7 +104,7 @@ public class RafsBrowser extends JFrame{
 						@Override
 						public void run() {					
 		                	addAudio(fileToAdd.getAbsolutePath());
-						}}).start();
+						}}).run();
                 }
 			}
         });
