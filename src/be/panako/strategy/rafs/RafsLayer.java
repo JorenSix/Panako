@@ -34,13 +34,16 @@
 
 package be.panako.strategy.rafs;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Stroke;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.util.BitSet;
 import java.util.Map;
 
+import be.panako.util.Hamming;
 import be.tarsos.dsp.ui.Axis;
 import be.tarsos.dsp.ui.CoordinateSystem;
 import be.tarsos.dsp.ui.layers.Layer;
@@ -49,45 +52,101 @@ public class RafsLayer implements Layer, MouseMotionListener {
 	
 	private final CoordinateSystem cs;
 	private final RafsExtractor fileInfo;
+	private final RafsExtractor refFileInfo;
+	private final long shift;
 	private Graphics2D graphics;
 	
 	
-	public RafsLayer(CoordinateSystem cs,RafsExtractor fileInfo) {
+	public RafsLayer(CoordinateSystem cs,RafsExtractor fileInfo,RafsExtractor refFileInfo) {
 		this.cs = cs;
 		this.fileInfo = fileInfo;
+		this.refFileInfo = refFileInfo;
+		if(refFileInfo!=null){
+			shift = ((RafsStrategy)RafsStrategy.getInstance()).align(refFileInfo.fingerprints, fileInfo.fingerprints);
+		}else{
+			shift = 0;
+		}
+		System.out.println("shift:" + shift);
 	}
 
 	@Override
 	public void draw(Graphics2D graphics) {
 		this.graphics = graphics;
 		float frameDurationInMS = (64)/  ((float) 5500) * 1000.f;
-		
-		Map<Float, BitSet> magnitudesSubMap = fileInfo.fingerprints.subMap(cs.getMin(Axis.X) / 1000.0f, cs.getMax(Axis.X) / 1000.0f );
+		Stroke stroke = graphics.getStroke();
+		if(refFileInfo!=null){
+			
+			Map<Float, BitSet> magnitudesSubMap = refFileInfo.fingerprints.subMap(cs.getMin(Axis.X) / 1000.0f, cs.getMax(Axis.X) / 1000.0f );
+			
+			graphics.setColor(Color.black);
+			for (Map.Entry<Float, BitSet> frameEntry : magnitudesSubMap.entrySet()) {
+				double timeStart = frameEntry.getKey();// in seconds
+				BitSet refMagnitudes = frameEntry.getValue();
+				Map.Entry<Float, BitSet> entry = fileInfo.fingerprints.ceilingEntry((float) timeStart+shift/1000.0f);
+				BitSet otherMagnitudes;
+				if(entry==null){
+					otherMagnitudes = refMagnitudes;
+				}else{
+					otherMagnitudes = entry.getValue();	
+				}
+
+				// draw the pixels
+				for (int i = 0; i < refMagnitudes.length(); i++) {
+					Color color = Color.black;
+					//actual energy at frame.frequencyEstimates[i];
+					float centsStartingPoint = i * 150;
+					// only draw the visible frequency range
+					if (centsStartingPoint >= cs.getMin(Axis.Y)
+							&& centsStartingPoint <= cs.getMax(Axis.Y)) {
+						int greyValue = (refMagnitudes.get(i) == otherMagnitudes.get(i)) ? 255 : 0;
+						color = new Color(greyValue, greyValue, greyValue);
+						graphics.setColor(color);
+						graphics.fillRect((int) Math.round(timeStart * 1000),
+								Math.round(centsStartingPoint),
+								(int) Math.round(frameDurationInMS),
+								(int) Math.ceil(150));
+						
+					}
+				}
 				
-		for (Map.Entry<Float, BitSet> frameEntry : magnitudesSubMap.entrySet()) {
-			double timeStart = frameEntry.getKey();// in seconds
-			BitSet magnitudes = frameEntry.getValue();
-		
-			// draw the pixels
-			for (int i = 0; i < magnitudes.length(); i++) {
-				Color color = Color.black;
-				
-				//actual energy at frame.frequencyEstimates[i];
-				
-				float centsStartingPoint = i * 150 ;
-				// only draw the visible frequency range
-				if (centsStartingPoint >= cs.getMin(Axis.Y)
-						&& centsStartingPoint <= cs.getMax(Axis.Y)) {
-					int greyValue = magnitudes.get(i) ? 255 : 0;
-					color = new Color(greyValue, greyValue, greyValue);
-					graphics.setColor(color);
-					graphics.fillRect((int) Math.round(timeStart * 1000),
-							Math.round(centsStartingPoint),
-							(int) Math.round(frameDurationInMS),
-							(int) Math.ceil(150));
+				float hammingDistance = Hamming.d(refMagnitudes, otherMagnitudes) * 150+75;
+				graphics.setColor(Color.red);
+				graphics.setStroke(new BasicStroke(75));
+				graphics.drawLine((int) Math.round(timeStart * 1000)+37,
+						Math.round(hammingDistance),
+						(int) Math.round(timeStart * 1000) + (int) Math.round(frameDurationInMS) + 37,
+						Math.round(hammingDistance));
+			}
+		}else{
+			Map<Float, BitSet> magnitudesSubMap = fileInfo.fingerprints.subMap(cs.getMin(Axis.X) / 1000.0f, cs.getMax(Axis.X) / 1000.0f );
+					
+			for (Map.Entry<Float, BitSet> frameEntry : magnitudesSubMap.entrySet()) {
+				double timeStart = frameEntry.getKey();// in seconds
+				BitSet magnitudes = frameEntry.getValue();
+			
+				// draw the pixels
+				for (int i = 0; i < magnitudes.length(); i++) {
+					Color color = Color.black;
+					
+					//actual energy at frame.frequencyEstimates[i];
+					
+					float centsStartingPoint = i * 150 ;
+					// only draw the visible frequency range
+					if (centsStartingPoint >= cs.getMin(Axis.Y)
+							&& centsStartingPoint <= cs.getMax(Axis.Y)) {
+						int greyValue = magnitudes.get(i) ? 255 : 0;
+						color = new Color(greyValue, greyValue, greyValue);
+						graphics.setColor(color);
+						graphics.fillRect((int) Math.round(timeStart * 1000),
+								Math.round(centsStartingPoint),
+								(int) Math.round(frameDurationInMS),
+								(int) Math.ceil(150));
+					}
 				}
 			}
 		}
+		graphics.setStroke(stroke);
+		graphics.setColor(Color.black);
 	}
 	
 	

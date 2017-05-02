@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.TreeMap;
 
-import be.panako.util.cufft.CudaFFT;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
@@ -47,7 +46,6 @@ public class RafsExtractor implements AudioProcessor {
 	float[] currentMagnitudes = new float[33];
 	float[] tempMagnitudes = new float[33];
 	
-	//public final TreeMap<Float,float[]> magnitudes;
 	public final TreeMap<Float,BitSet> fingerprints;
 	
 	//represents a 32bit value in an easy to use interface, BitSet. 
@@ -57,24 +55,15 @@ public class RafsExtractor implements AudioProcessor {
 	
 	float currentMedian;
 	
-	final CudaFFT fft;
-	//final cufftHandle plan;
+	final FFT fft;
 	
-	private final float[] window; 
-	
-	
-	String file;
-	
-
+	private String file;
 	
 	public RafsExtractor(String file,RafsExtractor ref){
 		fingerprints = new TreeMap<>();
-		//magnitudes = new TreeMap<>();
 		
 		this.file = file;
-		fft = new CudaFFT(size,new HammingWindow());
-		
-		 window = new HammingWindow().generateCurve(size);
+		fft = new FFT(size,new HammingWindow());
 		
 		currentFFTMagnitudes = new float[size/2];
 		
@@ -84,9 +73,6 @@ public class RafsExtractor implements AudioProcessor {
 			binStartingPointsInCents[i] = (float) PitchConverter.hertzToAbsoluteCent(fft.binToHz(i,sampleRate));
 			binHeightsInCents[i] = binStartingPointsInCents[i] - binStartingPointsInCents[i-1];
 		}
-		
-		
-		
 	}
 	
 	public void starExtraction(){
@@ -143,32 +129,6 @@ public class RafsExtractor implements AudioProcessor {
 
 	@Override
 	public void processingFinished() {
-		 fft.destroy();
+		 //fft.destroy();
 	}
-	/*
-	public void printLSHdbEntry(){
-		
-		File f = new File(file);
-		String name = f.getName();
-		int counter = -1;
-		
-		StringBuilder sb = new StringBuilder();
-		sb.append(String.format("%s_%.5f ",name,fingerprints.firstEntry().getKey()));		
-		for (Map.Entry<Float, BitSet> frameEntry : fingerprints.entrySet()) {
-			for(int i = 0 ; i < frameEntry.getValue().length() ; i++){
-				sb.append(frameEntry.getValue().get(i) ? "1 " : "0 ");
-			}
-			counter++;
-			if(counter == 3){
-				System.out.println(sb.toString());
-				sb = new StringBuilder();
-				sb.append(String.format("%s_%.5f ",name,frameEntry.getKey()));
-				for(int i = 0 ; i < frameEntry.getValue().length() ; i++){
-					sb.append(frameEntry.getValue().get(i) ? "1 " : "0 ");
-				}
-				counter = 0;
-			}
-		}
-		
-	}*/
 }

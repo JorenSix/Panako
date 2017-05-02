@@ -34,13 +34,23 @@ public class Hamming {
 	    }
 	    
 	    public static int d(BitSet x, BitSet y){
+	    	
+	    	long[] xLong = x.toLongArray();
+	    	long[] yLong = y.toLongArray();
+	    	
+	    	int d = 0;
+	    	for(int i = 0 ; i< xLong.length && i<yLong.length;i++){
+	    		d += d(xLong[i],yLong[i]);
+	    	}
+	    	return d;
+	    	
     		//clone the bit set x
-    		BitSet xored = (BitSet) x.clone();
+    		//BitSet xored = (BitSet) x.clone();
     		//xor (modifies) the bit set
-    		xored.xor(y);
+    		//xored.xor(y);
     		//return the number of 1's in the 
     		//xored set
-    		return xored.cardinality();	    	
+    		//return xored.cardinality();	    	
 	    }
 	}
 	       
