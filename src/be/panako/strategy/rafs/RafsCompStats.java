@@ -1,6 +1,7 @@
 package be.panako.strategy.rafs;
 
 import java.io.File;
+import java.nio.file.ReadOnlyFileSystemException;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
@@ -24,23 +25,33 @@ public class RafsCompStats {
 		
 		String reference = args[0];
 		TreeMap<Float, BitSet> refPrints = extractPackedPrints(new File(reference));
+		
 		List<TreeMap<Float, BitSet> > otherPrints = new ArrayList<>();
 		String[] others = new String[args.length-1];
+		float[] diffs = new float[args.length-1];
+		
 		for(int i = 1 ; i < args.length; i++){
 			others[i-1] = args[i];
 			otherPrints.add(extractPackedPrints(new File(args[i])));
+			float diff = ((RafsStrategy) RafsStrategy.getInstance()).align(refPrints, otherPrints.get(i-1));
+			diffs[i-1] = diff;
+			System.out.println(diff);
 		}
 		int frame = 0;
 		
 		for(Entry<Float,BitSet> entry : refPrints.entrySet()){
 			System.out.print(frame);
+			
+			int i = 0;
 			for(TreeMap<Float, BitSet> otherPrint : otherPrints){
-				Entry<Float,BitSet> otherEntry = otherPrint.ceilingEntry(entry.getKey());
+				float diff = diffs[i];
+				Entry<Float,BitSet> otherEntry = otherPrint.ceilingEntry(entry.getKey()+diff/1000.0f);
 				if(otherEntry == null){
 					System.out.print( " 32 ");
 				}else{
 					System.out.printf(" %d ",Hamming.d(entry.getValue(), otherEntry.getValue()));
 				}
+				i++;
 			}
 			frame ++;
 			System.out.println();

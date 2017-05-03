@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -12,15 +14,17 @@ import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
 import be.panako.util.FileUtils;
+import be.panako.util.Hamming;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 import be.tarsos.mih.BitSetWithID;
+import be.tarsos.mih.EclipseStorage;
 import be.tarsos.mih.MultiIndexHasher;
 import be.tarsos.mih.storage.MapDBStorage;
 
 public class RafsStrategy extends Strategy {
 
-	private final MultiIndexHasher mih = new MultiIndexHasher(128, 14, 4, new MapDBStorage(4, "rafs_storage.db"));
+	private final MultiIndexHasher mih = new MultiIndexHasher(128, 14, 4, new EclipseStorage(4));
 	
 	public RafsStrategy(){
 		
@@ -112,6 +116,57 @@ public class RafsStrategy extends Strategy {
 	public String resolve(String filename) {
 		return null;
 	}
+	
+	public long align(Map<Float,BitSet> reference,Map<Float,BitSet> other){
+		long numberOfMilliseconds = -1;
+		HashMap<Integer, Integer> mostPopularOffsets = new HashMap<>();
+		int popularityCount = -1;
+		List<Map.Entry<Float, BitSet>> entrySet = new ArrayList<>(other.entrySet());
+		//Collections.shuffle(entrySet);
+		//entrySet = entrySet.subList(0, 2000);
+		
+		
+		for (Map.Entry<Float, BitSet> otherPrint : entrySet) {
+			int currentMinHamming = 33;
+			int offset = -1;
+			
+			for (Map.Entry<Float, BitSet> refPrint : reference.entrySet()) {
+				int d ;
+				if(refPrint.getValue().length() > 8 && otherPrint.getValue().length() > 8){
+					d = Hamming.d(otherPrint.getValue(), refPrint.getValue());
+				}else{
+					d = 33;
+				}
+				if(d < currentMinHamming){
+					currentMinHamming = d;
+					offset  = Math.round(otherPrint.getKey() * 1000) - Math.round(refPrint.getKey() * 1000);
+				}
+			}
+			
+			//System.out.println(offset);
+			
+			if(offset != -1){
+				if(mostPopularOffsets.containsKey(offset)){
+					int newValue = mostPopularOffsets.get(offset)+1;
+					if(newValue > popularityCount){
+						popularityCount = newValue;
+						numberOfMilliseconds = offset;
+						
+						//10% match, skip evaluating the rest
+						if(popularityCount > 200 || popularityCount > 0.1 * Math.max(reference.size(),other.size())){
+							break;
+						}
+					}
+					mostPopularOffsets.put(offset,newValue);
+				}else{
+					//System.out.println(offset);
+					mostPopularOffsets.put(offset,1);
+				}
+			}
+		}
+		return numberOfMilliseconds;
+	}
+	
 	
 	private static List<BitSetWithID> extractPackedPrints(File f,int fileIndex){		
 		final int sampleRate = 5500;//2250Hz Nyquist frequency

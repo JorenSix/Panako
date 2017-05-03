@@ -165,7 +165,7 @@ public class RafsBrowser extends JFrame{
 	}
 
 	
-	private Component createFeaturePanel(RafsExtractor audioFileInfo) {
+	private Component createFeaturePanel(RafsExtractor audioFileInfo,RafsExtractor ref) {
 		
 		final LinkedPanel frequencyDomainPanel = new LinkedPanel(cs);
 		frequencyDomainPanel.getViewPort().addViewPortChangedListener(new ViewPortChangedListener() {
@@ -176,7 +176,7 @@ public class RafsBrowser extends JFrame{
 				}
 			}
 		});
-		RafsLayer infoLayer = new RafsLayer(cs,audioFileInfo);
+		RafsLayer infoLayer = new RafsLayer(cs,audioFileInfo,ref);
 		infoLayers.add(infoLayer);
 		
 		frequencyDomainPanel.addLayer(new ZoomMouseListenerLayer());
@@ -200,7 +200,7 @@ public class RafsBrowser extends JFrame{
 			referenceFile = new RafsExtractor(audioFile,null);
 			referenceFileLocation = audioFile;
 			referenceFile.starExtraction();
-			final Component featurePanel = createFeaturePanel(referenceFile);
+			final Component featurePanel = createFeaturePanel(referenceFile,null);
 			uiRunnable = new Runnable() {
 				@Override
 				public void run() {
@@ -238,8 +238,8 @@ public class RafsBrowser extends JFrame{
 			System.out.println();
 			System.out.println(String.format("Avg hamming distance for %d prints : %.4f, max d %d , min d %d",count,totalDistance/(float)count,maxDistance,minDistance));
 			
-			final Component featurePanel = createFeaturePanel(otherFileInfo);
-			uiRunnable = new Runnable() {
+			final Component featurePanel = createFeaturePanel(otherFileInfo,null);
+			Runnable otherRunnable = new Runnable() {
 				@Override
 				public void run() {
 					fingerprintPanel.add(featurePanel);
@@ -247,6 +247,18 @@ public class RafsBrowser extends JFrame{
 					fingerprintPanel.validate();
 				}
 			};
+			SwingUtilities.invokeLater(otherRunnable);
+			
+			final Component diffPanel = createFeaturePanel(otherFileInfo,referenceFile);
+			uiRunnable = new Runnable() {
+				@Override
+				public void run() {
+					fingerprintPanel.add(diffPanel);
+					//Validating a container means laying out its subcomponents:
+					fingerprintPanel.validate();
+				}
+			};
+			
 		}
 		SwingUtilities.invokeLater(uiRunnable);
 			
