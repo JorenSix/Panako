@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.TreeMap;
 
-import be.panako.util.cufft.CudaFFT;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
@@ -57,7 +56,7 @@ public class RafsExtractor implements AudioProcessor {
 	
 	float currentMedian;
 	
-	final CudaFFT fft;
+	final FFT fft;
 	//final cufftHandle plan;
 	
 	private final float[] window; 
@@ -72,7 +71,7 @@ public class RafsExtractor implements AudioProcessor {
 		//magnitudes = new TreeMap<>();
 		
 		this.file = file;
-		fft = new CudaFFT(size,new HammingWindow());
+		fft = new FFT(size,new HammingWindow());
 		
 		 window = new HammingWindow().generateCurve(size);
 		
@@ -143,7 +142,7 @@ public class RafsExtractor implements AudioProcessor {
 
 	@Override
 	public void processingFinished() {
-		 fft.destroy();
+		 //fft.destroy();
 	}
 	/*
 	public void printLSHdbEntry(){
