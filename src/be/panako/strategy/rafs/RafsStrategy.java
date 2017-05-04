@@ -6,6 +6,7 @@ import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -13,8 +14,10 @@ import java.util.TreeMap;
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
+import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Hamming;
+import be.panako.util.Key;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 import be.tarsos.mih.BitSetWithID;
@@ -117,32 +120,57 @@ public class RafsStrategy extends Strategy {
 		return null;
 	}
 	
-	public long align(Map<Float,BitSet> reference,Map<Float,BitSet> other){
+	public long align(TreeMap<Float,BitSet> reference,TreeMap<Float,BitSet> other){
 		long numberOfMilliseconds = -1;
 		HashMap<Integer, Integer> mostPopularOffsets = new HashMap<>();
 		int popularityCount = -1;
-		List<Map.Entry<Float, BitSet>> entrySet = new ArrayList<>(other.entrySet());
-		//Collections.shuffle(entrySet);
-		//entrySet = entrySet.subList(0, 2000);
+		float stepSizeInSeconds = (Config.getInt(Key.RAFS_FFT_SIZE) - Config.getInt(Key.RAFS_FFT_STEP_SIZE))/Config.getFloat(Key.RAFS_SAMPLE_RATE);
+		int subFingerprintSequenceSize = 8;
+		MultiIndexHasher mih = new MultiIndexHasher(32, 6, 2, new EclipseStorage(2));
 		
+		//create a multi index hash map 
+		for (Map.Entry<Float, BitSet> refPrint : reference.entrySet()) {
+			BitSet bitSet = refPrint.getValue();
+			long id = (long) (refPrint.getKey() * 10000);
+			BitSetWithID val = new BitSetWithID(id, bitSet);
+			mih.add(val);
+		}
 		
-		for (Map.Entry<Float, BitSet> otherPrint : entrySet) {
-			int currentMinHamming = 33;
+		for (Map.Entry<Float, BitSet> otherPrint : other.entrySet()) {
+			
+			BitSetWithID q = new BitSetWithID(0,otherPrint.getValue());			
+			Collection<BitSetWithID> nn = mih.query(q,10);
+			
+			int currentMinHamming = 33 * subFingerprintSequenceSize;
 			int offset = -1;
 			
-			for (Map.Entry<Float, BitSet> refPrint : reference.entrySet()) {
-				int d ;
-				if(refPrint.getValue().length() > 8 && otherPrint.getValue().length() > 8){
-					d = Hamming.d(otherPrint.getValue(), refPrint.getValue());
-				}else{
-					d = 33;
-				}
-				if(d < currentMinHamming){
-					currentMinHamming = d;
-					offset  = Math.round(otherPrint.getKey() * 1000) - Math.round(refPrint.getKey() * 1000);
+			float otherSequenceEnd = otherPrint.getKey() + subFingerprintSequenceSize * stepSizeInSeconds + stepSizeInSeconds/2.0f;
+			Collection<BitSet> otherSequence = other.subMap(otherPrint.getKey(), otherSequenceEnd).values();
+			
+			for(BitSetWithID neighbor : nn){
+				float neigborTime = neighbor.getIdentifier()/10000.0f;
+				float endofSequence = neigborTime + subFingerprintSequenceSize * stepSizeInSeconds + stepSizeInSeconds/2.0f;
+				Collection<BitSet> refSequence = reference.subMap(neigborTime- stepSizeInSeconds/2.0f,endofSequence).values();
+				if(otherSequence.size() == refSequence.size()){
+					int d = 0; 
+					Iterator<BitSet> refIterator = refSequence.iterator();
+					Iterator<BitSet> otherIterator = otherSequence.iterator();
+					while(refIterator.hasNext()){
+						BitSet ref = refIterator.next();
+						BitSet oth = otherIterator.next();
+						if(ref.length() > 5 && oth.length() > 5){
+							d += Hamming.d(ref, oth);
+						}else{
+							d += 33;
+						}
+					}
+					if(d < currentMinHamming){
+						currentMinHamming = d;
+						offset = Math.round((otherPrint.getKey()- neigborTime)  * 1000);
+					}
 				}
 			}
-			
+						
 			//System.out.println(offset);
 			
 			if(offset != -1){
@@ -152,7 +180,7 @@ public class RafsStrategy extends Strategy {
 						popularityCount = newValue;
 						numberOfMilliseconds = offset;
 						
-						//10% match, skip evaluating the rest
+						//10% match or more than 200 in agreement, skip evaluating the rest
 						if(popularityCount > 200 || popularityCount > 0.1 * Math.max(reference.size(),other.size())){
 							break;
 						}
@@ -169,9 +197,9 @@ public class RafsStrategy extends Strategy {
 	
 	
 	private static List<BitSetWithID> extractPackedPrints(File f,int fileIndex){		
-		final int sampleRate = 5500;//2250Hz Nyquist frequency
-		final int size = 2048;
-		final int overlap = 2048-64; //about an fft every 11.6ms (64/5500)
+		final int sampleRate = Config.getInt(Key.RAFS_SAMPLE_RATE);//2250Hz Nyquist frequency
+		final int size = Config.getInt(Key.RAFS_FFT_SIZE);
+		final int overlap =  Config.getInt(Key.RAFS_FFT_STEP_SIZE); //about an fft every 11.6ms (64/5500)
 		String file = f.getAbsolutePath();
 		AudioDispatcher d = AudioDispatcherFactory.fromPipe(file, sampleRate, size, overlap);
 		RafsExtractor ex = new RafsExtractor(file, null);

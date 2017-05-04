@@ -9,7 +9,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import be.panako.util.Config;
 import be.panako.util.Hamming;
+import be.panako.util.Key;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 
@@ -60,9 +62,9 @@ public class RafsCompStats {
 	}
 	
 	private static TreeMap<Float, BitSet> extractPackedPrints(File f){		
-		final int sampleRate = 5500;//2250Hz Nyquist frequency
-		final int size = 2048;
-		final int overlap = 2048-64; //about an fft every 11.6ms (64/5500)
+		final int sampleRate = Config.getInt(Key.RAFS_SAMPLE_RATE);//2250Hz Nyquist frequency
+		final int size = Config.getInt(Key.RAFS_FFT_SIZE);
+		final int overlap =  Config.getInt(Key.RAFS_FFT_STEP_SIZE);
 		String file = f.getAbsolutePath();
 		AudioDispatcher d = AudioDispatcherFactory.fromPipe(file, sampleRate, size, overlap);
 		RafsExtractor ex = new RafsExtractor(file, null);

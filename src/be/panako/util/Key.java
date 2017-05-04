@@ -283,6 +283,24 @@ public enum Key{
 	
 	
 	/**
+	 * The name of the MapDB database location.
+	 */
+	RAFS_DATABASE("rafs_db.db"),
+	/**
+	 * The sample rate of the input signal
+	 */
+	RAFS_SAMPLE_RATE(5500),	
+	/**
+	 * The size of the audio block and consequently the size (in samples) of the FFT.
+	 */
+	RAFS_FFT_SIZE(2048),
+	/**
+	 * The size of the audio block step size (in samples). Every 64 (2048-1984) blocks at a sample rate of 5.5k = 11.6ms
+	 */
+	RAFS_FFT_STEP_SIZE(1984),
+	
+	
+	/**
 	 * The folder where metadata (json files) for each file is stored.
 	 */
 	META_DATA_DIRECTORY("/opt/panako/metadata"), 
