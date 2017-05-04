@@ -179,7 +179,6 @@ public class RafsStrategy extends Strategy {
 					if(newValue > popularityCount){
 						popularityCount = newValue;
 						numberOfMilliseconds = offset;
-						
 						//10% match or more than 200 in agreement, skip evaluating the rest
 						if(popularityCount > 200 || popularityCount > 0.1 * Math.max(reference.size(),other.size())){
 							break;

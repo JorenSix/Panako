@@ -28,9 +28,11 @@ public class RafsCompStats {
 		String reference = args[0];
 		TreeMap<Float, BitSet> refPrints = extractPackedPrints(new File(reference));
 		
-		List<TreeMap<Float, BitSet> > otherPrints = new ArrayList<>();
+		List<TreeMap<Float, BitSet>> otherPrints = new ArrayList<>();
 		String[] others = new String[args.length-1];
 		float[] diffs = new float[args.length-1];
+		
+		TreeMap<String, List<Integer>> score = new TreeMap<>();
 		
 		for(int i = 1 ; i < args.length; i++){
 			others[i-1] = args[i];
@@ -38,6 +40,7 @@ public class RafsCompStats {
 			float diff = ((RafsStrategy) RafsStrategy.getInstance()).align(refPrints, otherPrints.get(i-1));
 			diffs[i-1] = diff;
 			System.out.println(diff);
+			score.put(new File(args[i]).getName(), new ArrayList<>());
 		}
 		int frame = 0;
 		
@@ -48,15 +51,22 @@ public class RafsCompStats {
 			for(TreeMap<Float, BitSet> otherPrint : otherPrints){
 				float diff = diffs[i];
 				Entry<Float,BitSet> otherEntry = otherPrint.ceilingEntry(entry.getKey()+diff/1000.0f);
-				if(otherEntry == null){
-					System.out.print( " 32 ");
-				}else{
-					System.out.printf(" %d ",Hamming.d(entry.getValue(), otherEntry.getValue()));
+				int d = 32;
+				if(otherEntry != null){
+					d = Hamming.d(entry.getValue(), otherEntry.getValue());
 				}
+				score.get(new File(args[i+1]).getName()).add(d);
+				System.out.printf(" %d", d);
 				i++;
 			}
 			frame ++;
 			System.out.println();
+		}
+		
+		for(Entry<String,List<Integer>> entry : score.entrySet()){
+			int sum = entry.getValue().stream().mapToInt(Integer::intValue).sum();
+			double average = sum / (double) entry.getValue().size() / 32.0;
+			System.out.printf("%s %.3f \n",entry.getKey(),average);			
 		}
 		
 	}
