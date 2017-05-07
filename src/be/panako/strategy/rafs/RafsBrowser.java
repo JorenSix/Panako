@@ -32,8 +32,6 @@
 *                                                                          *
 ****************************************************************************/
 
-
-
 package be.panako.strategy.rafs;
 
 import java.awt.BorderLayout;
@@ -71,7 +69,6 @@ public class RafsBrowser extends JFrame{
 
 	private static final long serialVersionUID = 8131793763940515009L;	
 
-
 	private String referenceFileLocation;
 	RafsExtractor referenceFile;
 	
@@ -79,7 +76,6 @@ public class RafsBrowser extends JFrame{
 	private final List<Component> featurePanels;
 	private final List<RafsLayer> infoLayers;
 	private final JPanel fingerprintPanel;
-	
 	
 	private CoordinateSystem cs;
 	
@@ -122,8 +118,6 @@ public class RafsBrowser extends JFrame{
 				clear();
 			}
 		});
-		
-		
 		buttonPanel.add(clearButton);
 		return buttonPanel;
 	}

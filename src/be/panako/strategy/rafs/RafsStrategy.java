@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -27,16 +26,40 @@ import be.tarsos.mih.storage.MapDBStorage;
 
 public class RafsStrategy extends Strategy {
 
-	private final MultiIndexHasher mih = new MultiIndexHasher(128, 14, 4, new EclipseStorage(4));
+	private final MultiIndexHasher mih;
+	//private final NavigableMap<Integer, String> audioNameStore;
+	
+	//private final DB db;
 	
 	public RafsStrategy(){
 		
+		String mapsDBFileName = Config.get(Key.RAFS_DATABASE);
+		int searchRadius = Config.getInt(Key.RAFS_HAMMINNG_SEARCH_RADIUS);
+		int chunks = Config.getInt(Key.RAFS_MIH_CHUNKS);
+		int numBits = Config.getInt(Key.RAFS_HAMMING_SPACE_NUM_BITS);
+		
+		
+		mih = new MultiIndexHasher(numBits, searchRadius, chunks, new MapDBStorage(chunks,mapsDBFileName));
+		
+		 File dbFile = new File(Config.get(Key.RAFS_DATABASE) + "desc.db");
+		// db = DBMaker.fileDB(dbFile)
+			//		.closeOnJvmShutdown() // close the database automatically
+			//		.make();
+			
+		 final String audioStore = "audio_store";
+		// The meta-data store.
+		//audioNameStore = db.treeMap(audioStore).keySerializer(Serializer.INTEGER).valueSerializer(Serializer.STRING)
+		//.counterEnable() // enable size counter
+		//.createOrOpen();
+			
 	}
 	
 	@Override
 	public double store(String resource, String description) {
-		List<BitSetWithID> prints =  extractPackedPrints(new File(resource), FileUtils.getIdentifier(resource));
+		int identifier = FileUtils.getIdentifier(resource);
+		//audioNameStore.put(identifier, description);
 		
+		List<BitSetWithID> prints =  extractPackedPrints(new File(resource), identifier);
 		for(BitSetWithID print : prints){
 			mih.add(print);
 		}
@@ -68,7 +91,6 @@ public class RafsStrategy extends Strategy {
 					}
 					mostPopularOffsets.get(queryOffset).add(closest);
 					numMatches = Math.max(mostPopularOffsets.get(queryOffset).size(),numMatches);
-					//System.out.println(queryOffset);
 				}
 			}
 		}
@@ -84,14 +106,13 @@ public class RafsStrategy extends Strategy {
 		
 		if(maxCount > 4){
 			BitSetWithID closest = maxVal.iterator().next();
-			long queryIdentifier = closest.getIdentifier() >> 32;
-			long queryOffset = closest.getIdentifier() - (queryIdentifier<<32);
-			handler.handleQueryResult(new QueryResult(queryOffset, 0, "desc", "" + queryIdentifier ,maxCount, queryOffset, 1.0, 1.0));
+			long resultIdentifier = closest.getIdentifier() >> 32;
+			long resultOffset = closest.getIdentifier() - (resultIdentifier<<32);
+			String desc = "";//audioNameStore.get(resultIdentifier);
+			handler.handleQueryResult(new QueryResult(0, 0, desc, "" + resultIdentifier ,maxCount, resultOffset, 1.0, 1.0));
 		}else{
 			handler.handleEmptyResult(new QueryResult(0, 0, "","", 0, 0, 0,0));
 		}
-		
-		
 	}
 
 	@Override
@@ -101,8 +122,8 @@ public class RafsStrategy extends Strategy {
 
 	@Override
 	public boolean hasResource(String resource) {
-		
-		return false;
+		int indentifier = FileUtils.getIdentifier(resource);
+		return resource.equals(resolve(indentifier + ""));
 	}
 
 	@Override
@@ -117,7 +138,8 @@ public class RafsStrategy extends Strategy {
 
 	@Override
 	public String resolve(String filename) {
-		return null;
+		int identifier = FileUtils.getIdentifier(new File(filename).getName());
+		return "";// audioNameStore.get(identifier);
 	}
 	
 	public long align(TreeMap<Float,BitSet> reference,TreeMap<Float,BitSet> other){

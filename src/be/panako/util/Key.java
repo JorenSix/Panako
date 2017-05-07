@@ -298,7 +298,12 @@ public enum Key{
 	 * The size of the audio block step size (in samples). Every 64 (2048-1984) blocks at a sample rate of 5.5k = 11.6ms
 	 */
 	RAFS_FFT_STEP_SIZE(1984),
-	
+	/**
+	 * The hamming search radius
+	 */
+	RAFS_HAMMINNG_SEARCH_RADIUS(16), 
+	RAFS_MIH_CHUNKS(4), 
+	RAFS_HAMMING_SPACE_NUM_BITS(128),
 	
 	/**
 	 * The folder where metadata (json files) for each file is stored.
@@ -307,7 +312,7 @@ public enum Key{
 	/**
 	 * The command executed to get meta data.
 	 */
-	META_DATA_COMMAND("/opt/panako/extract_metadata.sh");
+	META_DATA_COMMAND("/opt/panako/extract_metadata.sh"),  ;
 	
 	
 	String defaultValue;

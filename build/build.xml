@@ -84,6 +84,9 @@
 			<!-- DSP library -->
 			<zipfileset excludes="META-INF/**" src="../lib/TarsosDSP-2.4.jar"/>
 			
+			<!-- MIH library -->
+			<zipfileset excludes="META-INF/**" src="../lib/TarsosLSH-0.9.jar"/>
+			
 			<!-- webserver library -->
 			<zipfileset excludes="META-INF/**" src="../lib/webserver.jar"/>
 			
@@ -143,6 +146,9 @@
 			<!-- DSP library -->
 			<zipfileset excludes="META-INF/**" src="../lib/TarsosDSP-2.4.jar"/>
 			
+			<!-- MIH library -->
+			<zipfileset excludes="META-INF/**" src="../lib/TarsosLSH-0.9.jar"/>
+			
 			<!-- webserver library -->
 			<zipfileset excludes="META-INF/**" src="../lib/webserver.jar"/>
 			
@@ -201,7 +207,7 @@
 		 <!-- Copy the logging configuration and the main jar file -->
 	     <copy file="panako-${version}.jar" tofile="/opt/panako/panako.jar"/>
 		 <!-- Copy the default logging configuration -->
-	     <copy file="logging.properties" tofile="/opt/panako/logging.properties"/>
+	     <copy file="../doc/logging.properties" tofile="/opt/panako/logging.properties"/>
 		 <!-- Do not copy the configuration itself  -->
 		 <!-- <copy file="config.properties" tofile="/opt/panako/config.properties"/>-->
 	</target>
