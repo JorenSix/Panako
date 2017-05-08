@@ -41,14 +41,6 @@ package be.panako.util;
  * default values.
  * @author Joren Six
  */
-/**
- * @author joren
- *
- */
-/**
- * @author joren
- *
- */
 public enum Key{
 	/**
 	 * Checks the data store if the file # is already added. Set this to
@@ -301,8 +293,14 @@ public enum Key{
 	/**
 	 * The hamming search radius
 	 */
-	RAFS_HAMMINNG_SEARCH_RADIUS(16), 
+	RAFS_HAMMINNG_SEARCH_RADIUS(16),
+	/**
+	 * The number of chunks in the multi index hasher.
+	 */
 	RAFS_MIH_CHUNKS(4), 
+	/**
+	 * The number of bits stored in the the multi index hash.
+	 */
 	RAFS_HAMMING_SPACE_NUM_BITS(128),
 	
 	/**
