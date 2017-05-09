@@ -74,10 +74,14 @@ public class RafsStrategy extends Strategy {
 		
 		int maxMatches = 200;
 		int numMatches = -1000;
+		//for each fingerprint extracted from the query
 		for(BitSetWithID print : prints){
+			//if the the number of agreeing offsets is over 200, then stop
 			if(numMatches < maxMatches){
-			Collection<BitSetWithID> response = mih.query(print);	
+				//query for near neighbors
+				Collection<BitSetWithID> response = mih.query(print);
 				if(!response.isEmpty()  ){
+					//only the first neighbor is considered
 					BitSetWithID closest = response.iterator().next();
 					long queryIdentifier = closest.getIdentifier() >> 32;
 					long queryOffset = closest.getIdentifier() - (queryIdentifier<<32);
@@ -89,27 +93,32 @@ public class RafsStrategy extends Strategy {
 					if(!mostPopularOffsets.containsKey(queryOffset)){
 						mostPopularOffsets.put(queryOffset, new ArrayList<BitSetWithID>());
 					}
+					
+					//store the offset
 					mostPopularOffsets.get(queryOffset).add(closest);
+					//keep the max number of agreeing matches
 					numMatches = Math.max(mostPopularOffsets.get(queryOffset).size(),numMatches);
 				}
 			}
 		}
 		
-		List<BitSetWithID> maxVal=null;
+		//this contains the list with most
+		//List<BitSetWithID> fingerprintsWithMostCommonOffset=null;
 		int maxCount=-1;
-		for(ArrayList<BitSetWithID> val :  mostPopularOffsets.values()){
-			if(maxCount < val.size()){
-				maxCount = val.size();
-				maxVal = val;
+		long mostPopularOffset = -1;
+		for(Map.Entry<Long,ArrayList<BitSetWithID>> e :  mostPopularOffsets.entrySet()){
+			if(maxCount < e.getValue().size()){
+				maxCount = e.getValue().size();
+				//fingerprintsWithMostCommonOffset = e.getValue();
+				mostPopularOffset = e.getKey();
 			}
 		}
 		
+		
 		if(maxCount > 4){
-			BitSetWithID closest = maxVal.iterator().next();
-			long resultIdentifier = closest.getIdentifier() >> 32;
-			long resultOffset = closest.getIdentifier() - (resultIdentifier<<32);
+						
 			String desc = "";//audioNameStore.get(resultIdentifier);
-			handler.handleQueryResult(new QueryResult(0, 0, desc, "" + resultIdentifier ,maxCount, resultOffset, 1.0, 1.0));
+			handler.handleQueryResult(new QueryResult(0, 0, desc, "" + mostPopularOffset ,maxCount, mostPopularOffset, 1.0, 1.0));
 		}else{
 			handler.handleEmptyResult(new QueryResult(0, 0, "","", 0, 0, 0,0));
 		}
