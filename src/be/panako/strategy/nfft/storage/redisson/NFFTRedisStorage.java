@@ -10,11 +10,11 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
-import org.redisson.Config;
 import org.redisson.Redisson;
-import org.redisson.RedissonClient;
-import org.redisson.core.RAtomicLong;
-import org.redisson.core.RMap;
+import org.redisson.api.RAtomicLong;
+import org.redisson.api.RMap;
+import org.redisson.api.RedissonClient;
+import org.redisson.config.Config;
 
 import be.panako.strategy.nfft.NFFTFingerprint;
 import be.panako.strategy.nfft.storage.NFFTFingerprintHit;

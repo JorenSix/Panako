@@ -4,16 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.redisson.Config;
 import org.redisson.Redisson;
-import org.redisson.RedissonClient;
-import org.redisson.core.RMap;
+import org.redisson.api.RList;
+import org.redisson.api.RListMultimap;
+import org.redisson.api.RedissonClient;
+import org.redisson.config.Config;
 
 import be.tarsos.mih.storage.MIHStorage;
 
 public class RedisStorage implements MIHStorage {
 	
-	private final List<RMap<Integer, long[]>> hashtables;
+	private final List<RListMultimap<Integer, Long>> hashtables;
 	private final RedissonClient redisson;
 	
 	public RedisStorage(int numberOfTables,String name){
@@ -23,10 +24,7 @@ public class RedisStorage implements MIHStorage {
 		redisson = Redisson.create(config);
 		hashtables = new ArrayList<>();
 		for(int i = 0 ; i < numberOfTables ; i++){
-			RMap<Integer, long[]> map = redisson.getMap("fprint" + i + "" + name );
-			long[] values = {0l};
-			map.put(0,values);
-			
+			RListMultimap<Integer, Long> map = redisson.getListMultimap("fingerprint_" + i + "" + name);
 			hashtables.add(map);
 		}
 	}
@@ -36,13 +34,23 @@ public class RedisStorage implements MIHStorage {
 	}
 
 	@Override
-	public long[] put(int hashtableIndex, int key, long[] newList) {
-		return hashtables.get(hashtableIndex).put(key,newList);
+	public long[] put(int hashtableIndex, int key, long[] newArray) {
+		RList<Long> currentList = hashtables.get(hashtableIndex).get(key);
+		//append the current list with the new values
+		for(int i = currentList.size(); i <newArray.length ; i++){
+			hashtables.get(hashtableIndex).put(key,newArray[i]);
+		}		
+		return newArray;
 	}
 
 	@Override
 	public long[] get(int hashtableIndex, int key) {
-		return hashtables.get(hashtableIndex).get(key);
+		RList<Long> values = hashtables.get(hashtableIndex).get(key);
+		long[] asLongArray = new long[values.size()];
+		for(int i = 0 ; i<asLongArray.length ; i++){
+			asLongArray[i] = values.get(i);
+		}
+		return asLongArray;
 	}
 
 	@Override

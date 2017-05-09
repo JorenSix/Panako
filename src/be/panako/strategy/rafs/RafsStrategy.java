@@ -39,7 +39,7 @@ public class RafsStrategy extends Strategy {
 		int numBits = Config.getInt(Key.RAFS_HAMMING_SPACE_NUM_BITS);
 		
 		
-		mih = new MultiIndexHasher(numBits, searchRadius, chunks, new MapDBStorage(chunks,mapsDBFileName));
+		mih = new MultiIndexHasher(numBits, searchRadius, chunks, new RedisStorage(chunks,mapsDBFileName+".redis"));
 		
 		 File dbFile = new File(Config.get(Key.RAFS_DATABASE) + "desc.db");
 		// db = DBMaker.fileDB(dbFile)
