@@ -293,7 +293,7 @@ public enum Key{
 	/**
 	 * The hamming search radius
 	 */
-	RAFS_HAMMINNG_SEARCH_RADIUS(16),
+	RAFS_HAMMINNG_SEARCH_RADIUS(12),
 	/**
 	 * The number of chunks in the multi index hasher.
 	 */

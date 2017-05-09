@@ -3,6 +3,7 @@ package be.panako.strategy.rafs;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.TreeMap;
+import java.util.stream.IntStream;
 
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.AudioEvent;
@@ -46,7 +47,11 @@ public class RafsExtractor implements AudioProcessor {
 	float[] currentMagnitudes = new float[33];
 	float[] tempMagnitudes = new float[33];
 	
+	Float[] differences = new Float[32];
+	
 	public final TreeMap<Float,BitSet> fingerprints;
+	public final TreeMap<Float,int[]> fingerprintProbabilities;
+	private final boolean trackProbabilities;
 	
 	//represents a 32bit value in an easy to use interface, BitSet. 
 	BitSet currentFingerprint = new BitSet(32);
@@ -59,13 +64,15 @@ public class RafsExtractor implements AudioProcessor {
 	
 	private String file;
 	
-	public RafsExtractor(String file,RafsExtractor ref){
+	public RafsExtractor(String file,boolean trackProbabilities){
 		fingerprints = new TreeMap<>();
+		fingerprintProbabilities = new TreeMap<>();
+		
+		this.trackProbabilities = trackProbabilities;
 		
 		this.file = file;
 		fft = new FFT(size,new HammingWindow());
        
-		
 		currentFFTMagnitudes = new float[size/2];
 		
 		binStartingPointsInCents = new float[size];
@@ -113,10 +120,21 @@ public class RafsExtractor implements AudioProcessor {
 		if(previousMagnitudes != null){
 			//this makes sure that length is 32
 			currentFingerprint.set(31,true);
+			
 			for(int i = 0 ; i < currentFingerprint.length(); i++){
-				boolean value = currentMagnitudes[i] - currentMagnitudes[i+1] - (previousMagnitudes[i] - previousMagnitudes[i+1]) > 0;
-				currentFingerprint.set(i, value);
+				float difference = currentMagnitudes[i] - currentMagnitudes[i+1] - (previousMagnitudes[i] - previousMagnitudes[i+1]);
+				boolean binaryValue = difference > 0;
+				differences[i] = Math.abs(difference);
+				currentFingerprint.set(i, binaryValue);
 			}
+			if(trackProbabilities){
+				//use differences to sort the indexes from low to high probability that the bit is correct.
+				int[] sortedIndices = IntStream.range(0, differences.length)
+			                .boxed().sorted((i, j) -> differences[i].compareTo(differences[j]) )
+			                .mapToInt(ele -> ele).toArray();
+				fingerprintProbabilities.put(timeStamp, sortedIndices);
+			}
+			
 			fingerprints.put(timeStamp, (BitSet) currentFingerprint.clone());
 		}
 		

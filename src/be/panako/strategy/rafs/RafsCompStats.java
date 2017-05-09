@@ -26,7 +26,7 @@ public class RafsCompStats {
 		System.out.println();
 		
 		String reference = args[0];
-		TreeMap<Float, BitSet> refPrints = extractPackedPrints(new File(reference));
+		TreeMap<Float, BitSet> refPrints = extractPackedPrints(new File(reference),false);
 		
 		List<TreeMap<Float, BitSet>> otherPrints = new ArrayList<>();
 		String[] others = new String[args.length-1];
@@ -36,7 +36,7 @@ public class RafsCompStats {
 		
 		for(int i = 1 ; i < args.length; i++){
 			others[i-1] = args[i];
-			otherPrints.add(extractPackedPrints(new File(args[i])));
+			otherPrints.add(extractPackedPrints(new File(args[i]),false));
 			float diff = ((RafsStrategy) RafsStrategy.getInstance()).align(refPrints, otherPrints.get(i-1));
 			diffs[i-1] = diff;
 			System.out.println(diff);
@@ -71,13 +71,13 @@ public class RafsCompStats {
 		
 	}
 	
-	private static TreeMap<Float, BitSet> extractPackedPrints(File f){		
+	private static TreeMap<Float, BitSet> extractPackedPrints(File f,boolean trackProbabilities){		
 		final int sampleRate = Config.getInt(Key.RAFS_SAMPLE_RATE);//2250Hz Nyquist frequency
 		final int size = Config.getInt(Key.RAFS_FFT_SIZE);
 		final int overlap =  Config.getInt(Key.RAFS_FFT_STEP_SIZE);
 		String file = f.getAbsolutePath();
 		AudioDispatcher d = AudioDispatcherFactory.fromPipe(file, sampleRate, size, overlap);
-		RafsExtractor ex = new RafsExtractor(file, null);
+		RafsExtractor ex = new RafsExtractor(file, trackProbabilities);
 		//String baseName = f.getName();
 		d.addAudioProcessor(ex);
 		d.run();

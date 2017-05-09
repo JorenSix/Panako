@@ -191,7 +191,7 @@ public class RafsBrowser extends JFrame{
 		if(referenceFile == null){	
 			cs = new CoordinateSystem(AxisUnit.FREQUENCY, 0, 5000);
 			//remove the empty feature panel
-			referenceFile = new RafsExtractor(audioFile,null);
+			referenceFile = new RafsExtractor(audioFile,true);
 			referenceFileLocation = audioFile;
 			referenceFile.starExtraction();
 			final Component featurePanel = createFeaturePanel(referenceFile,null);
@@ -207,7 +207,7 @@ public class RafsBrowser extends JFrame{
 			// run ui stuff on ui thread.
 		
 		}else{
-			RafsExtractor otherFileInfo = new RafsExtractor(audioFile,referenceFile);
+			RafsExtractor otherFileInfo = new RafsExtractor(audioFile,true);
 			this.otherFiles.add(otherFileInfo);
 			otherFileInfo.starExtraction();
 			//otherFileInfo.printLSHdbEntry();

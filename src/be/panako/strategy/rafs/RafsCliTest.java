@@ -143,7 +143,7 @@ public class RafsCliTest {
 		final int overlap =  Config.getInt(Key.RAFS_FFT_STEP_SIZE); 
 		String file = f.getAbsolutePath();
 		AudioDispatcher d = AudioDispatcherFactory.fromPipe(file, sampleRate, size, overlap);
-		RafsExtractor ex = new RafsExtractor(file, null);
+		RafsExtractor ex = new RafsExtractor(file, true);
 		RafsPacker packer = new RafsPacker(ex);
 		//String baseName = f.getName();
 		

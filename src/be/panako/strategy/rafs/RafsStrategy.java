@@ -8,7 +8,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.TreeMap;
+
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+import org.mapdb.Serializer;
 
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
@@ -27,9 +32,9 @@ import be.tarsos.mih.storage.MapDBStorage;
 public class RafsStrategy extends Strategy {
 
 	private final MultiIndexHasher mih;
-	//private final NavigableMap<Integer, String> audioNameStore;
+	private final NavigableMap<Integer, String> audioNameStore;
 	
-	//private final DB db;
+	private final DB db;
 	
 	public RafsStrategy(){
 		
@@ -38,56 +43,69 @@ public class RafsStrategy extends Strategy {
 		int chunks = Config.getInt(Key.RAFS_MIH_CHUNKS);
 		int numBits = Config.getInt(Key.RAFS_HAMMING_SPACE_NUM_BITS);
 		
-		
 		mih = new MultiIndexHasher(numBits, searchRadius, chunks, new MapDBStorage(chunks,mapsDBFileName));
 		
 		 File dbFile = new File(Config.get(Key.RAFS_DATABASE) + "desc.db");
-		// db = DBMaker.fileDB(dbFile)
-			//		.closeOnJvmShutdown() // close the database automatically
-			//		.make();
+		 db = DBMaker.fileDB(dbFile)
+					.closeOnJvmShutdown() // close the database automatically
+					.make();
 			
 		 final String audioStore = "audio_store";
 		// The meta-data store.
-		//audioNameStore = db.treeMap(audioStore).keySerializer(Serializer.INTEGER).valueSerializer(Serializer.STRING)
-		//.counterEnable() // enable size counter
-		//.createOrOpen();
+		audioNameStore = db.treeMap(audioStore).keySerializer(Serializer.INTEGER).valueSerializer(Serializer.STRING)
+		.counterEnable() // enable size counter
+		.createOrOpen();
 			
 	}
 	
 	@Override
 	public double store(String resource, String description) {
 		int identifier = FileUtils.getIdentifier(resource);
-		//audioNameStore.put(identifier, description);
+		audioNameStore.put(identifier, description);
 		
-		List<BitSetWithID> prints =  extractPackedPrints(new File(resource), identifier);
+		List<BitSetWithID> prints =  extractPackedPrints(new File(resource), identifier,false);
 		for(BitSetWithID print : prints){
 			mih.add(print);
 		}
-		return 0;
+		
+		long finalTimeStamp = getOffset(prints.get(prints.size()-1).getIdentifier());
+		double audioDuration = finalTimeStamp/1000.0;
+		
+		return audioDuration;
+	}
+	
+	private long getOffset(long originalValue){
+		return originalValue - (getIdentifier(originalValue)<<32);
+	}
+	private long getIdentifier(long originalValue){
+		return  originalValue >> 32;	
 	}
 
 	@Override
 	public void query(String query, int maxNumberOfResults, QueryResultHandler handler) {
-		List<BitSetWithID> prints =  extractPackedPrints(new File(query), FileUtils.getIdentifier(query));
+		List<BitSetWithID> prints =  extractPackedPrints(new File(query), FileUtils.getIdentifier(query),true);
 		
 		TreeMap<Long, ArrayList<BitSetWithID>> mostPopularOffsets = new TreeMap<>();
-		
-		int maxMatches = 200;
+	
 		int numMatches = -1000;
+		int agreementThreshold = 4;
+		boolean agreementReached = false;
+		long matchIdentifier = -1;
+		long matchOffset = -1;
+		
 		//for each fingerprint extracted from the query
 		for(BitSetWithID print : prints){
 			//if the the number of agreeing offsets is over 200, then stop
-			if(numMatches < maxMatches){
+			if(agreementReached){
+				break;
+			} else {
 				//query for near neighbors
 				Collection<BitSetWithID> response = mih.query(print);
 				if(!response.isEmpty()  ){
-					//only the first neighbor is considered
+					//only the first (nearest) neighbor is considered
 					BitSetWithID closest = response.iterator().next();
-					long queryIdentifier = closest.getIdentifier() >> 32;
-					long queryOffset = closest.getIdentifier() - (queryIdentifier<<32);
-					
-					long printIdentifier = print.getIdentifier() >> 32;
-					long printOffset = print.getIdentifier() - (printIdentifier<<32);
+					long queryOffset = getOffset(closest.getIdentifier());
+					long printOffset = getOffset(print.getIdentifier());
 					
 					queryOffset = queryOffset - printOffset;
 					if(!mostPopularOffsets.containsKey(queryOffset)){
@@ -96,29 +114,42 @@ public class RafsStrategy extends Strategy {
 					
 					//store the offset
 					mostPopularOffsets.get(queryOffset).add(closest);
+					
 					//keep the max number of agreeing matches
 					numMatches = Math.max(mostPopularOffsets.get(queryOffset).size(),numMatches);
+					//if there are more than x offsets the same
+					if(numMatches >= agreementThreshold){
+						
+						//check if there are more than x identifiers the same
+						HashMap<Long, Integer> identifierCounts = new HashMap<>();
+						int maxIdentifierCount = 0;
+						List<BitSetWithID> list =mostPopularOffsets.get(queryOffset);
+						for(BitSetWithID id : list ){
+							long key = getIdentifier(id.getIdentifier());
+							if(!identifierCounts.containsKey(key)){
+								identifierCounts.put(key,0);
+							}
+							identifierCounts.put(key,identifierCounts.get(key)+1);
+							if(maxIdentifierCount<identifierCounts.get(key)){
+								maxIdentifierCount = identifierCounts.get(key);
+								matchIdentifier = key;
+							}
+						}
+						//if there are x offsets in agreement with the same identifier => match! 
+						if(maxIdentifierCount>=agreementThreshold){
+							matchOffset = queryOffset;
+							agreementReached = true;
+						}
+					} 
 				}
 			}
 		}
 		
-		//this contains the list with most
-		//List<BitSetWithID> fingerprintsWithMostCommonOffset=null;
-		int maxCount=-1;
-		long mostPopularOffset = -1;
-		for(Map.Entry<Long,ArrayList<BitSetWithID>> e :  mostPopularOffsets.entrySet()){
-			if(maxCount < e.getValue().size()){
-				maxCount = e.getValue().size();
-				//fingerprintsWithMostCommonOffset = e.getValue();
-				mostPopularOffset = e.getKey();
-			}
-		}
-		
-		
-		if(maxCount > 4){
-						
-			String desc = "";//audioNameStore.get(resultIdentifier);
-			handler.handleQueryResult(new QueryResult(0, 0, desc, "" + mostPopularOffset ,maxCount, mostPopularOffset, 1.0, 1.0));
+		if(agreementReached){
+			int fftOffset = 87;//(484 samples /5500Hz * 1000) in ms
+			long actualOffset = fftOffset + matchOffset;
+			String desc = audioNameStore.get((int) matchIdentifier);
+			handler.handleQueryResult(new QueryResult(0, 0, desc, "" + actualOffset ,4, actualOffset, 1.0, 1.0));
 		}else{
 			handler.handleEmptyResult(new QueryResult(0, 0, "","", 0, 0, 0,0));
 		}
@@ -131,8 +162,7 @@ public class RafsStrategy extends Strategy {
 
 	@Override
 	public boolean hasResource(String resource) {
-		int indentifier = FileUtils.getIdentifier(resource);
-		return resource.equals(resolve(indentifier + ""));
+		return new File(resource).getName().equals(resolve(resource));
 	}
 
 	@Override
@@ -147,8 +177,8 @@ public class RafsStrategy extends Strategy {
 
 	@Override
 	public String resolve(String filename) {
-		int identifier = FileUtils.getIdentifier(new File(filename).getName());
-		return "";// audioNameStore.get(identifier);
+		int identifier = FileUtils.getIdentifier(filename);
+		return audioNameStore.get(identifier);
 	}
 	
 	public long align(TreeMap<Float,BitSet> reference,TreeMap<Float,BitSet> other){
@@ -201,8 +231,6 @@ public class RafsStrategy extends Strategy {
 					}
 				}
 			}
-						
-			//System.out.println(offset);
 			
 			if(offset != -1){
 				if(mostPopularOffsets.containsKey(offset)){
@@ -226,13 +254,13 @@ public class RafsStrategy extends Strategy {
 	}
 	
 	
-	private static List<BitSetWithID> extractPackedPrints(File f,int fileIndex){		
+	private static List<BitSetWithID> extractPackedPrints(File f,int fileIndex,boolean trackProbabilities){		
 		final int sampleRate = Config.getInt(Key.RAFS_SAMPLE_RATE);//2250Hz Nyquist frequency
 		final int size = Config.getInt(Key.RAFS_FFT_SIZE);
 		final int overlap =  Config.getInt(Key.RAFS_FFT_STEP_SIZE); //about an fft every 11.6ms (64/5500)
 		String file = f.getAbsolutePath();
 		AudioDispatcher d = AudioDispatcherFactory.fromPipe(file, sampleRate, size, overlap);
-		RafsExtractor ex = new RafsExtractor(file, null);
+		RafsExtractor ex = new RafsExtractor(file, trackProbabilities);
 		RafsPacker packer = new RafsPacker(ex);
 		//String baseName = f.getName();
 		d.addAudioProcessor(ex);
