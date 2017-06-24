@@ -1,7 +1,7 @@
 /***************************************************************************
 *                                                                          *
 * Panako - acoustic fingerprinting                                         *
-* Copyright (C) 2014 - 2015 - Joren Six / IPEM                             *
+* Copyright (C) 2014 - 2017 - Joren Six / IPEM                             *
 *                                                                          *
 * This program is free software: you can redistribute it and/or modify     *
 * it under the terms of the GNU Affero General Public License as           *
@@ -34,12 +34,16 @@
 
 
 
+
 package be.panako.strategy;
 
+import java.util.Set;
+
+import be.panako.strategy.chromaprint.ChromaPrintStrategy;
 import be.panako.strategy.ncteq.NCteQStrategy;
 import be.panako.strategy.nfft.NFFTStrategy;
 import be.panako.strategy.pch.PitchClassHistogramStrategy;
-import be.panako.strategy.rafs.RafsStrategy;
+import be.panako.strategy.rafs.RafsRepStrategy;
 import be.panako.util.Config;
 import be.panako.util.Key;
 
@@ -55,9 +59,9 @@ public abstract class Strategy {
 	 */
 	public abstract double store(String resource, String description);
 	
-	public abstract void query(String query, int maxNumberOfResults, QueryResultHandler handler);
+	public abstract void query(String query, int maxNumberOfResults,Set<Integer> avoid, QueryResultHandler handler);
 	
-	public abstract void monitor(String query,int maxNumberOfReqults,QueryResultHandler handler);
+	public abstract void monitor(String query,int maxNumberOfReqults,Set<Integer> avoid,QueryResultHandler handler);
 	
 	/**
 	 * Are there fingerprints for this resource already stored in the database?
@@ -91,7 +95,9 @@ public abstract class Strategy {
 			}else if ("NCTEQ".equalsIgnoreCase(Config.get(Key.STRATEGY))){
 				strategy = new NCteQStrategy();
 			}else if("RAFS".equalsIgnoreCase(Config.get(Key.STRATEGY))){
-				strategy = new RafsStrategy();
+				strategy = new RafsRepStrategy();
+			}else if("CHROMAPRINT".equalsIgnoreCase(Config.get(Key.STRATEGY))){
+				strategy = new ChromaPrintStrategy();
 			}
 		}
 		return strategy;

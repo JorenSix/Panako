@@ -1,7 +1,7 @@
 /***************************************************************************
 *                                                                          *
 * Panako - acoustic fingerprinting                                         *
-* Copyright (C) 2014 - 2015 - Joren Six / IPEM                             *
+* Copyright (C) 2014 - 2017 - Joren Six / IPEM                             *
 *                                                                          *
 * This program is free software: you can redistribute it and/or modify     *
 * it under the terms of the GNU Affero General Public License as           *
@@ -32,6 +32,7 @@
 *                                                                          *
 ****************************************************************************/
 
+
 package be.panako.strategy.rafs;
 
 import java.util.BitSet;
@@ -51,29 +52,40 @@ public class RafsPacker implements AudioProcessor{
 	private final RafsExtractor extractor;
 	
 	public final TreeMap<Float,BitSet> packedFingerprints;
+	public final TreeMap<Float,int[]> packedProbabilities;
+	
+	private final boolean trackProbabilities;
 	private BitSet currentFingerprint;
+	private int[] currentProbabilities;
 	private double currentTimeStamp = 0;
 	private int bitIndex = 0;
 	
-	public RafsPacker(RafsExtractor extractor) {
+	public RafsPacker(RafsExtractor extractor,boolean trackProbabilities) {
 		this.extractor = extractor;
 		packedFingerprints = new TreeMap<>();
+		packedProbabilities = new TreeMap<>();
+		this.trackProbabilities=trackProbabilities;
 		currentFingerprint = new BitSet(128);
+		currentProbabilities = new int[128];
 	}
 
 	@Override
 	public boolean process(AudioEvent audioEvent) {
 		
 		BitSet set = extractor.fingerprints.get((float) audioEvent.getTimeStamp());
+		int[] probabilities = null;
+		if(trackProbabilities)
+			probabilities = extractor.fingerprintProbabilities.get((float) audioEvent.getTimeStamp());
 		
 		if(set != null){
-			
 			if(bitIndex == 0){
 				currentTimeStamp = audioEvent.getTimeStamp();
 			}
 			
 			for(int i = 0 ; i < 32 ; i++){
 				currentFingerprint.set(bitIndex,set.get(i));
+				if(trackProbabilities)
+					currentProbabilities[bitIndex]=probabilities[i];
 				bitIndex++;
 			}
 			
@@ -82,16 +94,21 @@ public class RafsPacker implements AudioProcessor{
 				//store the print
 				packedFingerprints.put((float) currentTimeStamp, (BitSet) currentFingerprint.clone());
 				
+				if(trackProbabilities)
+					packedProbabilities.put((float) currentTimeStamp, currentProbabilities.clone());
+				
 				//overlap of one print of 32 bits!
 				bitIndex = 0;
 				
 				for(int i = 0 ; i < 32 ; i++){
 					currentFingerprint.set(bitIndex,set.get(i));
+					if(trackProbabilities)
+						currentProbabilities[bitIndex]=probabilities[i];
 					bitIndex++;
 				}
 				currentTimeStamp = audioEvent.getTimeStamp();				
 			}
-		}
+		}		
 		
 		return true;
 	}

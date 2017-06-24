@@ -1,3 +1,37 @@
+/***************************************************************************
+*                                                                          *
+* Panako - acoustic fingerprinting                                         *
+* Copyright (C) 2014 - 2017 - Joren Six / IPEM                             *
+*                                                                          *
+* This program is free software: you can redistribute it and/or modify     *
+* it under the terms of the GNU Affero General Public License as           *
+* published by the Free Software Foundation, either version 3 of the       *
+* License, or (at your option) any later version.                          *
+*                                                                          *
+* This program is distributed in the hope that it will be useful,          *
+* but WITHOUT ANY WARRANTY; without even the implied warranty of           *
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the            *
+* GNU Affero General Public License for more details.                      *
+*                                                                          *
+* You should have received a copy of the GNU Affero General Public License *
+* along with this program.  If not, see <http://www.gnu.org/licenses/>     *
+*                                                                          *
+****************************************************************************
+*    ______   ________   ___   __    ________   ___   ___   ______         *
+*   /_____/\ /_______/\ /__/\ /__/\ /_______/\ /___/\/__/\ /_____/\        *
+*   \:::_ \ \\::: _  \ \\::\_\\  \ \\::: _  \ \\::.\ \\ \ \\:::_ \ \       *
+*    \:(_) \ \\::(_)  \ \\:. `-\  \ \\::(_)  \ \\:: \/_) \ \\:\ \ \ \      *
+*     \: ___\/ \:: __  \ \\:. _    \ \\:: __  \ \\:. __  ( ( \:\ \ \ \     *
+*      \ \ \    \:.\ \  \ \\. \`-\  \ \\:.\ \  \ \\: \ )  \ \ \:\_\ \ \    *
+*       \_\/     \__\/\__\/ \__\/ \__\/ \__\/\__\/ \__\/\__\/  \_____\/    *
+*                                                                          *
+****************************************************************************
+*                                                                          *
+*                              Panako                                      *
+*                       Acoustic Fingerprinting                            *
+*                                                                          *
+****************************************************************************/
+
 package be.panako.strategy.rafs;
 
 import java.io.File;
@@ -9,6 +43,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.mapdb.DB;
@@ -61,16 +96,18 @@ public class RafsStrategy extends Strategy {
 	@Override
 	public double store(String resource, String description) {
 		int identifier = FileUtils.getIdentifier(resource);
-		audioNameStore.put(identifier, description);
+		double audioDuration = -1;
 		
 		List<BitSetWithID> prints =  extractPackedPrints(new File(resource), identifier,false);
-		for(BitSetWithID print : prints){
-			mih.add(print);
+		if(!prints.isEmpty()){
+			for(BitSetWithID print : prints){
+				mih.add(print);
+			}
+			audioNameStore.put(identifier, description);
+			
+			long finalTimeStamp = getOffset(prints.get(prints.size()-1).getIdentifier());
+			audioDuration = finalTimeStamp/1000.0;
 		}
-		
-		long finalTimeStamp = getOffset(prints.get(prints.size()-1).getIdentifier());
-		double audioDuration = finalTimeStamp/1000.0;
-		
 		return audioDuration;
 	}
 	
@@ -82,8 +119,19 @@ public class RafsStrategy extends Strategy {
 	}
 
 	@Override
-	public void query(String query, int maxNumberOfResults, QueryResultHandler handler) {
-		List<BitSetWithID> prints =  extractPackedPrints(new File(query), FileUtils.getIdentifier(query),true);
+	public void query(String query, int maxNumberOfResults,Set<Integer> avoid, QueryResultHandler handler) {
+		int queryIndex = FileUtils.getIdentifier(query);
+		RafsPacker packer = extractPacker(new File(query),queryIndex ,true);
+		List<BitSetWithID> prints = new ArrayList<>();
+		List<int[]> probabilities = new ArrayList<>();
+		for (Map.Entry<Float, BitSet> frameEntry : packer.packedFingerprints.entrySet()) {
+			int offset = (int) (frameEntry.getKey() * 1000);
+			prints.add(new BitSetWithID(queryIndex * (1L<<32)  + offset, frameEntry.getValue()));
+		}
+		for (Map.Entry<Float, int[]> frameEntry : packer.packedProbabilities.entrySet()) {
+			probabilities.add(frameEntry.getValue());
+		}
+		
 		
 		TreeMap<Long, ArrayList<BitSetWithID>> mostPopularOffsets = new TreeMap<>();
 	
@@ -94,54 +142,62 @@ public class RafsStrategy extends Strategy {
 		long matchOffset = -1;
 		
 		//for each fingerprint extracted from the query
-		for(BitSetWithID print : prints){
+		for(int i = 0 ; i < prints.size() ; i++){
+			BitSetWithID print = prints.get(i);
+			int[] probability = probabilities.get(i);
+			BitSetWithID modifiedPrint = modifyPrint(print,probability);
 			//if the the number of agreeing offsets is over 200, then stop
 			if(agreementReached){
 				break;
 			} else {
 				//query for near neighbors
 				Collection<BitSetWithID> response = mih.query(print);
+				response.addAll(mih.query(modifiedPrint));
 				if(!response.isEmpty()  ){
-					//only the first (nearest) neighbor is considered
-					BitSetWithID closest = response.iterator().next();
-					long queryOffset = getOffset(closest.getIdentifier());
-					long printOffset = getOffset(print.getIdentifier());
+					Iterator<BitSetWithID> it = response.iterator();
+					while(it.hasNext() && ! agreementReached){
 					
-					queryOffset = queryOffset - printOffset;
-					if(!mostPopularOffsets.containsKey(queryOffset)){
-						mostPopularOffsets.put(queryOffset, new ArrayList<BitSetWithID>());
-					}
-					
-					//store the offset
-					mostPopularOffsets.get(queryOffset).add(closest);
-					
-					//keep the max number of agreeing matches
-					numMatches = Math.max(mostPopularOffsets.get(queryOffset).size(),numMatches);
-					//if there are more than x offsets the same
-					if(numMatches >= agreementThreshold){
+						//only the first (nearest) neighbor is considered
+						BitSetWithID neighbor = it.next();
+						long queryOffset = getOffset(neighbor.getIdentifier());
+						long printOffset = getOffset(print.getIdentifier());
 						
-						//check if there are more than x identifiers the same
-						HashMap<Long, Integer> identifierCounts = new HashMap<>();
-						int maxIdentifierCount = 0;
-						List<BitSetWithID> list =mostPopularOffsets.get(queryOffset);
-						for(BitSetWithID id : list ){
-							long key = getIdentifier(id.getIdentifier());
-							if(!identifierCounts.containsKey(key)){
-								identifierCounts.put(key,0);
-							}
-							identifierCounts.put(key,identifierCounts.get(key)+1);
-							if(maxIdentifierCount<identifierCounts.get(key)){
-								maxIdentifierCount = identifierCounts.get(key);
-								matchIdentifier = key;
-							}
+						queryOffset = queryOffset - printOffset;
+						if(!mostPopularOffsets.containsKey(queryOffset)){
+							mostPopularOffsets.put(queryOffset, new ArrayList<BitSetWithID>());
 						}
-						//if there are x offsets in agreement with the same identifier => match! 
-						if(maxIdentifierCount>=agreementThreshold){
-							matchOffset = queryOffset;
-							agreementReached = true;
-						}
-					} 
-				}
+						
+						//store the offset
+						mostPopularOffsets.get(queryOffset).add(neighbor);
+						
+						//keep the max number of agreeing matches
+						numMatches = Math.max(mostPopularOffsets.get(queryOffset).size(),numMatches);
+						//if there are more than x offsets the same
+						if(numMatches >= agreementThreshold){
+							
+							//check if there are more than x identifiers the same
+							HashMap<Long, Integer> identifierCounts = new HashMap<>();
+							int maxIdentifierCount = 0;
+							List<BitSetWithID> list =mostPopularOffsets.get(queryOffset);
+							for(BitSetWithID id : list ){
+								long key = getIdentifier(id.getIdentifier());
+								if(!identifierCounts.containsKey(key)){
+									identifierCounts.put(key,0);
+								}
+								identifierCounts.put(key,identifierCounts.get(key)+1);
+								if(maxIdentifierCount<identifierCounts.get(key)){
+									maxIdentifierCount = identifierCounts.get(key);
+									matchIdentifier = key;
+								}
+							}
+							//if there are x offsets in agreement with the same identifier => match! 
+							if(maxIdentifierCount>=agreementThreshold){
+								matchOffset = queryOffset;
+								agreementReached = true;
+							}
+						} 
+					}
+				}//end neighbor iterator
 			}
 		}
 		
@@ -155,8 +211,25 @@ public class RafsStrategy extends Strategy {
 		}
 	}
 
+	/**
+	 * Modifies a print so that the bits that are least certain are flipped.
+	 * @param print The original print to modify
+	 * @param probability The probabilities [0-31] for each bit, 0 means least certain. 
+	 * @return A modified print.
+	 */
+	private BitSetWithID modifyPrint(BitSetWithID print, int[] probability) {
+		BitSetWithID modifiedPrint = new BitSetWithID(print);
+		int threshold = 3;
+		for(int i = 0 ; i<probability.length ; i++){
+			if(probability[i]<threshold){
+				modifiedPrint.flip(i);
+			}
+		}		
+		return modifiedPrint;
+	}
+
 	@Override
-	public void monitor(String query, int maxNumberOfReqults, QueryResultHandler handler) {
+	public void monitor(String query, int maxNumberOfReqults,Set<Integer> avoid, QueryResultHandler handler) {
 		
 	}
 
@@ -185,7 +258,7 @@ public class RafsStrategy extends Strategy {
 		long numberOfMilliseconds = -1;
 		HashMap<Integer, Integer> mostPopularOffsets = new HashMap<>();
 		int popularityCount = -1;
-		float stepSizeInSeconds = (Config.getInt(Key.RAFS_FFT_SIZE) - Config.getInt(Key.RAFS_FFT_STEP_SIZE))/Config.getFloat(Key.RAFS_SAMPLE_RATE);
+		float stepSizeInSeconds = Config.getInt(Key.RAFS_FFT_STEP_SIZE)/Config.getFloat(Key.RAFS_SAMPLE_RATE);
 		int subFingerprintSequenceSize = 8;
 		MultiIndexHasher mih = new MultiIndexHasher(32, 6, 2, new EclipseStorage(2));
 		
@@ -199,7 +272,7 @@ public class RafsStrategy extends Strategy {
 		
 		for (Map.Entry<Float, BitSet> otherPrint : other.entrySet()) {
 			
-			BitSetWithID q = new BitSetWithID(0,otherPrint.getValue());			
+			BitSetWithID q = new BitSetWithID(0,otherPrint.getValue());
 			Collection<BitSetWithID> nn = mih.query(q,10);
 			
 			int currentMinHamming = 33 * subFingerprintSequenceSize;
@@ -254,25 +327,31 @@ public class RafsStrategy extends Strategy {
 	}
 	
 	
-	private static List<BitSetWithID> extractPackedPrints(File f,int fileIndex,boolean trackProbabilities){		
-		final int sampleRate = Config.getInt(Key.RAFS_SAMPLE_RATE);//2250Hz Nyquist frequency
-		final int size = Config.getInt(Key.RAFS_FFT_SIZE);
-		final int overlap =  Config.getInt(Key.RAFS_FFT_STEP_SIZE); //about an fft every 11.6ms (64/5500)
-		String file = f.getAbsolutePath();
-		AudioDispatcher d = AudioDispatcherFactory.fromPipe(file, sampleRate, size, overlap);
-		RafsExtractor ex = new RafsExtractor(file, trackProbabilities);
-		RafsPacker packer = new RafsPacker(ex);
-		//String baseName = f.getName();
-		d.addAudioProcessor(ex);
-		d.addAudioProcessor(packer);
-		d.run();
-		List<BitSetWithID> prints = new ArrayList<>();
-		
+	private static List<BitSetWithID> extractPackedPrints(File f,int fileIndex,boolean trackProbabilities){
+		RafsPacker packer = extractPacker(f,fileIndex,trackProbabilities);
+		List<BitSetWithID> prints = new ArrayList<>();		
 		for (Map.Entry<Float, BitSet> frameEntry : packer.packedFingerprints.entrySet()) {
 			int offset = (int) (frameEntry.getKey() * 1000);
 			prints.add(new BitSetWithID(fileIndex * (1L<<32)  + offset, frameEntry.getValue()));
 		}
 		return prints;		
+	}
+	
+	private static RafsPacker extractPacker(File f, int fileIndex, boolean trackProbabilities){
+		final int sampleRate = Config.getInt(Key.RAFS_SAMPLE_RATE);//2250Hz Nyquist frequency
+		final int size = Config.getInt(Key.RAFS_FFT_SIZE);
+		final int overlap =  size - Config.getInt(Key.RAFS_FFT_STEP_SIZE); //about an fft every 11.6ms (64/5500)
+		String file = f.getAbsolutePath();
+		AudioDispatcher d = AudioDispatcherFactory.fromPipe(file, sampleRate, size, overlap);
+		d.setZeroPadFirstBuffer(true);
+		RafsExtractor ex = new RafsExtractor(file, trackProbabilities);
+		RafsPacker packer = new RafsPacker(ex,trackProbabilities);
+		//String baseName = f.getName();
+		d.setZeroPadFirstBuffer(true);
+		d.addAudioProcessor(ex);
+		d.addAudioProcessor(packer);
+		d.run();
+		return packer;
 	}
 
 }

@@ -1,7 +1,7 @@
 /***************************************************************************
 *                                                                          *
 * Panako - acoustic fingerprinting                                         *
-* Copyright (C) 2014 - 2015 - Joren Six / IPEM                             *
+* Copyright (C) 2014 - 2017 - Joren Six / IPEM                             *
 *                                                                          *
 * This program is free software: you can redistribute it and/or modify     *
 * it under the terms of the GNU Affero General Public License as           *
@@ -31,6 +31,7 @@
 *                       Acoustic Fingerprinting                            *
 *                                                                          *
 ****************************************************************************/
+
 
 
 
@@ -132,6 +133,7 @@ public class Panako {
 		applicationList.add(new Client());
 		applicationList.add(new Resolve());
 		applicationList.add(new Tap());
+		applicationList.add(new Deduplication());
 		for (final Application application : applicationList) {
 			applications.put(application.name(), application);
 			applicationTrie.insert(application.name());

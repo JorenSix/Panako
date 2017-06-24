@@ -1,7 +1,7 @@
 /***************************************************************************
 *                                                                          *
 * Panako - acoustic fingerprinting                                         *
-* Copyright (C) 2014 - 2015 - Joren Six / IPEM                             *
+* Copyright (C) 2014 - 2017 - Joren Six / IPEM                             *
 *                                                                          *
 * This program is free software: you can redistribute it and/or modify     *
 * it under the terms of the GNU Affero General Public License as           *
@@ -36,9 +36,11 @@
 
 
 
+
 package be.panako.cli;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -59,7 +61,6 @@ public class Query extends Application{
 	@Override
 	public void run(String... args) {
 		int processors = availableProcessors();
-		ExecutorService executor = Executors.newFixedThreadPool(processors);
 		List<File> files = this.getFilesFromArguments(args);
 		if(files.size() > 1){
 			System.out.println("Processing " + files.size() + " queries on " + processors + " seperate threads.");
@@ -67,18 +68,30 @@ public class Query extends Application{
 		
 		Panako.printQueryResultHeader();
 		
-		for(File file: files){
-			executor.submit(new QueryTask(file));
+		if(hasArgument("debug", args)){
+			System.err.println("Debug argument detected");
+			for(File file: files){
+				new QueryTask(file).run();
+			}
+		}else{
+			
+			ExecutorService executor = Executors.newFixedThreadPool(processors);
+			for(File file: files){
+				executor.submit(new QueryTask(file));
+			}
+			executor.shutdown();
+			try {
+				//wait for tasks to finish
+				executor.awaitTermination(300, java.util.concurrent.TimeUnit.DAYS);
+				System.exit(0);
+			} catch (InterruptedException e1) {
+				//Thread was interrupted
+				LOG.severe("Did not finish all tasks, thread was interrupted!");
+			}
 		}
-		executor.shutdown();
-		try {
-			//wait for tasks to finish
-			executor.awaitTermination(300, java.util.concurrent.TimeUnit.DAYS);
-			System.exit(0);
-		} catch (InterruptedException e1) {
-			//Thread was interrupted
-			LOG.severe("Did not finish all tasks, thread was interrupted!");
-		}
+		
+		
+		
 	}
 
 	@Override
@@ -101,7 +114,7 @@ public class Query extends Application{
 		@Override
 		public void run() {
 			Strategy strategy = Strategy.getInstance();
-			strategy.query(file.getAbsolutePath(), 3, this);
+			strategy.query(file.getAbsolutePath(), 3,new HashSet<Integer>(), this);
 		}
 		
 		@Override

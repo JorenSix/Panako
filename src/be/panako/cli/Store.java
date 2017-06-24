@@ -1,7 +1,7 @@
 /***************************************************************************
 *                                                                          *
 * Panako - acoustic fingerprinting                                         *
-* Copyright (C) 2014 - 2015 - Joren Six / IPEM                             *
+* Copyright (C) 2014 - 2017 - Joren Six / IPEM                             *
 *                                                                          *
 * This program is free software: you can redistribute it and/or modify     *
 * it under the terms of the GNU Affero General Public License as           *
@@ -31,9 +31,6 @@
 *                       Acoustic Fingerprinting                            *
 *                                                                          *
 ****************************************************************************/
-
-
-
 
 
 package be.panako.cli;
@@ -89,7 +86,7 @@ public class Store extends Application {
 			executor.shutdown();
 			//wait for tasks to finish
 			executor.awaitTermination(300, java.util.concurrent.TimeUnit.DAYS);
-			System.exit(0);
+			//System.exit(0);
 		} catch(Exception e){
 			e.printStackTrace();
 		}

@@ -1,7 +1,7 @@
 /***************************************************************************
 *                                                                          *
 * Panako - acoustic fingerprinting                                         *
-* Copyright (C) 2014 - 2015 - Joren Six / IPEM                             *
+* Copyright (C) 2014 - 2017 - Joren Six / IPEM                             *
 *                                                                          *
 * This program is free software: you can redistribute it and/or modify     *
 * it under the terms of the GNU Affero General Public License as           *
@@ -32,6 +32,7 @@
 *                                                                          *
 ****************************************************************************/
 
+
 package be.panako.strategy.rafs;
 
 import java.awt.BasicStroke;
@@ -43,7 +44,9 @@ import java.awt.event.MouseMotionListener;
 import java.util.BitSet;
 import java.util.Map;
 
+import be.panako.util.Config;
 import be.panako.util.Hamming;
+import be.panako.util.Key;
 import be.tarsos.dsp.ui.Axis;
 import be.tarsos.dsp.ui.CoordinateSystem;
 import be.tarsos.dsp.ui.layers.Layer;
@@ -53,27 +56,40 @@ public class RafsLayer implements Layer, MouseMotionListener {
 	private final CoordinateSystem cs;
 	private final RafsExtractor fileInfo;
 	private final RafsExtractor refFileInfo;
-	private final long shift;
+	private final float shift;
 	private Graphics2D graphics;
+	private static RafsStrategy strategy; 
+	private boolean showDiff = false;
+	float frameDurationInMS; 
 
-	public RafsLayer(CoordinateSystem cs, RafsExtractor fileInfo, RafsExtractor refFileInfo) {
+	public RafsLayer(CoordinateSystem cs, RafsExtractor fileInfo, RafsExtractor refFileInfo,boolean diff) {
+		if(strategy == null){
+			strategy = new RafsStrategy();
+		}
+		
+		frameDurationInMS = Config.getFloat(Key.RAFS_FFT_STEP_SIZE) / Config.getFloat(Key.RAFS_SAMPLE_RATE) * 1000.f;
+		
 		this.cs = cs;
 		this.fileInfo = fileInfo;
 		this.refFileInfo = refFileInfo;
 		if (refFileInfo != null) {
-			shift = ((RafsStrategy) RafsStrategy.getInstance()).align(refFileInfo.fingerprints, fileInfo.fingerprints);
+			//round to the nearest frame and subract half a frame in ms
+			shift = Math.round(strategy.align(refFileInfo.fingerprints, fileInfo.fingerprints)/frameDurationInMS) * frameDurationInMS - frameDurationInMS/2.0f;
+			System.out.println("shift:" + shift);
 		} else {
-			shift = 0;
+			shift = - frameDurationInMS/2.0f;
 		}
-		System.out.println("shift:" + shift);
+		showDiff = diff;
+		
 	}
 
 	@Override
 	public void draw(Graphics2D graphics) {
 		this.graphics = graphics;
-		float frameDurationInMS = (64) / ((float) 5500) * 1000.f;
+		
+	
 		Stroke stroke = graphics.getStroke();
-		if (refFileInfo != null) {
+		if (showDiff) {
 
 			Map<Float, BitSet> magnitudesSubMap = refFileInfo.fingerprints.subMap(cs.getMin(Axis.X) / 1000.0f,
 					cs.getMax(Axis.X) / 1000.0f);
@@ -110,13 +126,14 @@ public class RafsLayer implements Layer, MouseMotionListener {
 				float hammingDistance = Hamming.d(refMagnitudes, otherMagnitudes) * 150 + 75;
 				graphics.setColor(Color.red);
 				graphics.setStroke(new BasicStroke(75));
-				graphics.drawLine((int) Math.round(timeStart * 1000) + 37, Math.round(hammingDistance),
-						(int) Math.round(timeStart * 1000) + (int) Math.round(frameDurationInMS) + 37,
+				graphics.drawLine((int) Math.round(timeStart * 1000 + frameDurationInMS/2.0f ) + 37, Math.round(hammingDistance),
+						(int) Math.round(timeStart * 1000 + frameDurationInMS/2.0f)  + (int) Math.round(frameDurationInMS) + 37,
 						Math.round(hammingDistance));
 			}
 		} else {
-			Map<Float, BitSet> magnitudesSubMap = fileInfo.fingerprints.subMap(cs.getMin(Axis.X) / 1000.0f,
-					cs.getMax(Axis.X) / 1000.0f);
+			
+			Map<Float, BitSet> magnitudesSubMap = fileInfo.fingerprints.subMap(cs.getMin(Axis.X) / 1000.0f + shift / 1000.0f,
+					cs.getMax(Axis.X) / 1000.0f + shift / 1000.0f  );
 
 			for (Map.Entry<Float, BitSet> frameEntry : magnitudesSubMap.entrySet()) {
 				double timeStart = frameEntry.getKey();// in seconds
@@ -134,7 +151,7 @@ public class RafsLayer implements Layer, MouseMotionListener {
 						int greyValue = magnitudes.get(i) ? 255 : 0;
 						color = new Color(greyValue, greyValue, greyValue);
 						graphics.setColor(color);
-						graphics.fillRect((int) Math.round(timeStart * 1000), Math.round(centsStartingPoint),
+						graphics.fillRect((int) Math.round(timeStart * 1000 - shift + frameDurationInMS/2.0f ), Math.round(centsStartingPoint),
 								(int) Math.round(frameDurationInMS), (int) Math.ceil(150));
 					}
 				}

@@ -1,7 +1,7 @@
 /***************************************************************************
 *                                                                          *
 * Panako - acoustic fingerprinting                                         *
-* Copyright (C) 2014 - 2015 - Joren Six / IPEM                             *
+* Copyright (C) 2014 - 2017 - Joren Six / IPEM                             *
 *                                                                          *
 * This program is free software: you can redistribute it and/or modify     *
 * it under the terms of the GNU Affero General Public License as           *
@@ -34,11 +34,13 @@
 
 
 
+
 package be.panako.strategy.ncteq;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -112,8 +114,7 @@ public class NCteQStrategy extends Strategy {
 	}
 
 	@Override
-	public void query(String query, int maxNumberOfResults,
-			QueryResultHandler handler) {
+	public void query(String query, int maxNumberOfResults,Set<Integer> avoid,QueryResultHandler handler) {
 		
 		ConstantQ constantQ = createConstantQ();
 		NCteQMapDBStorage storage = NCteQMapDBStorage.getInstance();
@@ -147,7 +148,7 @@ public class NCteQStrategy extends Strategy {
 	}
 
 	@Override
-	public void monitor(String query, final int maxNumberOfReqults,
+	public void monitor(String query, final int maxNumberOfReqults,Set<Integer> avoid,
 			final QueryResultHandler handler) {
 		
 		int samplerate = Config.getInt(Key.NCTEQ_SAMPLE_RATE);

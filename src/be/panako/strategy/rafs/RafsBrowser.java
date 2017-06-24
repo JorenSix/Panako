@@ -1,7 +1,7 @@
 /***************************************************************************
 *                                                                          *
 * Panako - acoustic fingerprinting                                         *
-* Copyright (C) 2014 - 2015 - Joren Six / IPEM                             *
+* Copyright (C) 2014 - 2017 - Joren Six / IPEM                             *
 *                                                                          *
 * This program is free software: you can redistribute it and/or modify     *
 * it under the terms of the GNU Affero General Public License as           *
@@ -31,6 +31,7 @@
 *                       Acoustic Fingerprinting                            *
 *                                                                          *
 ****************************************************************************/
+
 
 package be.panako.strategy.rafs;
 
@@ -159,7 +160,7 @@ public class RafsBrowser extends JFrame{
 	}
 
 	
-	private Component createFeaturePanel(RafsExtractor audioFileInfo,RafsExtractor ref) {
+	private Component createFeaturePanel(RafsExtractor audioFileInfo,RafsExtractor ref,boolean showDiff) {
 		
 		final LinkedPanel frequencyDomainPanel = new LinkedPanel(cs);
 		frequencyDomainPanel.getViewPort().addViewPortChangedListener(new ViewPortChangedListener() {
@@ -170,7 +171,7 @@ public class RafsBrowser extends JFrame{
 				}
 			}
 		});
-		RafsLayer infoLayer = new RafsLayer(cs,audioFileInfo,ref);
+		RafsLayer infoLayer = new RafsLayer(cs,audioFileInfo,ref,showDiff);
 		infoLayers.add(infoLayer);
 		
 		frequencyDomainPanel.addLayer(new ZoomMouseListenerLayer());
@@ -194,7 +195,7 @@ public class RafsBrowser extends JFrame{
 			referenceFile = new RafsExtractor(audioFile,true);
 			referenceFileLocation = audioFile;
 			referenceFile.starExtraction();
-			final Component featurePanel = createFeaturePanel(referenceFile,null);
+			final Component featurePanel = createFeaturePanel(referenceFile,null,false);
 			uiRunnable = new Runnable() {
 				@Override
 				public void run() {
@@ -232,7 +233,7 @@ public class RafsBrowser extends JFrame{
 			System.out.println();
 			System.out.println(String.format("Avg hamming distance for %d prints : %.4f, max d %d , min d %d",count,totalDistance/(float)count,maxDistance,minDistance));
 			
-			final Component featurePanel = createFeaturePanel(otherFileInfo,null);
+			final Component featurePanel = createFeaturePanel(otherFileInfo,referenceFile,false);
 			Runnable otherRunnable = new Runnable() {
 				@Override
 				public void run() {
@@ -243,7 +244,7 @@ public class RafsBrowser extends JFrame{
 			};
 			SwingUtilities.invokeLater(otherRunnable);
 			
-			final Component diffPanel = createFeaturePanel(otherFileInfo,referenceFile);
+			final Component diffPanel = createFeaturePanel(otherFileInfo,referenceFile,true);
 			uiRunnable = new Runnable() {
 				@Override
 				public void run() {

@@ -1,7 +1,7 @@
 /***************************************************************************
 *                                                                          *
 * Panako - acoustic fingerprinting                                         *
-* Copyright (C) 2014 - 2015 - Joren Six / IPEM                             *
+* Copyright (C) 2014 - 2017 - Joren Six / IPEM                             *
 *                                                                          *
 * This program is free software: you can redistribute it and/or modify     *
 * it under the terms of the GNU Affero General Public License as           *
@@ -34,8 +34,11 @@
 
 
 
+
 package be.panako.cli;
 
+
+import java.util.HashSet;
 
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
@@ -54,7 +57,7 @@ public class Monitor extends Application implements QueryResultHandler {
 		}
 		Strategy strategy = Strategy.getInstance();
 		Panako.printQueryResultHeader();
-		strategy.monitor(inputResource,1, this);
+		strategy.monitor(inputResource,1,new HashSet<Integer>(), this);
 	}
 
 	@Override

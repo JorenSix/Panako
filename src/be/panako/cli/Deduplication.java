@@ -33,65 +33,69 @@
 ****************************************************************************/
 
 
-
-
 package be.panako.cli;
 
-import java.lang.reflect.InvocationTargetException;
+import java.io.File;
+import java.util.HashSet;
+import java.util.List;
 
-import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
+import be.panako.strategy.QueryResult;
+import be.panako.strategy.QueryResultHandler;
+import be.panako.strategy.Strategy;
 
-import be.panako.ui.NCteQFingerprintBrowser;
-import be.panako.ui.NFFTFingerprintBrowser;
-import be.panako.util.Config;
-import be.panako.util.Key;
-
-public class Browser extends Application {
-
+public class Deduplication  extends Application implements QueryResultHandler  {
+	String query;
+	
 	@Override
 	public void run(String... args) {
-		try {
-			SwingUtilities.invokeAndWait(new Runnable() {
-				@Override
-				public void run() {
-					JFrame frame = null; 
-					if(Config.get(Key.STRATEGY).equals("NFFT")) {
-						frame = new NFFTFingerprintBrowser();
-					}else if(Config.get(Key.STRATEGY).equals("NCTEQ")) {
-						frame = new NCteQFingerprintBrowser();
-					}
-					frame.pack();
-					frame.setSize(800,550);
-					frame.setLocationRelativeTo(null);
-					frame.setVisible(true);
-				}
-			});
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}		
+		String[] storeArgs = new String[args.length+1];
+		storeArgs[0] = "store";
+		for(int i = 1 ; i < storeArgs.length ; i++){
+			storeArgs[i] = args[i-1];
+		}
+		Panako.main(storeArgs);
+		
+		List<File> files = super.getFilesFromArguments(args);
+		//monitor
+		Strategy strategy = Strategy.getInstance();
+		
+		for(File f: files){
+			query = f.getName();
+			HashSet<Integer> identifiersToAvoid = new HashSet<Integer>();
+			Integer identifierToAvoid = Integer.valueOf(strategy.resolve(f.getName()));
+			identifiersToAvoid.add(identifierToAvoid);
+			strategy.monitor(f.getAbsolutePath(), 10, identifiersToAvoid, this);
+		}
 	}
 
 	@Override
 	public String description() {
-		return "Starts the fingerprinter browser";
+		return "Deduplication tries to find duplicates in a set of files. Basically a store operation and monitor step for all files.";
 	}
 
 	@Override
 	public String synopsis() {
-		return "browser";
+		return "deduplication [audiofilelist.txt... audio_files...]";
 	}
 
 	@Override
 	public boolean needsStorage() {
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean writesToStorage() {
-		return false;
+		return true;
+	}
+
+	@Override
+	public void handleQueryResult(QueryResult result) {
+		Panako.printQueryResult(query, result);	
+	}
+
+	@Override
+	public void handleEmptyResult(QueryResult result) {
+		// NOOP
 	}
 
 }

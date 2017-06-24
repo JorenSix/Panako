@@ -1,7 +1,7 @@
 /***************************************************************************
 *                                                                          *
 * Panako - acoustic fingerprinting                                         *
-* Copyright (C) 2014 - 2015 - Joren Six / IPEM                             *
+* Copyright (C) 2014 - 2017 - Joren Six / IPEM                             *
 *                                                                          *
 * This program is free software: you can redistribute it and/or modify     *
 * it under the terms of the GNU Affero General Public License as           *
@@ -31,6 +31,7 @@
 *                       Acoustic Fingerprinting                            *
 *                                                                          *
 ****************************************************************************/
+
 
 
 
@@ -289,19 +290,37 @@ public enum Key{
 	/**
 	 * The size of the audio block step size (in samples). Every 64 (2048-1984) blocks at a sample rate of 5.5k = 11.6ms
 	 */
-	RAFS_FFT_STEP_SIZE(1984),
+	RAFS_FFT_STEP_SIZE(64),
 	/**
 	 * The hamming search radius
 	 */
-	RAFS_HAMMINNG_SEARCH_RADIUS(12),
+	RAFS_HAMMINNG_SEARCH_RADIUS(19),
 	/**
 	 * The number of chunks in the multi index hasher.
 	 */
-	RAFS_MIH_CHUNKS(4), 
+	RAFS_MIH_CHUNKS(5), 
 	/**
 	 * The number of bits stored in the the multi index hash.
 	 */
 	RAFS_HAMMING_SPACE_NUM_BITS(128),
+	
+	/**
+	 * The number of least reliable bits to flip.
+	 */
+	RAFS_BITS_TO_FLIP(9),
+	
+	/**
+	 * The Hamming distance threshold. If the number of erroneous bits for 256 fingerprints is below this
+	 * threshold then it is accepted as a true positive.
+	 */
+	RAFS_HAMMING_DISTANCE_THRESHOLD(2867),
+	
+	/**
+	 * The maximum time a query takes. By default, if not matches are found after 15 000 milliseconds
+	 * an empty result is returned.
+	 */
+	RAFS_TIMEOUT(15000),
+	
 	
 	/**
 	 * The folder where metadata (json files) for each file is stored.
@@ -310,7 +329,7 @@ public enum Key{
 	/**
 	 * The command executed to get meta data.
 	 */
-	META_DATA_COMMAND("/opt/panako/extract_metadata.sh"),  ;
+	META_DATA_COMMAND("/opt/panako/extract_metadata.sh")  ;
 	
 	
 	String defaultValue;

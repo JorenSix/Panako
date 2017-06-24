@@ -1,7 +1,7 @@
 /***************************************************************************
 *                                                                          *
 * Panako - acoustic fingerprinting                                         *
-* Copyright (C) 2014 - 2015 - Joren Six / IPEM                             *
+* Copyright (C) 2014 - 2017 - Joren Six / IPEM                             *
 *                                                                          *
 * This program is free software: you can redistribute it and/or modify     *
 * it under the terms of the GNU Affero General Public License as           *
@@ -31,6 +31,7 @@
 *                       Acoustic Fingerprinting                            *
 *                                                                          *
 ****************************************************************************/
+
 
 
 
@@ -128,7 +129,7 @@ public class NFFTStrategy extends Strategy {
 	}
 
 	@Override
-	public void query(String query, int maxNumberOfResults,
+	public void query(String query, int maxNumberOfResults,Set<Integer> avoid,
 			QueryResultHandler handler) {
 		
 		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
@@ -229,7 +230,7 @@ public class NFFTStrategy extends Strategy {
 	
 
 	@Override
-	public void monitor(String query,final  int maxNumberOfResults,
+	public void monitor(String query,final  int maxNumberOfResults,Set<Integer> avoid,
 			final QueryResultHandler handler) {
 		
 		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
@@ -251,7 +252,7 @@ public class NFFTStrategy extends Strategy {
 			@Override
 			public boolean process(AudioEvent audioEvent) {
 				double timeStamp = audioEvent.getTimeStamp() - Config.getInt(Key.MONITOR_OVERLAP);
-				processMonitorQuery(audioEvent.getFloatBuffer().clone(), maxNumberOfResults, handler,timeStamp);
+				processMonitorQuery(audioEvent.getFloatBuffer().clone(), maxNumberOfResults, handler,timeStamp,avoid);
 				return true;
 			}
 			
@@ -267,7 +268,7 @@ public class NFFTStrategy extends Strategy {
 
 	
 	private void processMonitorQuery(float[] audioBuffer,int maxNumberOfResults,
-			QueryResultHandler handler,double queryOffset){
+			QueryResultHandler handler,double queryOffset,Set<Integer> avoid){
 		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
 		int size = Config.getInt(Key.NFFT_SIZE);
 		int overlap = size - Config.getInt(Key.NFFT_STEP_SIZE);
@@ -291,8 +292,11 @@ public class NFFTStrategy extends Strategy {
 				handler.handleEmptyResult(result);
 			}else{
 				for(NFFTFingerprintQueryMatch match : queryMatches){
-					String description = storage.getAudioDescription(match.identifier);
-					handler.handleQueryResult(new QueryResult(queryOffset,queryOffset+queryDuration,String.valueOf(match.identifier), description, match.score, match.getStartTime(),100.0,100.0));
+					//avoid the results in the avoid hash set
+					if(!avoid.contains(match.identifier)){
+						String description = storage.getAudioDescription(match.identifier);
+						handler.handleQueryResult(new QueryResult(queryOffset,queryOffset+queryDuration,String.valueOf(match.identifier), description, match.score, match.getStartTime(),100.0,100.0));
+					}
 				}
 			}
 			

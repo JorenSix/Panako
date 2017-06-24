@@ -1,7 +1,7 @@
 /***************************************************************************
 *                                                                          *
 * Panako - acoustic fingerprinting                                         *
-* Copyright (C) 2014 - 2015 - Joren Six / IPEM                             *
+* Copyright (C) 2014 - 2017 - Joren Six / IPEM                             *
 *                                                                          *
 * This program is free software: you can redistribute it and/or modify     *
 * it under the terms of the GNU Affero General Public License as           *
@@ -34,10 +34,12 @@
 
 
 
+
 package be.panako.strategy.pch;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeMap;
 
 import be.panako.strategy.QueryResult;
@@ -162,7 +164,7 @@ public class PitchClassHistogramStrategy extends Strategy {
 	
 
 	@Override
-	public void query(String query, int maxNumberOfResults,
+	public void query(String query, int maxNumberOfResults,Set<Integer> avoid,
 			QueryResultHandler handler) {
 		
 		String directory = Config.get(Key.PCH_FILES);
@@ -205,7 +207,7 @@ public class PitchClassHistogramStrategy extends Strategy {
 	}
 
 	@Override
-	public void monitor(String query, int maxNumberOfReqults,
+	public void monitor(String query, int maxNumberOfReqults,Set<Integer> avoid,
 			QueryResultHandler handler) {
 		throw new Error("Operation not supported");
 		
