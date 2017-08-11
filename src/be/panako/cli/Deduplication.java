@@ -43,7 +43,7 @@ import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
 
-public class Deduplication  extends Application implements QueryResultHandler  {
+ class Deduplication  extends Application implements QueryResultHandler  {
 	String query;
 	
 	@Override
@@ -95,7 +95,8 @@ public class Deduplication  extends Application implements QueryResultHandler  {
 
 	@Override
 	public void handleEmptyResult(QueryResult result) {
-		// NOOP
+		//Panako.printQueryResult(query, null);
+		
 	}
 
 }
