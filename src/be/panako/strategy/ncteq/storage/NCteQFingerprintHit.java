@@ -119,7 +119,7 @@ public class NCteQFingerprintHit{
 	public int timeDifference(){
 		//int offset = Math.abs(matchTime - queryTime);
 		//return (int) Math.round(offset * timeRatio()/100.0f /8.0f ) * 8;
-		return Math.round(matchTime - queryTime * timeRatio()/100.0f);
+		return Math.round( Math.abs(matchTime - queryTime) * timeRatio()/100.0f);
 	}
 	
 	public int roughTimeDifference(){
