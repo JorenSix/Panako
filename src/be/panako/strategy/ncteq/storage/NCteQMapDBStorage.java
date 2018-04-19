@@ -219,7 +219,7 @@ public class NCteQMapDBStorage {
 	}
 
 	public List<NCteQFingerprintQueryMatch> getFingerprintMatches(
-			List<NCteQFingerprint> fingerprints, int size) {
+			List<NCteQFingerprint> fingerprints) {
 
 		if (fingerprints.isEmpty()) {
 			return new ArrayList<NCteQFingerprintQueryMatch>();
@@ -442,9 +442,6 @@ public class NCteQMapDBStorage {
 						.get(identifier) * 3.0);
 				match.timeRatio = timeRatio;
 				match.frequencyRatio = frequencyRatio;
-				if (matches.size() < size) {
-					matches.add(match);
-				}
 			}
 		}
 		// between query result and now (after processing result)

@@ -129,8 +129,8 @@ public class NFFTStrategy extends Strategy {
 	}
 
 	@Override
-	public void query(String query, int maxNumberOfResults,Set<Integer> avoid,
-			QueryResultHandler handler) {
+	public void query(String query, Set<Integer> avoid,
+                      QueryResultHandler handler) {
 		
 		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
 		int size = Config.getInt(Key.NFFT_SIZE);
@@ -143,7 +143,7 @@ public class NFFTStrategy extends Strategy {
 		
 		final List<NFFTFingerprintQueryMatch> queryMatches = new ArrayList<NFFTFingerprintQueryMatch>();
 		
-		queryMatches.addAll(storage.getMatches(fingerprints, maxNumberOfResults));
+		queryMatches.addAll(storage.getMatches(fingerprints));
 		
 		
 		double queryDuration = d.secondsProcessed();
@@ -216,7 +216,7 @@ public class NFFTStrategy extends Strategy {
 		List<NFFTFingerprint> fingerprints = PanakoWebserviceClient.deserializeFingerprintsFromJson(serizalizedFingerprints);
 		final List<NFFTFingerprintQueryMatch> queryMatches = new ArrayList<NFFTFingerprintQueryMatch>();
 		
-		queryMatches.addAll(storage.getMatches(fingerprints, maxNumberOfResults));
+		queryMatches.addAll(storage.getMatches(fingerprints));
 		if(queryMatches.isEmpty()){
 			QueryResult result = QueryResult.emptyQueryResult(queryOffset,queryOffset+queryDuration);
 			handler.handleEmptyResult(result);
@@ -230,8 +230,8 @@ public class NFFTStrategy extends Strategy {
 	
 
 	@Override
-	public void monitor(String query,final  int maxNumberOfResults,Set<Integer> avoid,
-			final QueryResultHandler handler) {
+	public void monitor(String query, Set<Integer> avoid,
+                        final QueryResultHandler handler) {
 		
 		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
 		int size = Config.getInt(Key.MONITOR_STEP_SIZE) * samplerate;
@@ -252,7 +252,7 @@ public class NFFTStrategy extends Strategy {
 			@Override
 			public boolean process(AudioEvent audioEvent) {
 				double timeStamp = audioEvent.getTimeStamp() - Config.getInt(Key.MONITOR_OVERLAP);
-				processMonitorQuery(audioEvent.getFloatBuffer().clone(), maxNumberOfResults, handler,timeStamp,avoid);
+				processMonitorQuery(audioEvent.getFloatBuffer().clone(), handler,timeStamp,avoid);
 				return true;
 			}
 			
@@ -267,8 +267,8 @@ public class NFFTStrategy extends Strategy {
 	
 
 	
-	private void processMonitorQuery(float[] audioBuffer,int maxNumberOfResults,
-			QueryResultHandler handler,double queryOffset,Set<Integer> avoid){
+	private void processMonitorQuery(float[] audioBuffer,
+                                     QueryResultHandler handler, double queryOffset, Set<Integer> avoid){
 		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
 		int size = Config.getInt(Key.NFFT_SIZE);
 		int overlap = size - Config.getInt(Key.NFFT_STEP_SIZE);
@@ -283,7 +283,7 @@ public class NFFTStrategy extends Strategy {
 			
 			final List<NFFTFingerprintQueryMatch> queryMatches = new ArrayList<NFFTFingerprintQueryMatch>();
 			
-			queryMatches.addAll(storage.getMatches(fingerprints, maxNumberOfResults));
+			queryMatches.addAll(storage.getMatches(fingerprints));
 			
 			double queryDuration = d.secondsProcessed();
 			

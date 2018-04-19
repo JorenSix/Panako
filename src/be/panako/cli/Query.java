@@ -114,7 +114,7 @@ public class Query extends Application{
 		@Override
 		public void run() {
 			Strategy strategy = Strategy.getInstance();
-			strategy.query(file.getAbsolutePath(), 3,new HashSet<Integer>(), this);
+			strategy.query(file.getAbsolutePath(), new HashSet<Integer>(), this);
 		}
 		
 		@Override
