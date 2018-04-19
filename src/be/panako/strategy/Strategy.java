@@ -59,9 +59,9 @@ public abstract class Strategy {
 	 */
 	public abstract double store(String resource, String description);
 	
-	public abstract void query(String query, int maxNumberOfResults,Set<Integer> avoid, QueryResultHandler handler);
+	public abstract void query(String query, Set<Integer> avoid, QueryResultHandler handler);
 	
-	public abstract void monitor(String query,int maxNumberOfReqults,Set<Integer> avoid,QueryResultHandler handler);
+	public abstract void monitor(String query, Set<Integer> avoid, QueryResultHandler handler);
 	
 	/**
 	 * Are there fingerprints for this resource already stored in the database?

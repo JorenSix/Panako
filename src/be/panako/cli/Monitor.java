@@ -57,7 +57,7 @@ public class Monitor extends Application implements QueryResultHandler {
 		}
 		Strategy strategy = Strategy.getInstance();
 		Panako.printQueryResultHeader();
-		strategy.monitor(inputResource,1,new HashSet<Integer>(), this);
+		strategy.monitor(inputResource, new HashSet<Integer>(), this);
 	}
 
 	@Override

@@ -92,7 +92,7 @@ public class ChromaPrintStrategy extends Strategy{
 	}
 
 	@Override
-	public void query(String query, int maxNumberOfResults,Set<Integer> avoid, QueryResultHandler handler) {
+	public void query(String query, Set<Integer> avoid, QueryResultHandler handler) {
 		ChromaPrintExtractor ex = new ChromaPrintExtractor(query, null);
 		ex.starExtraction();
 		long print = ex.getHash();
@@ -102,7 +102,7 @@ public class ChromaPrintStrategy extends Strategy{
 	}
 
 	@Override
-	public void monitor(String query, int maxNumberOfReqults,Set<Integer> avoid, QueryResultHandler handler) {
+	public void monitor(String query, Set<Integer> avoid, QueryResultHandler handler) {
 		ChromaPrintExtractor ex = new ChromaPrintExtractor(query, null);
 		ex.starExtraction();
 		long print = ex.getHash();

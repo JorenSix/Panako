@@ -238,7 +238,7 @@ public class RafsRepStrategy extends Strategy {
 	}
 
 	@Override
-	public void query(String query, int maxNumberOfResults,Set<Integer> avoid, QueryResultHandler handler) {
+	public void query(String query, Set<Integer> avoid, QueryResultHandler handler) {
 		int queryIndex = FileUtils.getIdentifier(query);
 		
 		System.err.println("Query");
@@ -362,7 +362,7 @@ public class RafsRepStrategy extends Strategy {
 
 
 	@Override
-	public void monitor(String query, int maxNumberOfReqults, Set<Integer> avoid, QueryResultHandler handler) {
+	public void monitor(String query, Set<Integer> avoid, QueryResultHandler handler) {
 		int samplerate = Config.getInt(Key.RAFS_SAMPLE_RATE);
 		int size = Config.getInt(Key.MONITOR_STEP_SIZE) * samplerate;
 		int overlap = Config.getInt(Key.MONITOR_OVERLAP) * samplerate;
