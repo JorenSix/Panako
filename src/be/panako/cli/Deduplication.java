@@ -64,7 +64,7 @@ import be.panako.strategy.Strategy;
 			HashSet<Integer> identifiersToAvoid = new HashSet<Integer>();
 			Integer identifierToAvoid = Integer.valueOf(strategy.resolve(f.getName()));
 			identifiersToAvoid.add(identifierToAvoid);
-			strategy.monitor(f.getAbsolutePath(), 10, identifiersToAvoid, this);
+			strategy.monitor(f.getAbsolutePath(), identifiersToAvoid, this);
 		}
 	}
 

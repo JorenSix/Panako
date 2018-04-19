@@ -58,6 +58,6 @@ public interface Storage {
 			int landmarkHash);
 
 	public abstract List<NFFTFingerprintQueryMatch> getMatches(
-			List<NFFTFingerprint> fingerprints, int size);
+            List<NFFTFingerprint> fingerprints);
 
 }

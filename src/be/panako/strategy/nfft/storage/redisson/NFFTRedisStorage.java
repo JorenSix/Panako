@@ -174,7 +174,7 @@ public class NFFTRedisStorage implements Storage {
 
 	@Override
 	public List<NFFTFingerprintQueryMatch> getMatches(
-			List<NFFTFingerprint> fingerprints, int size) {
+            List<NFFTFingerprint> fingerprints) {
 		StopWatch w = new StopWatch();
 		Set<NFFTFingerprintHit> allHits = new HashSet<NFFTFingerprintHit>();	
 		try{
@@ -311,12 +311,6 @@ public class NFFTRedisStorage implements Storage {
 				match.identifier = identifier;
 				match.score = alignedOffsets;
 				match.mostPopularOffset = offsetPerIdentifier.get(identifier);
-				if(matches.size() < size){
-					matches.add(match);
-				}
-			}
-			if(matches.size() >= size){
-				break;
 			}
 		}
 		return matches;

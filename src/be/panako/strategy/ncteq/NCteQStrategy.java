@@ -114,7 +114,7 @@ public class NCteQStrategy extends Strategy {
 	}
 
 	@Override
-	public void query(String query, int maxNumberOfResults,Set<Integer> avoid,QueryResultHandler handler) {
+	public void query(String query, Set<Integer> avoid, QueryResultHandler handler) {
 		
 		ConstantQ constantQ = createConstantQ();
 		NCteQMapDBStorage storage = NCteQMapDBStorage.getInstance();
@@ -133,7 +133,7 @@ public class NCteQStrategy extends Strategy {
 		
 		
 		float queryDuration = d.secondsProcessed();
-		List<NCteQFingerprintQueryMatch> matches = storage.getFingerprintMatches(fingerprints,maxNumberOfResults);
+		List<NCteQFingerprintQueryMatch> matches = storage.getFingerprintMatches(fingerprints);
 		
 		if(matches.isEmpty()){
 			QueryResult result = QueryResult.emptyQueryResult(0,queryDuration);
@@ -148,8 +148,8 @@ public class NCteQStrategy extends Strategy {
 	}
 
 	@Override
-	public void monitor(String query, final int maxNumberOfReqults,Set<Integer> avoid,
-			final QueryResultHandler handler) {
+	public void monitor(String query, Set<Integer> avoid,
+						final QueryResultHandler handler) {
 		
 		int samplerate = Config.getInt(Key.NCTEQ_SAMPLE_RATE);
 		int size = Config.getInt(Key.MONITOR_STEP_SIZE) * samplerate;
@@ -161,7 +161,7 @@ public class NCteQStrategy extends Strategy {
 			@Override
 			public boolean process(AudioEvent audioEvent) {
 				double timeStamp = audioEvent.getTimeStamp() - Config.getInt(Key.MONITOR_OVERLAP);
-				processMonitorQuery(audioEvent.getFloatBuffer().clone(), maxNumberOfReqults, handler,timeStamp,constanQ);
+				processMonitorQuery(audioEvent.getFloatBuffer().clone(), handler,timeStamp,constanQ);
 				return true;
 			}
 			
@@ -173,8 +173,8 @@ public class NCteQStrategy extends Strategy {
 
 	}
 	
-	private void processMonitorQuery(float[] audioBuffer,int maxNumberOfResults,
-			QueryResultHandler handler,double queryOffset, ConstantQ constantQ){
+	private void processMonitorQuery(float[] audioBuffer,
+									 QueryResultHandler handler, double queryOffset, ConstantQ constantQ){
 		int samplerate = Config.getInt(Key.NCTEQ_SAMPLE_RATE);
 		
 		
@@ -195,7 +195,7 @@ public class NCteQStrategy extends Strategy {
 			
 			NCteQMapDBStorage storage = NCteQMapDBStorage.getInstance();
 			float queryDuration = d.secondsProcessed();
-			List<NCteQFingerprintQueryMatch> matches = storage.getFingerprintMatches(fingerprints,maxNumberOfResults);
+			List<NCteQFingerprintQueryMatch> matches = storage.getFingerprintMatches(fingerprints);
 			
 			if(matches.isEmpty()){
 				QueryResult result = QueryResult.emptyQueryResult(queryOffset,queryOffset+queryDuration);

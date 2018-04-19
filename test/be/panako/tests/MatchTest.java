@@ -79,7 +79,7 @@ public class MatchTest {
 		for(final String queryFile : queries){
 			String resource = new File(queriesFolder,queryFile).getAbsolutePath();
 			
-			strategy.query(resource,3,new HashSet<Integer>(),new QueryResultHandler() {
+			strategy.query(resource, new HashSet<Integer>(),new QueryResultHandler() {
 				
 				@Override
 				public void handleQueryResult(QueryResult result) {

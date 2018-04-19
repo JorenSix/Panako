@@ -119,7 +119,7 @@ public class RafsStrategy extends Strategy {
 	}
 
 	@Override
-	public void query(String query, int maxNumberOfResults,Set<Integer> avoid, QueryResultHandler handler) {
+	public void query(String query, Set<Integer> avoid, QueryResultHandler handler) {
 		int queryIndex = FileUtils.getIdentifier(query);
 		RafsPacker packer = extractPacker(new File(query),queryIndex ,true);
 		List<BitSetWithID> prints = new ArrayList<>();
@@ -229,7 +229,7 @@ public class RafsStrategy extends Strategy {
 	}
 
 	@Override
-	public void monitor(String query, int maxNumberOfReqults,Set<Integer> avoid, QueryResultHandler handler) {
+	public void monitor(String query, Set<Integer> avoid, QueryResultHandler handler) {
 		
 	}
 
