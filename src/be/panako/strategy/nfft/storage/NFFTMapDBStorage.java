@@ -383,7 +383,7 @@ public class NFFTMapDBStorage implements Storage {
 						countInOrderAlignedHits++;
 					}
 				}
-				if(countInOrderAlignedHits>4){
+				if(countInOrderAlignedHits>8){
 					if(!scoreOderedPerIdentifier.containsKey(countInOrderAlignedHits)){
 						scoreOderedPerIdentifier.put(countInOrderAlignedHits, new ArrayList<Integer>());
 					}
