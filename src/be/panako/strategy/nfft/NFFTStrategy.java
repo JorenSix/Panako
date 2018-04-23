@@ -37,23 +37,6 @@
 
 package be.panako.strategy.nfft;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.logging.Logger;
-
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
-
-
-
 import be.panako.cli.Panako;
 import be.panako.http.PanakoWebserviceClient;
 import be.panako.strategy.QueryResult;
@@ -72,50 +55,56 @@ import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import java.io.File;
+import java.util.*;
+import java.util.logging.Logger;
+
 public class NFFTStrategy extends Strategy {
-	
+
 	private final static Logger LOG = Logger.getLogger(NFFTStrategy.class.getName());
-	
+
 	private final Storage storage;
-	
+
 	public NFFTStrategy(){
 		storage = NFFTMapDBStorage.getInstance();
 	}
-	
+
 	@Override
 	public double store(String resource, String description) {
 		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
 		int size = Config.getInt(Key.NFFT_SIZE);
 		int overlap = size - Config.getInt(Key.NFFT_STEP_SIZE);
-		
+
 		AudioDispatcher d = AudioDispatcherFactory.fromPipe(resource, samplerate, size, overlap);
 		final NFFTEventPointProcessor minMaxProcessor = new NFFTEventPointProcessor(size,overlap,samplerate);
 		d.addAudioProcessor(minMaxProcessor);
 		d.run();
 		Set<NFFTFingerprint> fingerprints = new HashSet<NFFTFingerprint>(minMaxProcessor.getFingerprints());
-		
+
 		int identifier = FileUtils.getIdentifier(resource);
-		
-		
+
+
 		for(NFFTFingerprint fingerprint: fingerprints){
 			storage.addFingerprint(identifier, fingerprint.t1, fingerprint.hash());
 		}
-		
+
 		// Store the meta data.
 		storage.addAudio(identifier, description);
-		
+
 		// Commit the changes to store the fingerprints
 		double durationInSeconds = d.secondsProcessed();
 		storage.audioObjectAdded((int) Math.round(durationInSeconds));
-		
+
 		LOG.info(String.format("Stored %d fingerprints bundeled from %d event points for %s.",fingerprints.size(),minMaxProcessor.getEventPoints().size(),resource));
 		return durationInSeconds;
 	}
-	
+
 	public String getAudioDescription(int identifier){
 		return storage.getAudioDescription(identifier);
 	}
-	
+
 	public List<NFFTFingerprint> extractFingerprintsFromQuery(String query){
 		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
 		int size = Config.getInt(Key.NFFT_SIZE);
@@ -131,7 +120,7 @@ public class NFFTStrategy extends Strategy {
 	@Override
 	public void query(String query, Set<Integer> avoid,
                       QueryResultHandler handler) {
-		
+
 		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
 		int size = Config.getInt(Key.NFFT_SIZE);
 		int overlap = size - Config.getInt(Key.NFFT_STEP_SIZE);
@@ -140,14 +129,23 @@ public class NFFTStrategy extends Strategy {
 		d.addAudioProcessor(minMaxProcessor);
 		d.run();
 		List<NFFTFingerprint> fingerprints = new ArrayList<NFFTFingerprint>(minMaxProcessor.getFingerprints());
-		
+
 		final List<NFFTFingerprintQueryMatch> queryMatches = new ArrayList<NFFTFingerprintQueryMatch>();
-		
-		queryMatches.addAll(storage.getMatches(fingerprints));
-		
-		
+
+		List<NFFTFingerprintQueryMatch> fingerprintMatches = storage.getMatches(fingerprints);
+
+		if(!fingerprintMatches.isEmpty()) {
+			int maxScore = fingerprintMatches.stream().map(NFFTFingerprintQueryMatch::getScore).max(Comparator.naturalOrder()).get();
+
+			for (NFFTFingerprintQueryMatch match : fingerprintMatches) {
+				if (match.getScore() * 5 > maxScore) {
+					queryMatches.add(match);
+				}
+			}
+		}
+
 		double queryDuration = d.secondsProcessed();
-		
+
 		if(queryMatches.isEmpty()){
 			QueryResult result = QueryResult.emptyQueryResult(0,queryDuration);
 			handler.handleEmptyResult(result);
@@ -158,9 +156,9 @@ public class NFFTStrategy extends Strategy {
 			}
 		}
 	}
-	
+
 	public void monitor(String query,final SerializedFingerprintsHandler handler){
-		
+
 		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
 		int size = Config.getInt(Key.MONITOR_STEP_SIZE) * samplerate;
 		int overlap = Config.getInt(Key.MONITOR_OVERLAP) * samplerate;
@@ -183,19 +181,19 @@ public class NFFTStrategy extends Strategy {
 				processMonitorQueryToSerializeFingerprints(audioEvent.getFloatBuffer().clone(), handler,timeStamp);
 				return true;
 			}
-			
+
 			@Override
 			public void processingFinished() {
 			}
 		});
 		d.run();
 	}
-	
+
 	private void processMonitorQueryToSerializeFingerprints(float[] audioBuffer,SerializedFingerprintsHandler handler,double queryOffset){
 		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
 		int size = Config.getInt(Key.NFFT_SIZE);
 		int overlap = size - Config.getInt(Key.NFFT_STEP_SIZE);
-		
+
 		AudioDispatcher d;
 		try {
 			d = AudioDispatcherFactory.fromFloatArray(audioBuffer, samplerate, size, overlap);
@@ -209,13 +207,13 @@ public class NFFTStrategy extends Strategy {
 			LOG.severe("Unsupported audio");
 		}
 	}
-	
+
 	public void matchSerializedFingerprints(String serizalizedFingerprints,final  int maxNumberOfResults,
 			final QueryResultHandler handler,double queryDuration,double queryOffset){
-		
+
 		List<NFFTFingerprint> fingerprints = PanakoWebserviceClient.deserializeFingerprintsFromJson(serizalizedFingerprints);
 		final List<NFFTFingerprintQueryMatch> queryMatches = new ArrayList<NFFTFingerprintQueryMatch>();
-		
+
 		queryMatches.addAll(storage.getMatches(fingerprints));
 		if(queryMatches.isEmpty()){
 			QueryResult result = QueryResult.emptyQueryResult(queryOffset,queryOffset+queryDuration);
@@ -227,12 +225,12 @@ public class NFFTStrategy extends Strategy {
 			}
 		}
 	}
-	
+
 
 	@Override
 	public void monitor(String query, Set<Integer> avoid,
                         final QueryResultHandler handler) {
-		
+
 		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
 		int size = Config.getInt(Key.MONITOR_STEP_SIZE) * samplerate;
 		int overlap = Config.getInt(Key.MONITOR_OVERLAP) * samplerate;
@@ -255,24 +253,24 @@ public class NFFTStrategy extends Strategy {
 				processMonitorQuery(audioEvent.getFloatBuffer().clone(), handler,timeStamp,avoid);
 				return true;
 			}
-			
+
 			@Override
 			public void processingFinished() {
 			}
 		});
 		d.run();
 	}
-	
-	
-	
 
-	
+
+
+
+
 	private void processMonitorQuery(float[] audioBuffer,
                                      QueryResultHandler handler, double queryOffset, Set<Integer> avoid){
 		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
 		int size = Config.getInt(Key.NFFT_SIZE);
 		int overlap = size - Config.getInt(Key.NFFT_STEP_SIZE);
-		
+
 		AudioDispatcher d;
 		try {
 			d = AudioDispatcherFactory.fromFloatArray(audioBuffer, samplerate, size, overlap);
@@ -280,13 +278,13 @@ public class NFFTStrategy extends Strategy {
 			d.addAudioProcessor(minMaxProcessor);
 			d.run();
 			List<NFFTFingerprint> fingerprints = new ArrayList<NFFTFingerprint>(minMaxProcessor.getFingerprints());
-			
+
 			final List<NFFTFingerprintQueryMatch> queryMatches = new ArrayList<NFFTFingerprintQueryMatch>();
-			
+
 			queryMatches.addAll(storage.getMatches(fingerprints));
-			
+
 			double queryDuration = d.secondsProcessed();
-			
+
 			if(queryMatches.isEmpty()){
 				QueryResult result = QueryResult.emptyQueryResult(queryOffset,queryOffset+queryDuration);
 				handler.handleEmptyResult(result);
@@ -299,11 +297,11 @@ public class NFFTStrategy extends Strategy {
 					}
 				}
 			}
-			
+
 		} catch (UnsupportedAudioFileException e) {
 			LOG.severe("Unsupported audio");
 		}
-		
+
 	}
 
 	@Override
@@ -315,19 +313,19 @@ public class NFFTStrategy extends Strategy {
 	public boolean isStorageAvailable() {
 		return NFFTMapDBStorage.getInstance() != null;
 	}
-	
+
 	public void compareFingerprints(File reference,File other) {
 		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
 		int size = Config.getInt(Key.NFFT_SIZE);
 		int overlap = size - Config.getInt(Key.NFFT_STEP_SIZE);
-		
+
 		AudioDispatcher d = AudioDispatcherFactory.fromPipe(reference.getAbsolutePath(), samplerate, size, overlap);
 		NFFTEventPointProcessor minMaxProcessor = new NFFTEventPointProcessor(size,overlap,samplerate);
 		d.addAudioProcessor(minMaxProcessor);
 		d.run();
 		List<NFFTFingerprint> fingerprintsReference = minMaxProcessor.getFingerprints();
-		
-		final List<NFFTFingerprint> fingerprintsQuery;		
+
+		final List<NFFTFingerprint> fingerprintsQuery;
 		if(reference.getAbsolutePath().equals(other.getAbsolutePath())){
 			fingerprintsQuery=fingerprintsReference;
 		}else{
@@ -337,8 +335,8 @@ public class NFFTStrategy extends Strategy {
 			d.run();
 			fingerprintsQuery = minMaxProcessor.getFingerprints();
 		}
-		
-		
+
+
 		TreeMap<Integer,List<NFFTFingerprint>> queryPrintsOrderedByTime;
 		queryPrintsOrderedByTime = new TreeMap<>();
 		for(NFFTFingerprint fingerprint: fingerprintsQuery){
@@ -348,7 +346,7 @@ public class NFFTStrategy extends Strategy {
 			}
 			queryPrintsOrderedByTime.get(milliseconds).add(fingerprint);
 		}
-		
+
 		TreeMap<Integer,List<NFFTFingerprint>> referencePrintsOrderedByTime;
 		referencePrintsOrderedByTime = new TreeMap<>();
 		for(NFFTFingerprint fingerprint: fingerprintsReference){
@@ -357,14 +355,14 @@ public class NFFTStrategy extends Strategy {
 				referencePrintsOrderedByTime.put(milliseconds,new ArrayList<NFFTFingerprint>());
 			}
 			referencePrintsOrderedByTime.get(milliseconds).add(fingerprint);
-		}		
-		
+		}
+
 		int windowInMilliseconds=5000;
 		int maxMilliseconds = 30000 * 1000;//max 30k seconds
 		int prevMilliSeconds = -999;
 		for(Map.Entry<Integer,List<NFFTFingerprint>> entry : queryPrintsOrderedByTime.entrySet()){
 			int currentMilliseconds = entry.getKey();
-			
+
 			SortedMap<Integer,List<NFFTFingerprint>> searchSpace = referencePrintsOrderedByTime.subMap(currentMilliseconds, maxMilliseconds);
 			//SortedMap<Integer,List<NFFTFingerprint>> searchSpace = referencePrintsOrderedByTime.subMap(0, maxMilliseconds);
 			SortedMap<Integer,List<NFFTFingerprint>> query = queryPrintsOrderedByTime.subMap(currentMilliseconds, currentMilliseconds+windowInMilliseconds);
@@ -382,15 +380,15 @@ public class NFFTStrategy extends Strategy {
 				System.out.println(currentMilliseconds + "," + currentMilliseconds);
 			}
 		}
-		
+
 		LOG.info(String.format("%d fingerprints printed on stdout from %d event points for %s.",fingerprintsReference.size(),minMaxProcessor.getEventPoints().size(),reference.getAbsolutePath()));
-		
-		
+
+
 	}
-	
+
 	private Set<Integer> search(SortedMap<Integer, List<NFFTFingerprint>> searchSpace,
 			SortedMap<Integer, List<NFFTFingerprint>> query) {
-		
+
 		Set<Integer> millisecondMatches = new HashSet<Integer>();
 		//create a database
 		HashMap<Integer,List<NFFTFingerprint>> database = new HashMap<>();
@@ -403,7 +401,7 @@ public class NFFTStrategy extends Strategy {
 				database.get(hash).add(print);
 			}
 		}
-		
+
 		//match the query with the database, keep the matches
 		List<NFFTFingerprintHit> matches = new ArrayList<>();
 		for(Map.Entry<Integer,List<NFFTFingerprint>> entry : query.entrySet()){
@@ -418,23 +416,23 @@ public class NFFTStrategy extends Strategy {
 						hit.timeDifference = hit.matchTime - hit.queryTime;
 						matches.add(hit);
 					}
-					
+
 				}//else ignore the fingerprint
 			}
 		}
-		
-		//use this hash table to count the most popular offsets 
+
+		//use this hash table to count the most popular offsets
 		HashMap<Integer,Integer> popularOffsets = new HashMap<Integer, Integer>();
-		
-		//add the offsets for each landmark hit 
+
+		//add the offsets for each landmark hit
 		for(NFFTFingerprintHit hit : matches){
 			if(!popularOffsets.containsKey(hit.timeDifference)){
-				popularOffsets.put(hit.timeDifference, 0);	
+				popularOffsets.put(hit.timeDifference, 0);
 			}
 			int numberOfAlignedOffsets = 1 + popularOffsets.get(hit.timeDifference);
 			popularOffsets.put(hit.timeDifference,numberOfAlignedOffsets);
 		}
-		
+
 		float toMSFactor = (Config.getInt(Key.NFFT_STEP_SIZE) * 1000) / (float) Config.getInt(Key.NFFT_SAMPLE_RATE);
 		for(NFFTFingerprintHit hit : matches){
 			if(popularOffsets.containsKey(hit.timeDifference)){
@@ -448,9 +446,9 @@ public class NFFTStrategy extends Strategy {
 				}
 			}
 		}
-		
+
 		return millisecondMatches;
-		
+
 	}
 
 	public NFFTStreamSync sync(String reference,String other){
@@ -466,11 +464,11 @@ public class NFFTStrategy extends Strategy {
 		System.out.println("Number of seconds: " + storage.getNumberOfSeconds());
 		System.out.println("Number of fingerprints/second: " + storage.getNumberOfFingerprints()/storage.getNumberOfSeconds());
 	}
-	
+
 	@Override
 	public String resolve(String filename) {
 		return "" + FileUtils.getIdentifier(filename);
 	}
 
-	
+
 }

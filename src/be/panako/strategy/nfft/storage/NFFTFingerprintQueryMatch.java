@@ -50,7 +50,11 @@ public class NFFTFingerprintQueryMatch{
 	public double starttime;
 	public int score;
 	public int mostPopularOffset;
-	
+
+	public int getScore() {
+		return score;
+	}
+
 	public double getStartTime(){
 		//The FFT hop size in seconds
 		float fftHopSizesS = Config.getInt(Key.NFFT_STEP_SIZE) / (float) Config.getInt(Key.NFFT_SAMPLE_RATE);
