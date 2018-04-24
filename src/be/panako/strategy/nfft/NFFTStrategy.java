@@ -138,7 +138,7 @@ public class NFFTStrategy extends Strategy {
 			int maxScore = fingerprintMatches.stream().map(NFFTFingerprintQueryMatch::getScore).max(Comparator.naturalOrder()).get();
 
 			for (NFFTFingerprintQueryMatch match : fingerprintMatches) {
-				if (match.getScore() * 5 > maxScore) {
+				if (match.getScore() * 10 > maxScore) {
 					queryMatches.add(match);
 				}
 			}
