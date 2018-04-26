@@ -264,7 +264,7 @@ public class NFFTMapDBStorage implements Storage {
 	 * @see be.panako.strategy.nfft.storage.Storage#getMatches(java.util.List, int)
 	 */
 	@Override
-	public List<NFFTFingerprintQueryMatch> getMatches(List<NFFTFingerprint> fingerprints, int size) {
+	public List<NFFTFingerprintQueryMatch> getMatches(List<NFFTFingerprint> fingerprints) {
 	
 		StopWatch w = new StopWatch();
 		Set<NFFTFingerprintHit> allHits = new HashSet<NFFTFingerprintHit>();	
@@ -401,12 +401,7 @@ public class NFFTMapDBStorage implements Storage {
 				match.identifier = identifier;
 				match.score = alignedOffsets;
 				match.mostPopularOffset = offsetPerIdentifier.get(identifier);
-				if(matches.size() < size){
-					matches.add(match);
-				}
-			}
-			if(matches.size() >= size){
-				break;
+				matches.add(match);
 			}
 		}
 		return matches;

@@ -2,7 +2,7 @@
 <project default="panako" name="Create the Panako JAR-file">
 
 	<!-- Configuration -->
-	<property name="version" value="1.6" />
+	<property name="version" value="1.6.1" />
 	
 	<!-- Run the ant timestamp task -->
 	<tstamp />
@@ -18,7 +18,7 @@
 	<!-- Compiles the java files to bytecode and copy required resources -->
 	<target name="compile">
 		<mkdir dir="../bin" />
-		<javac srcdir="../src" destdir="../bin" includeantruntime="false" >
+		<javac srcdir="../src" destdir="../bin" includeantruntime="false" debug="true" debuglevel="lines,vars,source">
 			<classpath>
 				<fileset dir="../lib" includes="*.jar" excludes="*src*.jar"  />
 				<fileset dir="../lib/redisson" includes="redisson*.jar" excludes="*src*.jar"  />
