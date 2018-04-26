@@ -132,17 +132,7 @@ public class NFFTStrategy extends Strategy {
 
 		final List<NFFTFingerprintQueryMatch> queryMatches = new ArrayList<NFFTFingerprintQueryMatch>();
 
-		List<NFFTFingerprintQueryMatch> fingerprintMatches = storage.getMatches(fingerprints);
-
-		if(!fingerprintMatches.isEmpty()) {
-			int maxScore = fingerprintMatches.stream().map(NFFTFingerprintQueryMatch::getScore).max(Comparator.naturalOrder()).get();
-
-			for (NFFTFingerprintQueryMatch match : fingerprintMatches) {
-				if (match.getScore() * 10 > maxScore) {
-					queryMatches.add(match);
-				}
-			}
-		}
+		queryMatches.addAll(storage.getMatches(fingerprints));
 
 		double queryDuration = d.secondsProcessed();
 
