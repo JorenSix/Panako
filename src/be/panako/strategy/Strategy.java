@@ -42,6 +42,7 @@ import java.util.Set;
 import be.panako.strategy.chromaprint.ChromaPrintStrategy;
 import be.panako.strategy.ncteq.NCteQStrategy;
 import be.panako.strategy.nfft.NFFTStrategy;
+import be.panako.strategy.olaf.OlafStrategy;
 import be.panako.strategy.pch.PitchClassHistogramStrategy;
 import be.panako.strategy.rafs.RafsRepStrategy;
 import be.panako.util.Config;
@@ -98,6 +99,8 @@ public abstract class Strategy {
 				strategy = new RafsRepStrategy();
 			}else if("CHROMAPRINT".equalsIgnoreCase(Config.get(Key.STRATEGY))){
 				strategy = new ChromaPrintStrategy();
+			}else if("OLAF".equalsIgnoreCase(Config.get(Key.STRATEGY))){
+				strategy = new OlafStrategy();
 			}
 		}
 		return strategy;

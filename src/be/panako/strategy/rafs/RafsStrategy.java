@@ -205,9 +205,9 @@ public class RafsStrategy extends Strategy {
 			int fftOffset = 87;//(484 samples /5500Hz * 1000) in ms
 			long actualOffset = fftOffset + matchOffset;
 			String desc = audioNameStore.get((int) matchIdentifier);
-			handler.handleQueryResult(new QueryResult(0, 0, desc, "" + actualOffset ,4, actualOffset, 1.0, 1.0));
+			handler.handleQueryResult(new QueryResult(query,0, 0, desc, "" + actualOffset ,4, actualOffset, 1.0, 1.0));
 		}else{
-			handler.handleEmptyResult(new QueryResult(0, 0, "","", 0, 0, 0,0));
+			handler.handleEmptyResult(new QueryResult(query,0, 0, "","", 0, 0, 0,0));
 		}
 	}
 

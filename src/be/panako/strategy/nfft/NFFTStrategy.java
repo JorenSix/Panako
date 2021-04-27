@@ -149,12 +149,12 @@ public class NFFTStrategy extends Strategy {
 		double queryDuration = d.secondsProcessed();
 		
 		if(queryMatches.isEmpty()){
-			QueryResult result = QueryResult.emptyQueryResult(0,queryDuration);
+			QueryResult result = QueryResult.emptyQueryResult(query,0,queryDuration);
 			handler.handleEmptyResult(result);
 		}else{
 			for(NFFTFingerprintQueryMatch match : queryMatches){
 				String description = storage.getAudioDescription(match.identifier);
-				handler.handleQueryResult(new QueryResult(0,queryDuration,String.valueOf(match.identifier), description, match.score, match.getStartTime(),100.0,100.0));
+				handler.handleQueryResult(new QueryResult(query,0,queryDuration,String.valueOf(match.identifier), description, match.score, match.getStartTime(),100.0,100.0));
 			}
 		}
 	}
@@ -218,12 +218,12 @@ public class NFFTStrategy extends Strategy {
 		
 		queryMatches.addAll(storage.getMatches(fingerprints, maxNumberOfResults));
 		if(queryMatches.isEmpty()){
-			QueryResult result = QueryResult.emptyQueryResult(queryOffset,queryOffset+queryDuration);
+			QueryResult result = QueryResult.emptyQueryResult("deserialized",queryOffset,queryOffset+queryDuration);
 			handler.handleEmptyResult(result);
 		}else{
 			for(NFFTFingerprintQueryMatch match : queryMatches){
 				String description = storage.getAudioDescription(match.identifier);
-				handler.handleQueryResult(new QueryResult(queryOffset,queryOffset+queryDuration,String.valueOf(match.identifier), description, match.score, match.getStartTime(),100.0,100.0));
+				handler.handleQueryResult(new QueryResult("deserialized",queryOffset,queryOffset+queryDuration,String.valueOf(match.identifier), description, match.score, match.getStartTime(),100.0,100.0));
 			}
 		}
 	}
@@ -252,7 +252,7 @@ public class NFFTStrategy extends Strategy {
 			@Override
 			public boolean process(AudioEvent audioEvent) {
 				double timeStamp = audioEvent.getTimeStamp() - Config.getInt(Key.MONITOR_OVERLAP);
-				processMonitorQuery(audioEvent.getFloatBuffer().clone(), maxNumberOfResults, handler,timeStamp,avoid);
+				processMonitorQuery(query,audioEvent.getFloatBuffer().clone(), maxNumberOfResults, handler,timeStamp,avoid);
 				return true;
 			}
 			
@@ -267,7 +267,7 @@ public class NFFTStrategy extends Strategy {
 	
 
 	
-	private void processMonitorQuery(float[] audioBuffer,int maxNumberOfResults,
+	private void processMonitorQuery(String query,float[] audioBuffer,int maxNumberOfResults,
 			QueryResultHandler handler,double queryOffset,Set<Integer> avoid){
 		int samplerate = Config.getInt(Key.NFFT_SAMPLE_RATE);
 		int size = Config.getInt(Key.NFFT_SIZE);
@@ -288,14 +288,14 @@ public class NFFTStrategy extends Strategy {
 			double queryDuration = d.secondsProcessed();
 			
 			if(queryMatches.isEmpty()){
-				QueryResult result = QueryResult.emptyQueryResult(queryOffset,queryOffset+queryDuration);
+				QueryResult result = QueryResult.emptyQueryResult(query,queryOffset,queryOffset+queryDuration);
 				handler.handleEmptyResult(result);
 			}else{
 				for(NFFTFingerprintQueryMatch match : queryMatches){
 					//avoid the results in the avoid hash set
 					if(!avoid.contains(match.identifier)){
 						String description = storage.getAudioDescription(match.identifier);
-						handler.handleQueryResult(new QueryResult(queryOffset,queryOffset+queryDuration,String.valueOf(match.identifier), description, match.score, match.getStartTime(),100.0,100.0));
+						handler.handleQueryResult(new QueryResult(query,queryOffset,queryOffset+queryDuration,String.valueOf(match.identifier), description, match.score, match.getStartTime(),100.0,100.0));
 					}
 				}
 			}

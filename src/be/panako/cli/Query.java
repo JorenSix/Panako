@@ -119,12 +119,12 @@ public class Query extends Application{
 		
 		@Override
 		public void handleQueryResult(QueryResult r) {
-			Panako.printQueryResult(file.getAbsolutePath(), r);
+			Panako.printQueryResult(r);
 		}
 
 		@Override
 		public void handleEmptyResult(QueryResult r) {
-			Panako.printQueryResult(file.getAbsolutePath(), r);	
+			Panako.printQueryResult(r);	
 		}
 	}	
 	

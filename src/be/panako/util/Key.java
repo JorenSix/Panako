@@ -329,7 +329,15 @@ public enum Key{
 	/**
 	 * The command executed to get meta data.
 	 */
-	META_DATA_COMMAND("/opt/panako/extract_metadata.sh")  ;
+	META_DATA_COMMAND("/opt/panako/extract_metadata.sh") ,
+	
+	
+	
+	/**
+	 * The folder to store the LMDB database
+	 */
+	OLAF_LMDB_FOLDER("/opt/panako/lmdb"),
+	;
 	
 	
 	String defaultValue;

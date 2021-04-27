@@ -241,8 +241,6 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 		
 		float[] frameMagnitudes = previousMagintudes.get(frameUnderAnalysis);
 		float[] currentPhase = previousPhase.get(frameUnderAnalysis);
-				
-				
 		
 		for(int i = 0 ; i<frameMagnitudes.length ; i++){
 			float maxVal = maxHorizontal[i];
@@ -290,7 +288,7 @@ public class NFFTEventPointProcessor implements AudioProcessor {
 		}
 		
 		int size = Config.getInt(Key.NFFT_SIZE);
-		FFT fft = new FFT(size);
+		//FFT fft = new FFT(size);
 		float[] binStartingPointsInCents = new float[size];
 		float[] binHeightsInCents = new float[size];
 		for (int i = 1; i < size; i++) {

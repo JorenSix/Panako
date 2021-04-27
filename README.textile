@@ -511,4 +511,5 @@ h2(#changelog). Changelog
 
 <dt>Version 1.6</dt><dd>2017-03-17</dd> This release adds a simplified version of chromaprint and an implementation of "'A Highly Robust Audio Fingerprinting System' by Haitsma and Kalker":http://www.ismir2002.ismir.net/proceedings/02-FP04-2.pdf
 
+<dt>Version 2.0</dt><dd>2021-04-27</dd> This release add support for LMDB a faster key-value store. A new implementation of the classic Shazam algorithm is included with a near-neigbour search fingerprint. The version bumped to 2.0 to signify incompatibility with older JRE's: lambdas are used so a newer JRE (8+) is needed.
  

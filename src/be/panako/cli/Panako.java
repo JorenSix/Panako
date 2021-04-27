@@ -288,10 +288,10 @@ public class Panako {
 	}
 	
 	
-	public static void printQueryResult(String query,QueryResult r){
-		String queryInfo = String.format("%s;%.0f;%.0f;",query,r.queryTimeOffsetStart,r.queryTimeOffsetStop);
-		String matchInfo = String.format("%s;%s;%.0f;%.0f;", r.identifier,r.description,r.time,r.score);
-		String factorInfo = String.format("%.0f%%;%.0f%%", r.timeFactor,r.frequencyFactor);
+	public static void printQueryResult(QueryResult r){
+		String queryInfo = String.format("%s;%.3f;%.3f;",r.query,r.queryTimeOffsetStart,r.queryTimeOffsetStop);
+		String matchInfo = String.format("%s;%s;%.3f;%.0f;", r.identifier,r.description,r.time,r.score);
+		String factorInfo = String.format("%.2f%%;%.2f%%", r.timeFactor,r.frequencyFactor);
 		System.out.println(queryInfo+matchInfo+factorInfo);
 	}
 	

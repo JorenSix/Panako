@@ -198,7 +198,7 @@ public class PitchClassHistogramStrategy extends Strategy {
 				int identifier = scores.get(key);
 				String description = descriptions.get(key);
 				double frequencyRatio = shifts.get(key);
-				QueryResult qr = new QueryResult(-1, -1, String.valueOf(identifier), description, (int) (key*100) , 0, -1, frequencyRatio);
+				QueryResult qr = new QueryResult(query,-1, -1, String.valueOf(identifier), description, (int) (key*100) , 0, -1, frequencyRatio);
 				handler.handleQueryResult(qr);
 				handled++;
 			}

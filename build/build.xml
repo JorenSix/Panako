@@ -2,7 +2,7 @@
 <project default="panako" name="Create the Panako JAR-file">
 
 	<!-- Configuration -->
-	<property name="version" value="1.6" />
+	<property name="version" value="2.0" />
 	
 	<!-- Run the ant timestamp task -->
 	<tstamp />
@@ -18,11 +18,13 @@
 	<!-- Compiles the java files to bytecode and copy required resources -->
 	<target name="compile">
 		<mkdir dir="../bin" />
-		<javac srcdir="../src" destdir="../bin" includeantruntime="false" >
+		<javac srcdir="../src" destdir="../bin" includeantruntime="false" target="1.8"  source="1.8">
 			<classpath>
+				<fileset file="${junit_jar}"/>
 				<fileset dir="../lib" includes="*.jar" excludes="*src*.jar"  />
 				<fileset dir="../lib/redisson" includes="redisson*.jar" excludes="*src*.jar"  />
 				<fileset dir="../lib/mapdb" includes="*.jar" excludes="*src*.jar"  />
+				<fileset dir="../lib/lmdb" includes="*.jar" excludes="*src*.jar"  />
 			</classpath>
 		</javac>
 	</target>
@@ -31,7 +33,6 @@
 	<target name="javadoc">
 		<javadoc access="public" 
 			author="true" 
-			classpath="${junit_jar}:../lib/TarsosDSP-2.4.jar:../lib/TarsosLSH-0.8.jar:../lib/redisson/redisson-2.2.3.jar:../lib/json-20140107.jar:../lib/commons-exec-1.3.jar:../lib/webserver.jar:../lib/servlet-2-3.jar" 
 			destdir="../doc/javadoc"
 			doctitle="Panako ${version}-${DSTAMP}" 
 			nodeprecated="false" 
@@ -39,11 +40,18 @@
 			noindex="false" 
 			nonavbar="false"
 			notree="false"
-			source="1.7" 
+			source="11" 
 			sourcepath="../src" 
 			splitindex="true" 
 			use="true" 
-			version="true" />
+			version="true" >	
+				<classpath>
+					<fileset dir="../lib" includes="*.jar" excludes="*src*.jar"  />
+					<fileset dir="../lib/redisson" includes="redisson*.jar" excludes="*src*.jar"  />
+					<fileset dir="../lib/mapdb" includes="*.jar" excludes="*src*.jar"  />
+					<fileset dir="../lib/lmdb" includes="*.jar" excludes="*src*.jar"  />
+				</classpath>
+			</javadoc>
 	</target>
 	
 	<!-- Creates index.html with info about panako in ../doc/ directory -->
@@ -54,50 +62,12 @@
 	<!-- Creates the Panako executable JAR-File client -->
 	<target name="panako" depends="compile">
 		<!-- with source code panako-${version}.jar -->
-		<jar destfile="panako-${version}.jar" filesetmanifest="mergewithoutmain">
-			<manifest>
-				<!-- Standard manifest attributes -->
-				<attribute name="Implementation-Version" value="${version}-${DSTAMP}" />
-				<attribute name="Built-By" value="${built_by}" />
-				<attribute name="Created-By" value="${built_by}" />
-				<attribute name="Built-Date" value="${TODAY}" />
-				<attribute name="Main-Class" value="be.panako.cli.Panako" />
-			</manifest>
+		<jar destfile="panako-${version}.jar" filesetmanifest="skip">
 			
-			<!-- mapdb jar files -->
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/eclipse-collections-7.1.1.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/eclipse-collections-api-7.1.1.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/eclipse-collections-forkjoin-7.1.1.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/elsa-3.0.0-M5.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/guava-19.0.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/jcip-annotations-1.0.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/kotlin-runtime-1.0.7.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/kotlin-stdlib-1.0.7.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/lz4-1.3.0.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/mapdb-3.0.4.jar"/>
-			
-			<!-- JSON lib -->
-			<zipfileset excludes="META-INF/**" src="../lib/json-20140107.jar"/>
-			
-			<!-- Execute scripts -->
-			<zipfileset excludes="META-INF/**" src="../lib/commons-exec-1.3.jar"/>
-			
-			<!-- DSP library -->
-			<zipfileset excludes="META-INF/**" src="../lib/TarsosDSP-2.4.jar"/>
-			
-			<!-- MIH library -->
-			<zipfileset excludes="META-INF/**" src="../lib/TarsosLSH-0.9.jar"/>
-			
-			<!-- webserver library -->
-			<zipfileset excludes="META-INF/**" src="../lib/webserver.jar"/>
-			
-			<!-- servlet library -->
-			<zipfileset excludes="META-INF/**" src="../lib/servlet-2-3.jar"/>
-			
-			<!-- alt db backend --> 
-			<zipfileset excludes="META-INF/**" src="../lib/redisson/redisson-all-2.9.1.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/redisson/zero-allocation-hashing-0.5.jar"/>
-			
+			<zipgroupfileset dir="../lib/" includes="*.jar"/><!-- panako dependencies -->
+			<zipgroupfileset dir="../lib/mapdb/" includes="*.jar"/><!-- mapdb jar files -->	
+			<zipgroupfileset dir="../lib/lmdb/" includes="*.jar"/><!-- mapdb jar files -->	
+			<zipgroupfileset dir="../lib/redisson" includes="*.jar"/><!-- redisson jar files -->
     		
 			<!-- exclude everything except src dir -->
 			<fileset dir="../bin">
@@ -112,6 +82,16 @@
 			
 			<!-- include API readme -->
 			<fileset file="../src/be/panako/http/api.html" />
+			
+			<manifest>
+				<!-- Standard manifest attributes -->
+				<attribute name="Implementation-Version" value="${version}-${DSTAMP}" />
+				<attribute name="Built-By" value="${built_by}" />
+				<attribute name="Created-By" value="${built_by}" />
+				<attribute name="Built-Date" value="${TODAY}" />
+				<attribute name="Main-Class" value="be.panako.cli.Panako" />
+			</manifest>
+			
 		</jar>
 	</target>
 	
@@ -128,39 +108,10 @@
 				<attribute name="Main-Class" value="be.panako.ui.syncsink.SyncSink" />
 			</manifest>
 			
-			<!-- mapdb jar files -->
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/eclipse-collections-7.1.1.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/eclipse-collections-api-7.1.1.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/eclipse-collections-forkjoin-7.1.1.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/elsa-3.0.0-M5.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/guava-19.0.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/jcip-annotations-1.0.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/kotlin-runtime-1.0.7.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/kotlin-stdlib-1.0.7.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/lz4-1.3.0.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/mapdb/mapdb-3.0.4.jar"/>
-			
-			<!-- JSON lib -->
-			<zipfileset excludes="META-INF/**" src="../lib/json-20140107.jar"/>
-			
-			<!-- Execute scripts -->
-			<zipfileset excludes="META-INF/**" src="../lib/commons-exec-1.3.jar"/>
-			
-			<!-- DSP library -->
-			<zipfileset excludes="META-INF/**" src="../lib/TarsosDSP-2.4.jar"/>
-			
-			<!-- MIH library -->
-			<zipfileset excludes="META-INF/**" src="../lib/TarsosLSH-0.9.jar"/>
-			
-			<!-- webserver library -->
-			<zipfileset excludes="META-INF/**" src="../lib/webserver.jar"/>
-			
-			<!-- servlet library -->
-			<zipfileset excludes="META-INF/**" src="../lib/servlet-2-3.jar"/>
-			
-			<!-- alt db backend --> 
-			<zipfileset excludes="META-INF/**" src="../lib/redisson/redisson-all-2.9.1.jar"/>
-			<zipfileset excludes="META-INF/**" src="../lib/redisson/zero-allocation-hashing-0.5.jar"/>
+			<zipgroupfileset dir="../lib/" includes="*.jar"/><!-- panako dependencies -->
+			<zipgroupfileset dir="../lib/mapdb/" includes="*.jar"/><!-- mapdb jar files -->	
+			<zipgroupfileset dir="../lib/lmdb/" includes="*.jar"/><!-- mapdb jar files -->	
+			<zipgroupfileset dir="../lib/redisson" includes="*.jar"/><!-- redisson jar files -->
     		
 			<!-- exclude everything except src dir -->
 			<fileset dir="../bin">
@@ -208,7 +159,7 @@
 		 <mkdir dir="/opt/panako/log"/>
 		 <!-- Copy the panako execute script -->
 		 <copy file="../doc/panako" tofile="/opt/panako/panako"/>
-		 <!-- Copy the logging configuration and the main jar file -->
+		 <!-- Copy the main jar file -->
 	     <copy file="panako-${version}.jar" tofile="/opt/panako/panako.jar"/>
 		 <!-- Copy the default logging configuration -->
 	     <copy file="../doc/logging.properties" tofile="/opt/panako/logging.properties"/>

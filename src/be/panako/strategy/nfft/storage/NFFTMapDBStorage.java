@@ -255,6 +255,7 @@ public class NFFTMapDBStorage implements Storage {
 	@Override
 	public float addFingerprint(int identifier, int time, int landmarkHash) {
 		int[] value = {landmarkHash, time, identifier};
+		
 		fftFingerprintStore.add(value);
 		return 0.0f;
 	}

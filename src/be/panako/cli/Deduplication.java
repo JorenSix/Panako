@@ -43,9 +43,7 @@ import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
 
- class Deduplication  extends Application implements QueryResultHandler  {
-	String query;
-	
+ class Deduplication  extends Application implements QueryResultHandler  {	
 	@Override
 	public void run(String... args) {
 		String[] storeArgs = new String[args.length+1];
@@ -60,7 +58,6 @@ import be.panako.strategy.Strategy;
 		Strategy strategy = Strategy.getInstance();
 		
 		for(File f: files){
-			query = f.getName();
 			HashSet<Integer> identifiersToAvoid = new HashSet<Integer>();
 			Integer identifierToAvoid = Integer.valueOf(strategy.resolve(f.getName()));
 			identifiersToAvoid.add(identifierToAvoid);
@@ -90,13 +87,12 @@ import be.panako.strategy.Strategy;
 
 	@Override
 	public void handleQueryResult(QueryResult result) {
-		Panako.printQueryResult(query, result);	
+		Panako.printQueryResult(result);	
 	}
 
 	@Override
 	public void handleEmptyResult(QueryResult result) {
-		//Panako.printQueryResult(query, null);
-		
+		Panako.printQueryResult(result);
 	}
 
 }

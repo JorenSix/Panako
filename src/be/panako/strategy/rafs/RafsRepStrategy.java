@@ -315,9 +315,9 @@ public class RafsRepStrategy extends Strategy {
 		if(bestOffset!=-1){
 			long actualOffset =  bestOffset;
 			String desc = audioNameStore.get((int) identifier);
-			handler.handleQueryResult(new QueryResult(0, 0, desc, "" + actualOffset ,score, actualOffset, 1.0, 1.0));
+			handler.handleQueryResult(new QueryResult(query,0, 0, desc, "" + actualOffset ,score, actualOffset, 1.0, 1.0));
 		}else{
-			handler.handleEmptyResult(new QueryResult(0, 0, "","", 0, 0, 0,0));
+			handler.handleEmptyResult(new QueryResult(query,0, 0, "","", 0, 0, 0,0));
 		}
 	}
 
@@ -383,7 +383,7 @@ public class RafsRepStrategy extends Strategy {
 			@Override
 			public boolean process(AudioEvent audioEvent) {
 				double timeStamp = audioEvent.getTimeStamp() - Config.getInt(Key.MONITOR_OVERLAP);
-				processMonitorQuery(audioEvent.getFloatBuffer().clone(), handler,timeStamp,avoid);
+				processMonitorQuery(query,audioEvent.getFloatBuffer().clone(), handler,timeStamp,avoid);
 				return true;
 			}
 			
@@ -394,7 +394,7 @@ public class RafsRepStrategy extends Strategy {
 		d.run();
 	}
 	
-	private void processMonitorQuery(float[] audioData,QueryResultHandler handler, double timeStamp,Set<Integer> avoid){
+	private void processMonitorQuery(String query,float[] audioData,QueryResultHandler handler, double timeStamp,Set<Integer> avoid){
 		int samplerate = Config.getInt(Key.RAFS_SAMPLE_RATE);
 		int size = Config.getInt(Key.RAFS_FFT_SIZE);
 		int overlap = size - Config.getInt(Key.RAFS_FFT_STEP_SIZE);
@@ -406,14 +406,14 @@ public class RafsRepStrategy extends Strategy {
 			final RafsExtractor processor = new RafsExtractor(null,true);
 			d.addAudioProcessor(processor);
 			d.run();
-			queryForMonitor(processor.fingerprints, processor.fingerprintProbabilities, 10 , avoid, handler);
+			queryForMonitor(query,processor.fingerprints, processor.fingerprintProbabilities, 10 , avoid, handler);
 		} catch (UnsupportedAudioFileException e) {
 			LOG.severe("Unsupported audio");
 		}
 	}
 	
 
-	public void queryForMonitor(TreeMap<Float,BitSet> fingerprints, TreeMap<Float,int[]> fingerprintProbabilities, int maxNumberOfResults,Set<Integer> avoid, QueryResultHandler handler) {
+	public void queryForMonitor(String query,TreeMap<Float,BitSet> fingerprints, TreeMap<Float,int[]> fingerprintProbabilities, int maxNumberOfResults,Set<Integer> avoid, QueryResultHandler handler) {
 		
 	
 		int identifier = -1;
@@ -490,9 +490,9 @@ public class RafsRepStrategy extends Strategy {
 		if(bestOffset!=-1){
 			long actualOffset =  bestOffset;
 			String desc = audioNameStore.get((int) identifier);
-			handler.handleQueryResult(new QueryResult(0, 0, desc, "" + actualOffset ,score, actualOffset, 1.0, 1.0));
+			handler.handleQueryResult(new QueryResult(query,0, 0, desc, "" + actualOffset ,score, actualOffset, 1.0, 1.0));
 		}else{
-			handler.handleEmptyResult(new QueryResult(0, 0, "","", 0, 0, 0,0));
+			handler.handleEmptyResult(new QueryResult(query,0, 0, "","", 0, 0, 0,0));
 		}
 	}
 	

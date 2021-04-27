@@ -41,6 +41,9 @@ public class QueryResult {
 	
 	public final String identifier;
 	public final String description;
+	
+	public final String query;
+	
 	public final double score;
 	public final double time;
 	public final double queryTimeOffsetStart;
@@ -73,7 +76,7 @@ public class QueryResult {
 	 *            higher frequency compared to the reference. 90 means a 10%
 	 *            lower frequency.
 	 */
-	public QueryResult(double queryTimeOffsetStart,double queryTimeOffsetStop, String identifier, String description, double score, double time,double timeFactor, double frequencyFactor){
+	public QueryResult(String query,double queryTimeOffsetStart,double queryTimeOffsetStop, String identifier, String description, double score, double time,double timeFactor, double frequencyFactor){
 		this.queryTimeOffsetStart = queryTimeOffsetStart;
 		this.queryTimeOffsetStop = queryTimeOffsetStop;
 		this.identifier = identifier;
@@ -82,9 +85,10 @@ public class QueryResult {
 		this.time = time;
 		this.timeFactor=timeFactor;
 		this.frequencyFactor = frequencyFactor;
+		this.query = query;
 	}
 	
-	public static QueryResult emptyQueryResult(double queryTimeOffsetStart,double queryTimeOffsetStop){
-		return new QueryResult(queryTimeOffsetStart,queryTimeOffsetStop,null, null, -1, -1,-1,-1);
+	public static QueryResult emptyQueryResult(String query,double queryTimeOffsetStart,double queryTimeOffsetStop){
+		return new QueryResult(query,queryTimeOffsetStart,queryTimeOffsetStop,null, null, -1, -1,-1,-1);
 	}
 }

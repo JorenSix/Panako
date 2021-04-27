@@ -46,7 +46,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
-import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentNavigableMap;
@@ -510,7 +509,7 @@ public class NCteQMapDBStorage {
 	}
 
 	public void polluteDB(final int hashes) {
-
+/*
 		Iterator<int[]> source = new Iterator<int[]>() {
 
 			long counter = 0;
@@ -534,7 +533,7 @@ public class NCteQMapDBStorage {
 			@Override
 			public void remove() {
 			}
-		};
+		};/*
 
 		/*
 		 * source = Pump.sort(source, true, 100000,

@@ -176,8 +176,6 @@ public class LemireMinMaxFilter {
 	}
 	
 	public static void main(String... args){
-		
-		
 		float[] data = {1,2,3,7,8,-7,12,13,7};
 		int windowSize = 3;
 		LemireMinMaxFilter filter = new LemireMinMaxFilter(windowSize,data.length,true);

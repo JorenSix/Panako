@@ -46,16 +46,18 @@ import be.panako.strategy.Strategy;
 import be.tarsos.dsp.util.AudioResourceUtils;
 
 public class Monitor extends Application implements QueryResultHandler {
-	String inputResource;
+
 	
 	@Override
 	public void run(String... args) {
+		String inputResource = null;
 		if (args.length > 0){
 			inputResource = AudioResourceUtils.sanitizeResource(args[0]);
 		}else if (args.length == 0){
 			inputResource = Panako.DEFAULT_MICROPHONE;
 		}
 		Strategy strategy = Strategy.getInstance();
+		
 		Panako.printQueryResultHeader();
 		strategy.monitor(inputResource,1,new HashSet<Integer>(), this);
 	}
@@ -82,11 +84,11 @@ public class Monitor extends Application implements QueryResultHandler {
 
 	@Override
 	public void handleQueryResult(QueryResult r) {
-		Panako.printQueryResult(inputResource, r);
+		Panako.printQueryResult(r);
 	}
 
 	@Override
 	public void handleEmptyResult(QueryResult r) {
-		Panako.printQueryResult(inputResource, r);
+		Panako.printQueryResult(r);
 	}
 }

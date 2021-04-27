@@ -136,12 +136,12 @@ public class NCteQStrategy extends Strategy {
 		List<NCteQFingerprintQueryMatch> matches = storage.getFingerprintMatches(fingerprints,maxNumberOfResults);
 		
 		if(matches.isEmpty()){
-			QueryResult result = QueryResult.emptyQueryResult(0,queryDuration);
+			QueryResult result = QueryResult.emptyQueryResult(query,0,queryDuration);
 			handler.handleEmptyResult(result);
 		}else{
 			for(NCteQFingerprintQueryMatch match : matches){
 				String description = storage.getAudioDescription(match.identifier);
-				QueryResult result = new QueryResult(0,queryDuration,String.valueOf(match.identifier), description, match.score, match.getStartTime(),match.timeRatio,match.frequencyRatio);
+				QueryResult result = new QueryResult(query,0,queryDuration,String.valueOf(match.identifier), description, match.score, match.getStartTime(),match.timeRatio,match.frequencyRatio);
 				handler.handleQueryResult(result);
 			}
 		}
@@ -161,7 +161,7 @@ public class NCteQStrategy extends Strategy {
 			@Override
 			public boolean process(AudioEvent audioEvent) {
 				double timeStamp = audioEvent.getTimeStamp() - Config.getInt(Key.MONITOR_OVERLAP);
-				processMonitorQuery(audioEvent.getFloatBuffer().clone(), maxNumberOfReqults, handler,timeStamp,constanQ);
+				processMonitorQuery(query,audioEvent.getFloatBuffer().clone(), maxNumberOfReqults, handler,timeStamp,constanQ);
 				return true;
 			}
 			
@@ -173,7 +173,7 @@ public class NCteQStrategy extends Strategy {
 
 	}
 	
-	private void processMonitorQuery(float[] audioBuffer,int maxNumberOfResults,
+	private void processMonitorQuery(String query,float[] audioBuffer,int maxNumberOfResults,
 			QueryResultHandler handler,double queryOffset, ConstantQ constantQ){
 		int samplerate = Config.getInt(Key.NCTEQ_SAMPLE_RATE);
 		
@@ -198,12 +198,12 @@ public class NCteQStrategy extends Strategy {
 			List<NCteQFingerprintQueryMatch> matches = storage.getFingerprintMatches(fingerprints,maxNumberOfResults);
 			
 			if(matches.isEmpty()){
-				QueryResult result = QueryResult.emptyQueryResult(queryOffset,queryOffset+queryDuration);
+				QueryResult result = QueryResult.emptyQueryResult(query,queryOffset,queryOffset+queryDuration);
 				handler.handleEmptyResult(result);
 			}else{
 				for(NCteQFingerprintQueryMatch match : matches){
 					String description = storage.getAudioDescription(match.identifier);
-					QueryResult result = new QueryResult(queryOffset,queryOffset+queryDuration,String.valueOf(match.identifier), description, match.score, match.getStartTime(),match.timeRatio,match.frequencyRatio);
+					QueryResult result = new QueryResult(query,queryOffset,queryOffset+queryDuration,String.valueOf(match.identifier), description, match.score, match.getStartTime(),match.timeRatio,match.frequencyRatio);
 					handler.handleQueryResult(result);
 				}
 			}
