@@ -84,9 +84,9 @@ public class MatchTest {
 				@Override
 				public void handleQueryResult(QueryResult result) {
 					int startExpected = Integer.valueOf(queryFile.split("_")[1].split("-")[0].replace("s", ""));
-					System.out.println(result.description + " " + queryFile);
-					System.out.println(Math.round(result.time));
-					assertEquals("Found an unexpected start of query for " + queryFile, startExpected, Math.round(result.time));
+					System.out.println(result.refPath + " " + queryFile);
+					System.out.println(Math.round(result.queryStart));
+					assertEquals("Found an unexpected start of query for " + queryFile, startExpected, Math.round(result.queryStart));
 				}
 				
 				@Override

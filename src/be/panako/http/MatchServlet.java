@@ -133,12 +133,12 @@ public class MatchServlet extends HttpServlet {
 				JSONObject object = new JSONObject();
 				//query info
 				object.put("query", "");
-				object.put("query_start", result.queryTimeOffsetStart);
-				object.put("query_stop", result.queryTimeOffsetStop);
+				object.put("query_start", result.queryStart);
+				object.put("query_stop", result.queryStop);
 				//match info
-				object.put("match_identifier", result.identifier);
-				object.put("match_description", result.description);
-				object.put("match_start", result.time);
+				object.put("match_identifier", result.refIdentifier);
+				object.put("match_description", result.refPath);
+				object.put("match_start", result.refStart);
 				object.put("match_score", result.score);
 
 				output.println(object.toString());
@@ -149,8 +149,8 @@ public class MatchServlet extends HttpServlet {
 				JSONObject object = new JSONObject();
 				//query info
 				object.put("query", "");
-				object.put("query_start",  result.queryTimeOffsetStart);
-				object.put("query_stop", result.queryTimeOffsetStop);
+				object.put("query_start",  result.queryStart);
+				object.put("query_stop", result.queryStop);
 				//match info
 				object.put("match_identifier", 0);
 				object.put("match_description", "NO MATCH");

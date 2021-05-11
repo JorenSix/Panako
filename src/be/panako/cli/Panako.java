@@ -42,6 +42,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
@@ -87,6 +88,9 @@ public class Panako {
 	
 
 	public Panako() {
+		//makes sure number formatting is always the same
+		java.util.Locale.setDefault(Locale.US);
+		 
 		//Initialize configuration:
 		Config.getInstance();
 		
@@ -129,6 +133,7 @@ public class Panako {
 		applicationList.add(new Resolve());
 		applicationList.add(new Tap());
 		applicationList.add(new Deduplication());
+		applicationList.add(new Load());
 		for (final Application application : applicationList) {
 			applications.put(application.name(), application);
 			applicationTrie.insert(application.name());
@@ -289,15 +294,16 @@ public class Panako {
 	
 	
 	public static void printQueryResult(QueryResult r){
-		String queryInfo = String.format("%s;%.3f;%.3f;",r.query,r.queryTimeOffsetStart,r.queryTimeOffsetStop);
-		String matchInfo = String.format("%s;%s;%.3f;%.0f;", r.identifier,r.description,r.time,r.score);
-		String factorInfo = String.format("%.2f%%;%.2f%%", r.timeFactor,r.frequencyFactor);
-		System.out.println(queryInfo+matchInfo+factorInfo);
+	
+		String queryInfo = String.format("%s ; %.3f ; %.3f ; "     ,r.queryPath,r.queryStart   ,r.queryStop);
+		String refInfo = String.format("%s ; %s ; %.3f ; %.3f ; "  ,r.refPath  ,r.refIdentifier,r.refStart       ,r.refStop);
+		String matchInfo = String.format("%.0f ; %.2f %% ; %.2f %%",r.score    , r.timeFactor  ,r.frequencyFactor);
+		System.out.println(queryInfo+refInfo+matchInfo);
 	}
 	
 	public static void printQueryResultHeader(){
 		String header;
-		header = "Query;Query start (s);Query stop (s); Match Identifier;Match description; Match start (s); Match score; Time factor (%); Frequency factor(%)"; 
+		header = "Query path;Query start (s);Query stop (s); Match path;Match id; Match start (s); Match stop (s); Match score; Time factor (%); Frequency factor(%)"; 
 		System.out.println(header);
 	}
 

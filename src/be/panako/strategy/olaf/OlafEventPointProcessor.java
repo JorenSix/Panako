@@ -40,6 +40,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import be.panako.util.Config;
+import be.panako.util.Key;
 import be.panako.util.LemireMinMaxFilter;
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
@@ -57,6 +59,7 @@ public class OlafEventPointProcessor implements AudioProcessor {
 	 * complexity
 	 */
 	private final float[][] magnitudes;
+	private final float[][] maxMagnitudes;
 	
 	/**
 	 * A counter used in the 2D float arrays
@@ -74,8 +77,8 @@ public class OlafEventPointProcessor implements AudioProcessor {
 	
 	private final LemireMinMaxFilter maxFilterVertical;
 
-	private final int maxFilterWindowSizeFrequency = 103;
-	private final int maxFilterWindowSizeTime = 25;
+	private final int maxFilterWindowSizeFrequency = Config.getInt(Key.OLAF_FREQ_MAX_FILTER_SIZE);
+	private final int maxFilterWindowSizeTime = Config.getInt(Key.OLAF_TIME_MAX_FILTER_SIZE);
 	
 	private final float[] maxHorizontal;
 	
@@ -86,6 +89,7 @@ public class OlafEventPointProcessor implements AudioProcessor {
 		
 		magnitudesIndex=0;
 		magnitudes = new float[maxFilterWindowSizeTime][fftSize/2];
+		maxMagnitudes = new float[maxFilterWindowSizeTime][fftSize/2];
 
 		previousMaxMagnitudes = new HashMap<>();
 		previousMagnitudes = new HashMap<>();
@@ -95,7 +99,23 @@ public class OlafEventPointProcessor implements AudioProcessor {
 		maxHorizontal = new float[fftSize/2];
 	}
 	
-	@Override
+	void naive_max_filter(float[] data, float[]  max, int  half_filter_size , boolean clamp){
+
+		for(int i = 0 ; i < data.length ; i++){
+			int startIndex = Math.max(i - half_filter_size,0);
+			int  stopIndex = Math.min(data.length-1, i + half_filter_size);
+			float maxValue = -1000000;
+			for(int j = startIndex ; j <= stopIndex; j++){
+				if(maxValue < data[j]){
+	                maxValue = data[j];
+	            }
+			}
+	        max[i] = maxValue;
+		}
+	   
+	}
+	
+	@Override	
 	public boolean process(AudioEvent audioEvent) {
 		//clone since the buffer is reused to slide
 		float[] buffer = audioEvent.getFloatBuffer().clone();
@@ -113,34 +133,42 @@ public class OlafEventPointProcessor implements AudioProcessor {
 		//store the frame magnitudes
 		previousMagnitudes.put(analysisFrameIndex, magnitudes[magnitudesIndex]);
 		
-		//run a maximum filter on the frame
-		maxFilterVertical.filter(magnitudes[magnitudesIndex]);
-		previousMaxMagnitudes.put(analysisFrameIndex,maxFilterVertical.getMaxVal());
+		//run a max filter over frequency bins
+		maxFilterVertical.maxFilter(magnitudes[magnitudesIndex],maxMagnitudes[magnitudesIndex]);
+		//store the max filtered frequency bins
+		previousMaxMagnitudes.put(analysisFrameIndex,maxMagnitudes[magnitudesIndex]);
 		
 		//find the horziontal maxima
 		if(previousMaxMagnitudes.size()==maxFilterWindowSizeTime){
-			horizontalFilter();
-			//Remove analysis frames that are not needed any more:
 			
 			int t = analysisFrameIndex - maxFilterWindowSizeTime /2;
+			
+			float[] maxFrame = previousMaxMagnitudes.get(t);
 			float[] frameMagnitudes = previousMagnitudes.get(t);
+			
 			for(int f = 2 ; f < frameMagnitudes.length - 1 ; f++){
-				float maxVal = maxHorizontal[f];
+				float maxVal = maxFrame[f];
 				float currentVal = frameMagnitudes[f];
-				if(currentVal == maxVal && currentVal !=0){
-					
-					float[] prevFrameMagnitudes = previousMagnitudes.get(t-1);
-					float[] nextFrameMagnitudes = previousMagnitudes.get(t+1);
-					
-					//add the magnitude of surrounding bins for magnitude estimate more robust against discretization effects 
-					currentVal = frameMagnitudes[f] + prevFrameMagnitudes[f] + nextFrameMagnitudes[f]
-							+ frameMagnitudes[f+1] + prevFrameMagnitudes[f+1] + nextFrameMagnitudes[f+1]
-							+ frameMagnitudes[f-1] + prevFrameMagnitudes[f-1] + nextFrameMagnitudes[f-1];
-					
-					eventPoints.add(new OlafEventPoint(t, f,currentVal));
+				
+				if(maxVal == currentVal) {
+					horizontalFilter(f);
+					maxVal = maxHorizontal[f];
+					if(currentVal == maxVal && currentVal !=0 ){
+						
+						float[] prevFrameMagnitudes = previousMagnitudes.get(t-1);
+						float[] nextFrameMagnitudes = previousMagnitudes.get(t+1);
+						
+						//add the magnitude of surrounding bins for magnitude estimates more robust against discretization effects 
+						float totalMagnitude = frameMagnitudes[f] + prevFrameMagnitudes[f] + nextFrameMagnitudes[f]
+								+ frameMagnitudes[f+1] + prevFrameMagnitudes[f+1] + nextFrameMagnitudes[f+1]
+								+ frameMagnitudes[f-1] + prevFrameMagnitudes[f-1] + nextFrameMagnitudes[f-1];
+						
+						eventPoints.add(new OlafEventPoint(t, f,totalMagnitude));
+					}
 				}
 			}
 			
+			//Remove analysis frames that are not needed any more:
 			previousMaxMagnitudes.remove(analysisFrameIndex-maxFilterWindowSizeTime+1);
 			previousMagnitudes.remove(analysisFrameIndex-maxFilterWindowSizeTime+1);
 		}
@@ -160,19 +188,19 @@ public class OlafEventPointProcessor implements AudioProcessor {
 	public float[] getMagnitudes(){
 		return magnitudes[magnitudesIndex];
 	}
-
-	private void horizontalFilter() {
-		Arrays.fill(maxHorizontal, -1);
+	
+	private void horizontalFilter(int j) {
+ 		Arrays.fill(maxHorizontal, -1000);
 		
 		// The frame index of the frame under analysis:
-		int frameUnderAnalysis = analysisFrameIndex - maxFilterWindowSizeTime/2;
+ 		int centerFrameIndex = analysisFrameIndex - maxFilterWindowSizeTime /2;
+		int startFrameIndex =  centerFrameIndex - maxFilterWindowSizeTime/2;
+		int stopFrameIndex =  centerFrameIndex + maxFilterWindowSizeTime/2;
 		
 		// Run a horizontal max filter
-		for(int i = frameUnderAnalysis - maxFilterWindowSizeTime/2; i < frameUnderAnalysis + maxFilterWindowSizeTime/2;i++){
+		for(int i = startFrameIndex ; i < stopFrameIndex ; i++){
 			float[] maxFrame = previousMaxMagnitudes.get(i);
-			for(int j = 0 ; j < maxFrame.length ; j++){
-				maxHorizontal[j] = Math.max(maxHorizontal[j], maxFrame[j]);
-			}
+			maxHorizontal[j] = Math.max(maxHorizontal[j], maxFrame[j]);
 		}
 	}
 	
@@ -192,11 +220,11 @@ public class OlafEventPointProcessor implements AudioProcessor {
 	
 	private void packEventPointsIntoFingerprints(){
 		
-		int minFreqDistance = 1;
-		int maxFreqDistance = 128;
+		int minFreqDistance = Config.getInt(Key.OLAF_FP_MIN_FREQ_DIST);
+		int maxFreqDistance = Config.getInt(Key.OLAF_FP_MAX_FREQ_DIST);
 		
-		int minTimeDistance = 2;
-		int maxTimeDistance = 33;
+		int minTimeDistance = Config.getInt(Key.OLAF_FP_MIN_TIME_DIST);
+		int maxTimeDistance = Config.getInt(Key.OLAF_FP_MAX_TIME_DIST);
 		
 		for(int i = 0; i < eventPoints.size();i++){
 			int t1 = eventPoints.get(i).t;
@@ -241,7 +269,7 @@ public class OlafEventPointProcessor implements AudioProcessor {
 		fingerprints.clear();
 		analysisFrameIndex=0;
 		magnitudesIndex=0;
-		
+		previousMagnitudes.clear();
 		previousMaxMagnitudes.clear();
 	}
 	

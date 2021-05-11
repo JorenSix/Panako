@@ -336,7 +336,33 @@ public enum Key{
 	/**
 	 * The folder to store the LMDB database
 	 */
-	OLAF_LMDB_FOLDER("/opt/panako/lmdb"),
+	OLAF_LMDB_FOLDER("/opt/panako/lmdb"), 
+	/**
+	 * File cache directory for bulk import
+	 */
+	OLAF_CACHE_FOLDER("/opt/panako/cache"), 
+	
+	OLAF_SAMPLE_RATE("16000"), 
+	OLAF_SIZE("1024"), 
+	OLAF_STEP_SIZE("128"), 
+	
+	OLAF_MIN_HITS_UNFILTERED("10"), 
+	OLAF_MIN_HITS_FILTERED("5"), 
+	OLAF_MIN_TIME_FACTOR("0.9"), 
+	OLAF_MAX_TIME_FACTOR("1.1"),
+	
+	OLAF_FREQ_MAX_FILTER_SIZE(103), 
+	OLAF_TIME_MAX_FILTER_SIZE(25), 
+	OLAF_FP_MIN_FREQ_DIST(1), 
+	OLAF_FP_MAX_FREQ_DIST(128), 
+	OLAF_FP_MIN_TIME_DIST(2), 
+	OLAF_FP_MAX_TIME_DIST(33),
+	
+	OLAF_CACHE_TO_FILE("FALSE"), 
+	OLAF_QUERY_RANGE(1), 
+	OLAF_USE_CACHED_PRINTS("FALSE"), 
+	
+	NUMBER_OF_QUERY_RESULTS(1000);
 	;
 	
 	

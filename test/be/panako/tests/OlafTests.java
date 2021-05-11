@@ -14,7 +14,8 @@ import org.junit.Test;
 
 import be.panako.strategy.olaf.OlafFingerprint;
 import be.panako.strategy.olaf.OlafResourceMetadata;
-import be.panako.strategy.olaf.OlafStorage;
+import be.panako.strategy.olaf.OlafDBStorage;
+import be.panako.strategy.olaf.OlafDBStorage.OlafDBHit;
 import be.panako.strategy.olaf.OlafStrategy;
 
 public class OlafTests {
@@ -31,27 +32,27 @@ public class OlafTests {
 		OlafFingerprint fp7 = new OlafFingerprint( 1, 11, 1,   20, 20, 2,    45, 50, 3);
 		
 		// 1 time bin diff
-		assertTrue(fp1.fixedHash()-fp2.fixedHash() == 1);
+		assertTrue(fp1.hash()-fp2.hash() == 1);
 		
 		// 27 time bins diff
-		assertTrue(fp1.fixedHash()-fp3.fixedHash() == 27);
+		assertTrue(fp1.hash()-fp3.hash() == 27);
 		
 		// 2 freq bins diff
-		assertTrue(Math.abs(fp1.fixedHash()-fp4.fixedHash()) > 1000);
+		assertTrue(Math.abs(fp1.hash()-fp4.hash()) > 1000);
 		
 		// mag relation diff
-		assertTrue(Math.abs(fp1.fixedHash()-fp5.fixedHash()) > 1000);
+		assertTrue(Math.abs(fp1.hash()-fp5.hash()) > 1000);
 		
 		// time shift, hash is the same
-		assertTrue(Math.abs(fp1.fixedHash()-fp6.fixedHash()) == 0);
+		assertTrue(Math.abs(fp1.hash()-fp6.hash()) == 0);
 		
 		// 1 freq bin diff , hash is the same
-		assertTrue(Math.abs(fp1.fixedHash()-fp7.fixedHash()) == 0);
+		assertTrue(Math.abs(fp1.hash()-fp7.hash()) == 0);
 	}
 	
 	@Test
 	public void testOlafStorage() {
-		OlafStorage db = OlafStorage.getInstance();
+		OlafDBStorage db = OlafDBStorage.getInstance();
 		
 		
 		for(int i = 0 ; i < 7 ; i++) {
@@ -65,7 +66,7 @@ public class OlafTests {
 		db.processStoreQueue();	
 		
 		db.addToQueryQueue(3);
-		Map<Long,long[] > matchAccumulator = new HashMap<>();
+		Map<Long,List<OlafDBHit>> matchAccumulator = new HashMap<>();
 		db.processQueryQueue(matchAccumulator, 1);
 		
 		db.addToDeleteQueue(1,1,1);
@@ -90,6 +91,37 @@ public class OlafTests {
 		OlafResourceMetadata metadata = db.getMetadata(12);
 		assertTrue(metadata.path.equals("tsqdfsqdf/sdfqsdf/qsdf/qdsfest"));
 		assertTrue(null == db.getMetadata(13));
+		
+		for(int i = 0 ; i < 10_000 ; i++) {
+			db.addToDeleteQueue((long) Integer.MAX_VALUE + (long) i, i,i);
+		}
+		db.processDeleteQueue();
+		
+		for(int i = 0 ; i < 10_000 ; i++) {
+			db.addToStoreQueue((long) Integer.MAX_VALUE + (long) i, i, i);
+		}
+		
+		long checkKey = (long) Integer.MAX_VALUE + (long) 10;
+		db.addToStoreQueue(checkKey, 5,6);
+		db.addToStoreQueue(checkKey, 6,6);
+		db.addToStoreQueue(checkKey, 7,6);
+		db.processStoreQueue();
+		
+		//query
+		db.addToQueryQueue(checkKey);
+		matchAccumulator.clear();
+		db.processQueryQueue(matchAccumulator, 0);
+		assertTrue(matchAccumulator.get(checkKey).size()>=4);
+		
+		matchAccumulator.clear();
+		db.addToQueryQueue(checkKey);
+		db.processQueryQueue(matchAccumulator, 1);
+		assertTrue(4 + 1*2 <= matchAccumulator.get(checkKey).size());
+		
+		matchAccumulator.clear();
+		db.addToQueryQueue(checkKey);
+		db.processQueryQueue(matchAccumulator, 2);
+		assertTrue(4 + 2*2 <= matchAccumulator.get(checkKey).size());
 		
 				
 		db.entries(true);
@@ -130,7 +162,7 @@ String rec = "/Volumes/papiom/Datasets/Free Music Archive - FMA/fma_small/013/01
 		
 		String resource;
 		List<OlafFingerprint> prints;
-		OlafStorage db = OlafStorage.getInstance();
+		OlafDBStorage db = OlafDBStorage.getInstance();
 		
 		db.entries(true);
 		
@@ -141,17 +173,17 @@ String rec = "/Volumes/papiom/Datasets/Free Music Archive - FMA/fma_small/013/01
 		for(OlafFingerprint p : prints) {
 			int tOffset = r.ints(-3, (4)).findFirst().getAsInt();
 			OlafFingerprint copy = new OlafFingerprint(p.t1 + tOffset, p.f1,p.m1,p.t2,p.f2,p.m2,p.t3,p.f3,p.m3);
-			long hash = copy.fixedHash();
+			long hash = copy.hash();
 			db.addToQueryQueue(hash);
 		}
-		Map<Long,long[] > matchAccumulator = new HashMap<>();
+		Map<Long,List<OlafDBHit>> matchAccumulator = new HashMap<>();
 		db.processQueryQueue(matchAccumulator, 5);
 		System.out.println("matches after modification of t1 " + matchAccumulator.size());
 		System.out.println("Prints: " + prints.size());
 	
 		prints = strat.toFingerprints("/Users/joren/lmdbtest/013928_10s.ogg");
 		for(OlafFingerprint p : prints) {
-			long hash = p.fixedHash();
+			long hash = p.hash();
 			db.addToQueryQueue(hash);
 		}
 		matchAccumulator.clear();
@@ -172,7 +204,7 @@ String rec = "/Volumes/papiom/Datasets/Free Music Archive - FMA/fma_small/013/01
 			resource = mp3.getAbsolutePath();
 			prints = strat.toFingerprints(resource);
 			for(OlafFingerprint p : prints) {
-				long hash = p.fixedHash();
+				long hash = p.hash();
 				db.addToQueryQueue(hash);
 			}
 			System.out.println("Prints: " + prints.size() + " " + prints.size()/30.0);

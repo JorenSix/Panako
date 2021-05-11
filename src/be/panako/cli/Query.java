@@ -49,6 +49,8 @@ import java.util.logging.Logger;
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
+import be.panako.util.Config;
+import be.panako.util.Key;
 
 
 /**
@@ -68,16 +70,15 @@ public class Query extends Application{
 		
 		Panako.printQueryResultHeader();
 		
-		if(hasArgument("debug", args)){
+		if(hasArgument("debug", args) || processors==1){
 			System.err.println("Debug argument detected");
 			for(File file: files){
-				new QueryTask(file).run();
+				new QueryTask(file.getPath()).run();
 			}
 		}else{
-			
 			ExecutorService executor = Executors.newFixedThreadPool(processors);
 			for(File file: files){
-				executor.submit(new QueryTask(file));
+				executor.submit(new QueryTask(file.getPath()));
 			}
 			executor.shutdown();
 			try {
@@ -105,16 +106,21 @@ public class Query extends Application{
 	}
 
 	private static class QueryTask implements Runnable, QueryResultHandler{
-		private final File file;
+		private final String path;
+		private final HashSet<Integer> emptyHashSet = new HashSet<Integer>();
+		private final Strategy strategy;
+		private final int numberOfQueryResults;
 		
-		public QueryTask(File file){
-			this.file = file;
+		public QueryTask(String path){
+			this.path = path;
+			this.numberOfQueryResults = Config.getInt(Key.NUMBER_OF_QUERY_RESULTS);
+			strategy = Strategy.getInstance();
 		}
 
 		@Override
 		public void run() {
-			Strategy strategy = Strategy.getInstance();
-			strategy.query(file.getAbsolutePath(), 3,new HashSet<Integer>(), this);
+			
+			strategy.query(path, this.numberOfQueryResults,emptyHashSet, this);
 		}
 		
 		@Override

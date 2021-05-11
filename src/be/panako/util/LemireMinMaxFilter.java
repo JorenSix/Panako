@@ -95,6 +95,62 @@ public class LemireMinMaxFilter {
 		return maxVal.clone();
 	}
 	
+	/**
+	 * Run only a max filter. The resulting filtered data is stored in maxFiltered
+	 * 
+	 * @param array the data to filter. It should have the same length as given in the constructor.
+	 * @param maxFiltered the data to filter. It should have the same length as the data array
+	 */
+	public void maxFilter(float[] array,float[] maxFiltered){
+		
+		if(clampEdges){
+			System.arraycopy(array, 0, dataToFilter, windowSize/2, array.length);
+			Arrays.fill(dataToFilter, 0, windowSize/2, array[0]);
+			Arrays.fill(dataToFilter, dataToFilter.length-windowSize/2, dataToFilter.length, array[array.length-1]);
+			array = dataToFilter;
+		}
+
+		maxFifo.addLast(0);
+	    for (int i = 1; i < windowSize; ++i) {
+            if (array[i] > array[i - 1]) { //overshoot
+                maxFifo.removeLast();
+                while (!maxFifo.isEmpty()) {
+                    if (array[i] <= array[maxFifo.peekLast()]) {
+                    	break;
+                    }
+                    maxFifo.removeLast();
+                }
+            } 
+            maxFifo.addLast(i);
+        }
+	    
+		
+		for(int i = windowSize ; i < array.length ; ++i){
+			
+			maxFiltered[i-windowSize] = array[maxFifo.peekFirst()];
+			
+			
+			if(array[i]>array[i-1]){
+				maxFifo.removeLast();
+				while(!maxFifo.isEmpty()){
+					if(array[i]<=array[maxFifo.peekLast()]){
+						break;
+					}
+					maxFifo.removeLast();
+				}
+			}
+			maxFifo.addLast(i);
+			
+			if(i==windowSize + maxFifo.peekFirst()){
+				maxFifo.removeFirst();
+			}
+		}
+		maxFiltered[array.length-windowSize] = array[maxFifo.peekFirst()];
+		
+		//reuse fifo's to minimize memory use
+		maxFifo.clear();
+	}
+	
 
 	/**
 	 * Run the filter. The resulting filtered data can requested by calling getMaxVal() and getMinVal().

@@ -57,6 +57,8 @@ public class OlafFingerprint {
 	public final int f3;
 	public final float m3;
 	
+	private long hash;
+	
 	public OlafFingerprint(int t1,int f1,float m1,int t2,int f2,float m2,int t3,int f3,float m3){
 		this.t1 = t1;
 		this.f1 = f1;
@@ -72,6 +74,22 @@ public class OlafFingerprint {
 				
 		assert t2 > t1;
 		assert t3 > t2;
+	}
+	
+	public OlafFingerprint(long hash,int t1){
+		this.hash = hash;
+		
+		this.t1 = t1;
+		this.f1 = -1;
+		this.m1 = -1;
+		
+		this.t2 = -1;
+		this.f2 = -1;
+		this.m2 = -1;
+		
+		this.t3 = -1;
+		this.f3 = -1;
+		this.m3 = -1;
 	}	
 	
 	public OlafFingerprint(OlafEventPoint e1, OlafEventPoint e2, OlafEventPoint e3){
@@ -83,7 +101,7 @@ public class OlafFingerprint {
 	 * 
 	 * @return a hash representing this fingerprint.
 	 */
-	public int hash(){
+	public int robustHash(){
 		int hash = 0;
 		
 		int f1LargerThanF2 = f2 > f3 ? 1 : 0;
@@ -144,8 +162,10 @@ public class OlafFingerprint {
 		return hash;
 	}
 	
-	public long fixedHash(){
-		long hash = 0;
+	public long hash(){
+		if(hash!=0)
+			return hash;
+		//else
 		
 		long f1LargerThanF2 = f2 > f3 ? 1 : 0;
 		long f2LargerThanF3 = f2 > f3 ? 1 : 0;
@@ -221,6 +241,6 @@ public class OlafFingerprint {
 		//It is very well possible that that two hashes collide, while the fingerprints are not equal to each other.
 		//Implementing hash code makes sure no identical fingerprints are added, but also that no collisions are
 		//allowed. Take care when using sets. 
-		return hash();
+		return (int) hash();
 	}
 }

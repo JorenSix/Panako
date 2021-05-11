@@ -76,9 +76,16 @@ public class Store extends Application {
 		System.out.println("Audiofile;Audio duration;Fingerprinting duration;ratio");
 		for(File file: files){
 			counter++;
-			//executor.submit(new StoreTask(file, counter, files.size()));
+			
 			StoreTask task = new StoreTask(file, counter, files.size(),extractMetaData);
-			task.run();
+			if(processors == 1) {
+				// Only one thread available:
+				// run on the main thread
+				task.run();
+			}else {
+				// run on thread managed by pool
+				executor.submit(task);
+			}
 		}
 	
 		try {
@@ -90,11 +97,6 @@ public class Store extends Application {
 		} catch(Exception e){
 			e.printStackTrace();
 		}
-		/*catch (InterruptedException e1) {
-			//Thread was interrupted
-			e1.printStackTrace();
-			LOG.severe("Did not finish all tasks, thread was interrupted!");
-		}*/
 	}
 
 	@Override
@@ -137,15 +139,18 @@ public class Store extends Application {
 
 				String message=null;
 				if(isDouble){
-					message = String.format("%d/%d;%s;%s;%s",taskID,totalTasks,file.getName(),StopWatch.toTime("", 0),"Skipped: description already present;");
+					message = String.format("%d/%d;%s;%s;%s",taskID,totalTasks,file.getName(),StopWatch.toTime("", 0),"Skipped: resource already stored;");
 				}else{
-					double durationInSecons = strategy.store(file.getAbsolutePath(), file.getName());
+					double durationInSeconds = strategy.store(file.getAbsolutePath(), file.getName());
 					
 					if(extractMetaData){
 						extractMetaData(file);
 					}
-					double secondsPassed = w.timePassed(TimeUnit.SECONDS);
-					message = String.format("%d/%d;%s;%s;%s;%.2f",taskID,totalTasks,file.getName(),StopWatch.toTime("", (int) Math.round(durationInSecons)),w.formattedToString(),durationInSecons/secondsPassed);			
+					double cpuSecondsPassed = w.timePassed(TimeUnit.SECONDS);
+					String audioDuration = StopWatch.toTime("", (int) Math.round(durationInSeconds));
+					String cpuTimeDuration = w.formattedToString();
+					double timeRatio = durationInSeconds/cpuSecondsPassed;
+					message = String.format("%d/%d;%s;%s;%s;%.2f",taskID,totalTasks,file.getName(),audioDuration,cpuTimeDuration,timeRatio);			
 				}
 				LOG.info(message);
 				System.out.println(message);
@@ -178,8 +183,7 @@ public class Store extends Application {
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
-			}
-			
+			}	
 		}
 		
 		private boolean checkFile(File file){

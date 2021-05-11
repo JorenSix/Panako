@@ -39,19 +39,22 @@ package be.panako.strategy;
 
 public class QueryResult {
 	
-	public final String identifier;
-	public final String description;
+	//query info
+	public final String queryPath;	
+	public final double queryStart;
+	public final double queryStop;
 	
-	public final String query;
+	//ref info
+	public final String refIdentifier;
+	public final String refPath;
+	public final double refStart;
+	public final double refStop;
 	
+	//match info
 	public final double score;
-	public final double time;
-	public final double queryTimeOffsetStart;
-	public final double queryTimeOffsetStop;
 	public final double timeFactor;
 	public final double frequencyFactor;
 	
-
 	
 	/**
 	 * @param queryTimeOffsetStart
@@ -76,19 +79,31 @@ public class QueryResult {
 	 *            higher frequency compared to the reference. 90 means a 10%
 	 *            lower frequency.
 	 */
-	public QueryResult(String query,double queryTimeOffsetStart,double queryTimeOffsetStop, String identifier, String description, double score, double time,double timeFactor, double frequencyFactor){
-		this.queryTimeOffsetStart = queryTimeOffsetStart;
-		this.queryTimeOffsetStop = queryTimeOffsetStop;
-		this.identifier = identifier;
-		this.description = description;
+	public QueryResult(String queryPath,double queryStart,double queryStop, String refPath, String refIdentifier, double refStart, double refStop, double score,double timeFactor, double frequencyFactor){
+		this.queryPath = queryPath;
+		this.queryStart = queryStart;
+		this.queryStop = queryStop;
+		
+		this.refPath = refPath;
+		this.refIdentifier = refIdentifier;
+		this.refStart = refStart;
+		this.refStop = refStop;
+		
 		this.score = score;
-		this.time = time;
 		this.timeFactor=timeFactor;
 		this.frequencyFactor = frequencyFactor;
-		this.query = query;
 	}
 	
-	public static QueryResult emptyQueryResult(String query,double queryTimeOffsetStart,double queryTimeOffsetStop){
-		return new QueryResult(query,queryTimeOffsetStart,queryTimeOffsetStop,null, null, -1, -1,-1,-1);
+	
+	
+	public QueryResult(String query, double queryStart, double queryStop, String refIdentifier, String refPath, int score,
+			double refStart, double timeFactor, double frequencyFactor) {
+		this(query,queryStart,queryStop,refPath,refIdentifier,refStart,0,score,timeFactor,frequencyFactor);
+	}
+
+
+
+	public static QueryResult emptyQueryResult(String query,double queryStart,double queryStop){
+		return new QueryResult(query,queryStart,queryStop,null, null, -1, -1,-1,-1,-1);
 	}
 }
