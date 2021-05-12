@@ -32,101 +32,127 @@
 *                                                                          *
 ****************************************************************************/
 
+
 package be.panako.cli;
 
 import java.io.File;
-import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
-import be.panako.strategy.QueryResult;
-import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
+import be.panako.strategy.olaf.OlafStrategy;
 import be.panako.util.Config;
 import be.panako.util.Key;
-
+import be.panako.util.StopWatch;
+import be.panako.util.TimeUnit;
 
 /**
- * Query the storage for audio fragments.
+ * Store audio fingerptings in the storage. 
  * @author Joren Six
  */
-public class Query extends Application{
-	private final static Logger LOG = Logger.getLogger(Query.class.getName());
-
+public class Delete extends Application {
+	private final static Logger LOG = Logger.getLogger(Delete.class.getName());
+	
 	@Override
-	public void run(String... args) {
+	public void run(final String... args) {
 		int processors = availableProcessors();
-		List<File> files = this.getFilesFromArguments(args);
-		if(files.size() > 1){
-			System.out.println("Processing " + files.size() + " queries on " + processors + " seperate threads.");
+		int counter=0;
+		final ExecutorService executor = Executors.newFixedThreadPool(processors);
+		final List<File> files = this.getFilesFromArguments(args);
+		
+		System.out.println("Audiofile;Audio duration;Fingerprinting duration;ratio");
+		for(File file: files){
+			counter++;
+			
+			DeleteTask task = new DeleteTask(file, counter, files.size());
+			if(processors == 1) {
+				// Only one thread available:
+				// run on the main thread
+				task.run();
+			}else {
+				// run on thread managed by pool
+				executor.submit(task);
+			}
 		}
-		
-		Panako.printQueryResultHeader();
-		
-		if(hasArgument("debug", args) || processors==1){
-			for(File file: files){
-				new QueryTask(file.getPath()).run();
-			}
-		}else{
-			ExecutorService executor = Executors.newFixedThreadPool(processors);
-			for(File file: files){
-				executor.submit(new QueryTask(file.getPath()));
-			}
+	
+		try {
+			//do not accept more tasks.
 			executor.shutdown();
-			try {
-				//wait for tasks to finish
-				executor.awaitTermination(300, java.util.concurrent.TimeUnit.DAYS);
-				System.exit(0);
-			} catch (InterruptedException e1) {
-				//Thread was interrupted
-				LOG.severe("Did not finish all tasks, thread was interrupted!");
-			}
+			//wait for tasks to finish
+			executor.awaitTermination(300, java.util.concurrent.TimeUnit.DAYS);
+			//System.exit(0);
+		} catch(Exception e){
+			e.printStackTrace();
 		}
-		
-		
-		
 	}
 
 	@Override
 	public String description() {
-		return "Calculates fingerprints for the audio query and matches those with the database.";
+		return "Deletes audio fingerprints from the storage.";
 	}
 
 	@Override
-	public String synopsis() {
-		return "[audio_file...]";
+	public String synopsis() {	
+		return "delete [audiofilelist.txt... audio_files...]";
 	}
-
-	private static class QueryTask implements Runnable, QueryResultHandler{
-		private final String path;
-		private final HashSet<Integer> emptyHashSet = new HashSet<Integer>();
-		private final Strategy strategy;
-		private final int numberOfQueryResults;
+	
+	private static class DeleteTask implements Runnable{
+		private final File file;
+		private final int taskID;
+		private final int totalTasks;
 		
-		public QueryTask(String path){
-			this.path = path;
-			this.numberOfQueryResults = Config.getInt(Key.NUMBER_OF_QUERY_RESULTS);
-			strategy = Strategy.getInstance();
+		
+		public DeleteTask(File file,int taskID,int totalTasks){
+			this.file = file;
+			this.taskID = taskID;
+			this.totalTasks = totalTasks;
 		}
 
 		@Override
 		public void run() {
 			
-			strategy.query(path, this.numberOfQueryResults,emptyHashSet, this);
+			StopWatch w = new StopWatch();
+			if(checkFile(file)){
+				
+				//Currently OlafStrategy is the only with delete support
+				OlafStrategy strategy = (OlafStrategy) Strategy.getInstance();
+				
+				boolean hasResource = false;
+				hasResource =  strategy.hasResource(file.getAbsolutePath());
+				
+				String message=null;
+				if(hasResource){
+					message = String.format("%d/%d;%s;%s;%s",taskID,totalTasks,file.getName(),StopWatch.toTime("", 0),"Deletion skipped: resource not in the key value store;");
+				}else{
+					double durationInSeconds = strategy.delete(file.getAbsolutePath(), file.getName());
+					
+					double cpuSecondsPassed = w.timePassed(TimeUnit.SECONDS);
+					String audioDuration = StopWatch.toTime("", (int) Math.round(durationInSeconds));
+					String cpuTimeDuration = w.formattedToString();
+					double timeRatio = durationInSeconds/cpuSecondsPassed;
+					message = String.format("%d/%d;%s;%s;%s;%.2f",taskID,totalTasks,file.getName(),audioDuration,cpuTimeDuration,timeRatio);			
+				}
+				LOG.info(message);
+				System.out.println(message);
+			}
 		}
 		
-		@Override
-		public void handleQueryResult(QueryResult r) {
-			Panako.printQueryResult(r);
+		private boolean checkFile(File file){
+			boolean fileOk = false;
+			//file must be smaller than a configured number of bytes
+			if(file.length() != 0 && file.length() < Config.getInt(Key.MAX_FILE_SIZE)){
+				fileOk = true;
+			}else{
+				String message = "Could not process " + file.getName() + " it has an unacceptable file size: zero or larger than " + Config.getInt(Key.MAX_FILE_SIZE) + "bytes ).";
+				LOG.warning(message);
+				System.out.println(message);
+			}
+			return fileOk;
 		}
-
-		@Override
-		public void handleEmptyResult(QueryResult r) {
-			Panako.printQueryResult(r);	
-		}
-	}	
+	}
+	
 	
 	@Override
 	public boolean needsStorage() {
@@ -135,6 +161,6 @@ public class Query extends Application{
 	
 	@Override
 	public boolean writesToStorage() {
-		return false;
+		return true;
 	}
 }

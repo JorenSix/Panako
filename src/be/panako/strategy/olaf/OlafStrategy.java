@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 
 import be.panako.strategy.QueryResult;
@@ -55,12 +56,47 @@ public class OlafStrategy extends Strategy {
 		float duration = 0;
 		if(prints.size() != 0) {
 			duration = blocksToSeconds(prints.get(prints.size()-1).t3);
+			LOG.info(String.format("Stored %d fingerprints for '%s', id: %d", prints.size() , resource ,resourceID));
 		}else {
 			LOG.warning("Warning: no prints extracted for " + resource);
+			
 		}
 		int numberOfPrints = prints.size();
 		
 		db.storeMetadata((long) resourceID,resource,duration,numberOfPrints);
+		
+		//storage is done: 
+		//try to clear memory
+		System.gc();
+		
+		return duration;
+	}
+	
+	public double delete(String resource, String description) {
+
+		OlafDBStorage db = OlafDBStorage.getInstance();
+		
+		List<OlafFingerprint> prints = toFingerprints(resource);
+		
+		int resourceID = FileUtils.getIdentifier(resource);
+		//delete
+		for(OlafFingerprint print : prints) {
+			long hash = print.hash();			
+			int printT1 = print.t1;
+			db.addToDeleteQueue(hash, resourceID, printT1);
+		}
+		db.processDeleteQueue();
+		
+		//delete meta-data as well
+		float duration = 0;
+		if(prints.size() != 0) {
+			duration = blocksToSeconds(prints.get(prints.size()-1).t3);
+		}else {
+			LOG.warning("Warning: no prints extracted for " + resource);
+		}
+	
+		
+		db.deleteMetadata((long) resourceID);
 		
 		//storage is done: 
 		//try to clear memory
@@ -162,15 +198,16 @@ public class OlafStrategy extends Strategy {
 				 int identifier = dbHit.resourceID;
 				 int matchTime = dbHit.t;
 				 if(!hitsPerIdentifer.containsKey(identifier)){
-						hitsPerIdentifer.put(identifier, new ArrayList<OlafHit>());
+					hitsPerIdentifer.put(identifier, new ArrayList<OlafHit>());
 				 }
 				 OlafHit hit = new OlafHit();
 				 hit.identifier = identifier;
 				 hit.matchTime = matchTime;
+				 hit.originalHash = dbHit.originalHash;
+				 hit.matchedNearHash = dbHit.matchedNearHash;
 				 hit.queryTime = printMap.get(fingerprintHash).t1;
 				 hitsPerIdentifer.get(identifier).add(hit);
 			 });
-			 
 		 });
 		 
 		 int minimumUnfilteredHits = Config.getInt(Key.OLAF_MIN_HITS_UNFILTERED);
@@ -189,7 +226,7 @@ public class OlafStrategy extends Strategy {
 		 });
 		 
 		 hitsPerIdentifer.forEach((identifier, hitlist) -> {
-			// System.out.println("Matches " + identifier + " matches " + hitlist.size());
+			 //System.out.println("Matches " + identifier + " matches " + hitlist.size());
 			 
 			 //sort by query time
 			 Collections.sort(hitlist, (Comparator<? super OlafHit>) (OlafHit a, OlafHit b) -> Integer.valueOf(a.queryTime).compareTo(Integer.valueOf(b.queryTime)));
@@ -197,13 +234,13 @@ public class OlafStrategy extends Strategy {
 			 List<OlafHit> firstHits = new ArrayList<>(hitlist.subList(0, Math.max(minimumUnfilteredHits,hitlist.size()/5)));
 			 List<OlafHit> lastHits = new ArrayList<>(hitlist.subList(hitlist.size()-Math.max(minimumUnfilteredHits,hitlist.size()/5), hitlist.size()));
 			 
-			 //sort by diff
+			 //sort both last and first hits by delta t
 			 Collections.sort(firstHits, (Comparator<? super OlafHit>) (OlafHit a, OlafHit b) -> Integer.valueOf(a.Δt()).compareTo(Integer.valueOf(b.Δt())));
 			 Collections.sort(lastHits, (Comparator<? super OlafHit>) (OlafHit a, OlafHit b) -> Integer.valueOf(a.Δt()).compareTo(Integer.valueOf(b.Δt())));
 			 
-			 float y1 = firstHits.get(firstHits.size()/2).Δt();
+			//find the first x1 where delta t is equals to the median delta t
+			 float y1 = firstHits.get(firstHits.size()/2).Δt();//take the median
 			 float x1 = 0;
-			 
 			 for(int i = 0 ; i < firstHits.size() ; i++) {
 				 OlafHit hit = firstHits.get(i);
 				 int diff = hit.Δt();
@@ -213,6 +250,7 @@ public class OlafStrategy extends Strategy {
 				 }
 			 }
 			 
+			//find the first x2 where delta t is equals to the median delta t
 			 float y2 = lastHits.get(lastHits.size()/2).Δt();
 			 float x2 = 0;
 			 for(int i = lastHits.size() - 1 ; i >= 0 ; i--) {
@@ -228,6 +266,11 @@ public class OlafStrategy extends Strategy {
 			 float offset = -x1 * slope + y1;
 			 float timeFactor = 1-slope;
 			 
+			 //System.out.printf("slope %f offset %f  timefactor %f \n",slope,offset,timeFactor);
+			 
+			 //threshold in time bins
+			 double threshold = Config.getFloat(Key.OLAF_QUERY_RANGE);
+			 
 			 //only continue processing when time factor is reasonable
 			 if(timeFactor > Config.getFloat(Key.OLAF_MIN_TIME_FACTOR) && timeFactor < Config.getFloat(Key.OLAF_MAX_TIME_FACTOR)) {
 				 List<OlafHit> filteredHits = new ArrayList<>();
@@ -236,8 +279,12 @@ public class OlafStrategy extends Strategy {
 					 float yActual = hit.Δt();
 					 float x = hit.queryTime;
 					 float yPredicted = slope * x + offset;
+					 
 					 //should be within an expected range
-					 boolean yInExpectedRange = Math.abs(yActual-yPredicted) <= 0.10 * yActual; 
+					 boolean yInExpectedRange = Math.abs(yActual-yPredicted) <= threshold ; 
+					 
+					 //if(hit.identifier!= FileUtils.getIdentifier(queryPath))
+						 //System.out.printf("pred: %f  actual: %f   dif abs: %f  threshold %f \n",yPredicted, yActual, threshold);
 					 
 					 if(yInExpectedRange) {
 						 filteredHits.add(hit);
@@ -246,6 +293,8 @@ public class OlafStrategy extends Strategy {
 				 
 				 //ignore resources with too few filtered hits remaining
 				 if(filteredHits.size() > minimumFilteredHits) {
+					 //System.out.println("Matches " + identifier + " matches filtered hits: " + filteredHits.size());
+					 
 					 float minDuration = 0;
 					 float queryStart = blocksToSeconds(filteredHits.get(0).queryTime);
 					 float queryStop = blocksToSeconds(filteredHits.get(filteredHits.size()-1).queryTime);
@@ -260,9 +309,33 @@ public class OlafStrategy extends Strategy {
 						 
 						 //retrieve meta-data
 						 OlafResourceMetadata metadata = db.getMetadata((long) identifier);
-						 String refPath = metadata.path;
+						 String refPath = "metadata unavailable!";
+						 if(metadata != null )
+							 refPath = metadata.path;
 						 
-						 queryResults.add(new QueryResult(queryPath,queryStart, queryStop, refPath, "" + identifier, refStart, refStop,  score, timeFactor, frequencyFactor));
+						 //Construct a histogram with the number of matches for each second
+						 //Ideally there is a more or less equal number of matches each second
+						 // note that the last second might not be a full second
+						 TreeMap<Integer,Integer> matchesPerSecondHistogram = new TreeMap<>();
+						 for(OlafHit hit : filteredHits) {
+							 //if(hit.identifier!= FileUtils.getIdentifier(queryPath))
+								 //System.out.printf("%d %d %d %d %d\n", hit.identifier, hit.matchTime, hit.queryTime, hit.originalHash, hit.matchedNearHash);
+							 float offsetInSec = blocksToSeconds(hit.matchTime) - refStart;
+							 int secondBin = (int) offsetInSec;
+							 if(!matchesPerSecondHistogram.containsKey(secondBin))
+								 matchesPerSecondHistogram.put(secondBin, 0);
+							 matchesPerSecondHistogram.put(secondBin, matchesPerSecondHistogram.get(secondBin)+1);
+						 }
+						 double mean = 0;
+						 for(Map.Entry<Integer,Integer> entry : matchesPerSecondHistogram.entrySet()) {
+							 mean += entry.getValue();
+						 }
+						 //number of seconds bins
+						 int numberOfSecondBins = (int) (refStop - refStart);
+						 mean = mean/(double) numberOfSecondBins;
+						 
+						 QueryResult r = new QueryResult(queryPath,queryStart, queryStop, refPath, "" + identifier, refStart, refStop,  score, timeFactor, frequencyFactor,mean);
+						 queryResults.add(r);
 					 }
 				 }
 			 }			 
@@ -288,6 +361,10 @@ public class OlafStrategy extends Strategy {
 	
 	public  static class OlafHit {
 		
+		public long matchedNearHash;
+
+		public long originalHash;
+
 		/**
 		 * The match audio identifier
 		 */
@@ -388,7 +465,7 @@ public class OlafStrategy extends Strategy {
 		
 		List<String> tdbFiles =  FileUtils.glob(folder,".*.tdb", false);
 		
-		int index = 0;
+		int index = 1;
 		
 		for(String fingerprintFilePath : tdbFiles) {
 			
@@ -412,7 +489,7 @@ public class OlafStrategy extends Strategy {
 				db.storeMetadata(resourceIdentifer, metaData.path, (float) metaData.duration, metaData.numFingerprints);
 				//FileUtils.rm(metaDataFilePath);
 				//FileUtils.rm(fingerprintFilePath);
-				System.out.printf("%d/%d Stored %d fingerprints and meta-data for resource %d",index,tdbFiles.size(),fingerprints.size(),resourceIdentifer);
+				System.out.printf("%d/%d Stored %d fingerprints and meta-data for resource %d \n",index,tdbFiles.size(),fingerprints.size(),resourceIdentifer);
 			}else {
 				db.clearStoreQueue();
 				System.out.printf("%d/%d DID NOT STORE FINGEPRINTS: Could not find meta data file for %d, expected a file at: %s\n",index,tdbFiles.size(),resourceIdentifer,metaDataFilePath);
@@ -420,5 +497,51 @@ public class OlafStrategy extends Strategy {
 			
 			index++;
 		}
+	}
+	
+	private void addToMap(TreeMap<Integer,float[]> map,int t,int f,float m) {
+		if(!map.containsKey(t)) {
+			map.put(t, new float[Config.getInt(Key.OLAF_SIZE)/2]);
+		}
+		map.get(t)[f]=m;
+	}
+
+	public void print(String path, boolean sonicVisualizerOutput) {
+		List<OlafFingerprint> prints = toFingerprints(path);
+		
+		if(sonicVisualizerOutput) {
+			TreeMap<Integer,float[]> timeIndexedSpectralPeaks = new TreeMap<>();
+			for(OlafFingerprint print : prints) {
+				addToMap(timeIndexedSpectralPeaks,print.t1,print.f1,print.m1);
+				addToMap(timeIndexedSpectralPeaks,print.t2,print.f2,print.m2);
+				addToMap(timeIndexedSpectralPeaks,print.t2,print.f2,print.m3);
+			}
+			float[] emptySpectrum = new float[Config.getInt(Key.OLAF_SIZE)/2];
+			StringBuilder sb = new StringBuilder();
+			for(int t = 0 ; t <= timeIndexedSpectralPeaks.lastKey();t++) {
+				float[] spectrum = emptySpectrum;
+				if(timeIndexedSpectralPeaks.containsKey(t))
+					spectrum = timeIndexedSpectralPeaks.get(t);
+				
+				sb.append(blocksToSeconds(t)).append(",");
+				for(int i = 0 ; i < spectrum.length ; i++) {
+					sb.append(spectrum[i]).append(",");
+				}
+				sb.append("\n");
+			}
+			System.out.println(sb.toString());
+			
+		}else {
+			OlafFileStorage db = OlafFileStorage.getInstance();
+			int resourceID = FileUtils.getIdentifier(path);
+			for(OlafFingerprint print : prints) {
+				long hash = print.hash();			
+				int printT1 = print.t1;
+				db.addToStoreQueue(hash, resourceID, printT1);
+			}
+			String printString = db.storeQueueToString();
+			System.out.print(printString);
+		}
+		
 	}
 }

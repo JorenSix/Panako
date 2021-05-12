@@ -134,6 +134,8 @@ public class Panako {
 		applicationList.add(new Tap());
 		applicationList.add(new Deduplication());
 		applicationList.add(new Load());
+		applicationList.add(new Delete());
+		applicationList.add(new Print());
 		for (final Application application : applicationList) {
 			applications.put(application.name(), application);
 			applicationTrie.insert(application.name());
@@ -297,13 +299,13 @@ public class Panako {
 	
 		String queryInfo = String.format("%s ; %.3f ; %.3f ; "     ,r.queryPath,r.queryStart   ,r.queryStop);
 		String refInfo = String.format("%s ; %s ; %.3f ; %.3f ; "  ,r.refPath  ,r.refIdentifier,r.refStart       ,r.refStop);
-		String matchInfo = String.format("%.0f ; %.2f %% ; %.2f %%",r.score    , r.timeFactor  ,r.frequencyFactor);
+		String matchInfo = String.format("%.0f ; %.2f %% ; %.2f %%; %.2f",r.score    , r.timeFactor  ,r.frequencyFactor, r.scoreVariance);
 		System.out.println(queryInfo+refInfo+matchInfo);
 	}
 	
 	public static void printQueryResultHeader(){
 		String header;
-		header = "Query path;Query start (s);Query stop (s); Match path;Match id; Match start (s); Match stop (s); Match score; Time factor (%); Frequency factor(%)"; 
+		header = "Query path;Query start (s);Query stop (s); Match path;Match id; Match start (s); Match stop (s); Match score; Time factor (%); Frequency factor(%), Mean matches per second"; 
 		System.out.println(header);
 	}
 

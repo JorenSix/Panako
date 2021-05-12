@@ -32,66 +32,43 @@
 *                                                                          *
 ****************************************************************************/
 
+
+
+
+
+
 package be.panako.cli;
 
 import java.io.File;
-import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.logging.Logger;
 
-import be.panako.strategy.QueryResult;
-import be.panako.strategy.QueryResultHandler;
-import be.panako.strategy.Strategy;
-import be.panako.util.Config;
-import be.panako.util.Key;
+import be.panako.strategy.olaf.OlafStrategy;
 
 
 /**
  * Query the storage for audio fragments.
  * @author Joren Six
  */
-public class Query extends Application{
-	private final static Logger LOG = Logger.getLogger(Query.class.getName());
+public class Print extends Application{
 
 	@Override
 	public void run(String... args) {
-		int processors = availableProcessors();
+	
 		List<File> files = this.getFilesFromArguments(args);
-		if(files.size() > 1){
-			System.out.println("Processing " + files.size() + " queries on " + processors + " seperate threads.");
+		
+		boolean sonicVisualizerOutput = hasArgument("-sv", args);
+		
+		OlafStrategy strategy = (OlafStrategy) OlafStrategy.getInstance();
+		
+		for(File file: files){
+			strategy.print(file.getPath(),sonicVisualizerOutput);
 		}
-		
-		Panako.printQueryResultHeader();
-		
-		if(hasArgument("debug", args) || processors==1){
-			for(File file: files){
-				new QueryTask(file.getPath()).run();
-			}
-		}else{
-			ExecutorService executor = Executors.newFixedThreadPool(processors);
-			for(File file: files){
-				executor.submit(new QueryTask(file.getPath()));
-			}
-			executor.shutdown();
-			try {
-				//wait for tasks to finish
-				executor.awaitTermination(300, java.util.concurrent.TimeUnit.DAYS);
-				System.exit(0);
-			} catch (InterruptedException e1) {
-				//Thread was interrupted
-				LOG.severe("Did not finish all tasks, thread was interrupted!");
-			}
-		}
-		
-		
 		
 	}
 
 	@Override
 	public String description() {
-		return "Calculates fingerprints for the audio query and matches those with the database.";
+		return "Prints the fingerprints to stdout";
 	}
 
 	@Override
@@ -99,42 +76,15 @@ public class Query extends Application{
 		return "[audio_file...]";
 	}
 
-	private static class QueryTask implements Runnable, QueryResultHandler{
-		private final String path;
-		private final HashSet<Integer> emptyHashSet = new HashSet<Integer>();
-		private final Strategy strategy;
-		private final int numberOfQueryResults;
-		
-		public QueryTask(String path){
-			this.path = path;
-			this.numberOfQueryResults = Config.getInt(Key.NUMBER_OF_QUERY_RESULTS);
-			strategy = Strategy.getInstance();
-		}
-
-		@Override
-		public void run() {
-			
-			strategy.query(path, this.numberOfQueryResults,emptyHashSet, this);
-		}
-		
-		@Override
-		public void handleQueryResult(QueryResult r) {
-			Panako.printQueryResult(r);
-		}
-
-		@Override
-		public void handleEmptyResult(QueryResult r) {
-			Panako.printQueryResult(r);	
-		}
-	}	
-	
 	@Override
 	public boolean needsStorage() {
-		return true;
+		return false;
 	}
-	
+
 	@Override
 	public boolean writesToStorage() {
 		return false;
 	}
 }
+
+	

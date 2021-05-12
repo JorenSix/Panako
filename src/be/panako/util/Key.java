@@ -336,7 +336,7 @@ public enum Key{
 	/**
 	 * The folder to store the LMDB database
 	 */
-	OLAF_LMDB_FOLDER("/opt/panako/lmdb"), 
+	OLAF_LMDB_FOLDER("/opt/panako/dbs/default"), 
 	/**
 	 * File cache directory for bulk import
 	 */

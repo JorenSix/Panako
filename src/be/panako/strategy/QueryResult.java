@@ -54,6 +54,7 @@ public class QueryResult {
 	public final double score;
 	public final double timeFactor;
 	public final double frequencyFactor;
+	public final double scoreVariance;
 	
 	
 	/**
@@ -79,7 +80,7 @@ public class QueryResult {
 	 *            higher frequency compared to the reference. 90 means a 10%
 	 *            lower frequency.
 	 */
-	public QueryResult(String queryPath,double queryStart,double queryStop, String refPath, String refIdentifier, double refStart, double refStop, double score,double timeFactor, double frequencyFactor){
+	public QueryResult(String queryPath,double queryStart,double queryStop, String refPath, String refIdentifier, double refStart, double refStop, double score,double timeFactor, double frequencyFactor,double scoreVariance){
 		this.queryPath = queryPath;
 		this.queryStart = queryStart;
 		this.queryStop = queryStop;
@@ -92,18 +93,27 @@ public class QueryResult {
 		this.score = score;
 		this.timeFactor=timeFactor;
 		this.frequencyFactor = frequencyFactor;
+		
+		this.scoreVariance = scoreVariance;
 	}
 	
 	
 	
 	public QueryResult(String query, double queryStart, double queryStop, String refIdentifier, String refPath, int score,
 			double refStart, double timeFactor, double frequencyFactor) {
-		this(query,queryStart,queryStop,refPath,refIdentifier,refStart,0,score,timeFactor,frequencyFactor);
+		this(query,queryStart,queryStop,refPath,refIdentifier,refStart,0,score,timeFactor,frequencyFactor,0);
 	}
 
 
 
+	public QueryResult(String queryPath,double queryStart,double queryStop, String refPath, String refIdentifier, double refStart, double refStop, double score,double timeFactor, double frequencyFactor){
+		this( queryPath, queryStart, queryStop,  refPath,  refIdentifier,  refStart,  refStop,  score, timeFactor,  frequencyFactor,0);
+	}
+		
+
+
+
 	public static QueryResult emptyQueryResult(String query,double queryStart,double queryStop){
-		return new QueryResult(query,queryStart,queryStop,null, null, -1, -1,-1,-1,-1);
+		return new QueryResult(query,queryStart,queryStop,null, null, -1, -1,-1,-1,-1,0);
 	}
 }

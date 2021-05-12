@@ -1,0 +1,30 @@
+#! /usr/bin/env ruby
+require "open3"
+
+n = ARGV[0].to_i
+file = ARGV[1]
+
+lines = `wc -l '#{file}'`.to_i
+chunk_size = (lines/n.to_f).ceil
+system("split -l #{chunk_size} '#{file}'")
+
+threads = []
+
+Dir.glob("xa*").sort.each do |f|
+	system("mv '#{f}' '#{f}.txt'")
+	threads << Thread.new do
+		Open3.pipeline "panako OLAF_CACHE_TO_FILE=TRUE AVAILABLE_PROCESSORS=1 store '#{f}.txt'", out: STDOUT
+	end
+end
+
+threads.each { |thr| thr.join }
+
+Dir.glob("xa*").sort.each do |f|
+	system("rm '#{f}'")
+end
+
+puts "store finished"
+
+#load the prints in the db
+system("panako load")
+

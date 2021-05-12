@@ -327,7 +327,7 @@ public class OlafDBStorage implements OlafStorage {
 	    	  String dbpath = FileUtils.combine(folder,"data.mdb");
 	    	  long dbSizeInMB = new File(dbpath).length() / (1024 * 1024);
 	    	  
-		      System.out.printf("[MDB database statistics]\n");
+		      System.out.printf("[MDB INDEX statistics]\n");
 		      System.out.printf("=========================\n");
 		      System.out.printf("> Size of database page:        %d\n", stats.pageSize);
 		      System.out.printf("> Depth of the B-tree:          %d\n", stats.depth);
@@ -347,14 +347,15 @@ public class OlafDBStorage implements OlafStorage {
 		      
 		      double totalDuration = 0;
 		      long totalPrints = 0;
+		      long totalResources = 0;
 		      
 		      double maxPrintsPerSecond = 0;
 		      String maxPrintsPerSecondPath = "";
 		      double minPrintsPerSecond = 100000;
 		      String minPrintsPerSecondPath = "";
 		      
-		      System.out.printf("[MDB resource statistics]\n");
-		      System.out.printf("=========================\n");
+		      
+		      
 		      while(c.seek(SeekOp.MDB_NEXT)) {
 		    	  
 		    	 //long resourceIdentifier =  c.key().getLong();
@@ -377,14 +378,25 @@ public class OlafDBStorage implements OlafStorage {
 			     
 			     totalDuration += duration;
 			     totalPrints += numFingerprints;
+			     totalResources++;
 		      }
 		      
 		      double avgPrintsPerSecond =   totalPrints / totalDuration;
-		      System.out.printf("=========================\n\n");
-		      System.out.printf("TOTAL: %.3fs   %dfp   %5.1ffp/s\n",totalDuration,totalPrints,avgPrintsPerSecond);
+		      //System.out.printf("=========================\n\n");
 		      
-		      System.out.printf("Min prints per second: %5.1ffp/s   '%s'\n",minPrintsPerSecond,minPrintsPerSecondPath);
-		      System.out.printf("Max prints per second: %5.1ffp/s   '%s'\n",maxPrintsPerSecond,maxPrintsPerSecondPath);
+		      System.out.printf("[MDB INDEX TOTALS]\n");
+		      System.out.printf("=========================\n");
+		      System.out.printf("> %d audio files \n",totalResources);
+		      System.out.printf("> %.3f seconds of audio\n",totalDuration);
+		      System.out.printf("> %d fingerprint hashes \n",totalPrints);
+		      System.out.printf("=========================\n\n");
+		      
+		      System.out.printf("[MDB INDEX INFO]\n");
+		      System.out.printf("=========================\n");
+		      System.out.printf("> Avg prints per second: %5.1ffp/s \n",avgPrintsPerSecond);
+		      System.out.printf("> Min prints per second: %5.1ffp/s '%s'\n",minPrintsPerSecond,minPrintsPerSecondPath);
+		      System.out.printf("> Max prints per second: %5.1ffp/s '%s'\n",maxPrintsPerSecond,maxPrintsPerSecondPath);
+		      System.out.printf("=========================\n\n");
 		      
 		      c.close();
 		      txn.close();
@@ -392,6 +404,28 @@ public class OlafDBStorage implements OlafStorage {
 	    
 	    
 	    return entries;
+	}
+
+	public void deleteMetadata(long resourceID) {  
+		
+		try (Txn<ByteBuffer> txn = env.txnWrite()) {
+			
+			final ByteBuffer key = ByteBuffer.allocateDirect(8);
+			key.putLong(resourceID).flip();
+			
+			final ByteBuffer found = resourceMap.get(txn, key);
+			if(found !=null) {
+				resourceMap.delete(txn, key);
+			}else {
+				//not found, not deleted
+			}
+			
+		    txn.commit();
+		 
+	    }catch (Exception e) {
+	    	e.printStackTrace();
+	    }
+		
 	}
 
 }

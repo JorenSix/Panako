@@ -2,9 +2,7 @@ package be.panako.strategy.olaf;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
@@ -87,30 +85,29 @@ public class OlafFileStorage implements OlafStorage {
 		storeQueue.add(data);
 	}
 	
+	public String storeQueueToString() {		
+		//sort by hash asc
+		//storeQueue.sort((a, b) -> Long.valueOf(a[0]).compareTo(b[0]));
+		StringBuilder sb = new StringBuilder();
+		for(long[] data : storeQueue) {
+			sb.append(data[0]).append(" ").append(data[1]).append(" ").append(data[2]).append("\n");
+		}
+		
+		// Clears the store queue
+		storeQueue.clear();
+		
+		return sb.toString();
+	}
+	
 	public void processStoreQueue() {
 		if(storeQueue.isEmpty()) return;
 		
 		int resourceIdentifier = (int) storeQueue.get(0)[1];
 		
-		//sort by hash asc
-		//storeQueue.sort((a, b) -> Long.valueOf(a[0]).compareTo(b[0]));
-				
+		// Clears the store queue
+		String fingerprintsAsString = storeQueueToString();
 		String path = FileUtils.combine(storeDir.getAbsolutePath(),resourceIdentifier + ".tdb");
-		Set<Long> set = new HashSet<>();
-		
-		StringBuilder sb = new StringBuilder();
-		for(long[] data : storeQueue) {
-			//prevent uncommon duplicate entries
-			long key = data[0] + data[1]<<32l + data[2]<<48l;
-			if(!set.contains(key)) {
-				set.add(key);
-				sb.append(data[0]).append(" ").append(data[1]).append(" ").append(data[2]).append("\n");
-			}
-		}
-		
-		FileUtils.writeFile(sb.toString(), path);
-		
-		storeQueue.clear();
+		FileUtils.writeFile(fingerprintsAsString, path);
 	}
 	
 	public long[] dataFromLine(String line) {
