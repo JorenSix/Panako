@@ -245,7 +245,7 @@ public class OlafStrategy extends Strategy {
 		 });
 		 
 		 hitsPerIdentifer.forEach((identifier, hitlist) -> {
-			 System.out.println("Matches " + identifier + " matches " + hitlist.size());
+			 //System.out.println("Matches " + identifier + " matches " + hitlist.size());
 			 
 			 //sort by query time
 			 Collections.sort(hitlist, (Comparator<? super OlafHit>) (OlafHit a, OlafHit b) -> Integer.valueOf(a.queryTime).compareTo(Integer.valueOf(b.queryTime)));
@@ -283,7 +283,7 @@ public class OlafStrategy extends Strategy {
 			 float offset = -x1 * slope + y1;
 			 float timeFactor = 1-slope;
 			 
-			 System.out.printf("slope %f offset %f  timefactor %f \n",slope,offset,timeFactor);
+			 //System.out.printf("slope %f offset %f  timefactor %f \n",slope,offset,timeFactor);
 			 
 			 //threshold in time bins
 			 double threshold = Config.getFloat(Key.OLAF_QUERY_RANGE);
