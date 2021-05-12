@@ -149,7 +149,26 @@ public class OlafStrategy extends Strategy {
 		return t * (Config.getInt(Key.OLAF_STEP_SIZE)/(float) Config.getInt(Key.OLAF_SAMPLE_RATE));
 	}
 
-
+	private int mostCommonDeltaTforHitList(List<OlafHit> hitList) {
+		Map<Integer,Integer> countPerDiff = new HashMap<>();
+		hitList.forEach((hit)->{
+			int deltaT = hit.Δt();
+			if(!countPerDiff.containsKey(deltaT))
+				countPerDiff.put(deltaT, 0);
+			countPerDiff.put(deltaT, countPerDiff.get(deltaT)+1);
+		});
+		
+		int maxCount = 0;
+		int mostCommonDeltaT = 0;
+		for(Map.Entry<Integer,Integer> entry : countPerDiff.entrySet()) {
+			int count = entry.getValue();
+			if(count > maxCount) {
+				maxCount = count;
+				mostCommonDeltaT = entry.getKey();
+			}
+		}
+		return mostCommonDeltaT;
+	}
 	@Override
 	public void query(String query, int maxNumberOfResults, Set<Integer> avoid, QueryResultHandler handler) {
 		query(query,maxNumberOfResults,avoid,handler,0,MAX_TIME);
@@ -226,20 +245,18 @@ public class OlafStrategy extends Strategy {
 		 });
 		 
 		 hitsPerIdentifer.forEach((identifier, hitlist) -> {
-			 //System.out.println("Matches " + identifier + " matches " + hitlist.size());
+			 System.out.println("Matches " + identifier + " matches " + hitlist.size());
 			 
 			 //sort by query time
 			 Collections.sort(hitlist, (Comparator<? super OlafHit>) (OlafHit a, OlafHit b) -> Integer.valueOf(a.queryTime).compareTo(Integer.valueOf(b.queryTime)));
-			 
-			 List<OlafHit> firstHits = new ArrayList<>(hitlist.subList(0, Math.max(minimumUnfilteredHits,hitlist.size()/5)));
-			 List<OlafHit> lastHits = new ArrayList<>(hitlist.subList(hitlist.size()-Math.max(minimumUnfilteredHits,hitlist.size()/5), hitlist.size()));
-			 
-			 //sort both last and first hits by delta t
-			 Collections.sort(firstHits, (Comparator<? super OlafHit>) (OlafHit a, OlafHit b) -> Integer.valueOf(a.Δt()).compareTo(Integer.valueOf(b.Δt())));
-			 Collections.sort(lastHits, (Comparator<? super OlafHit>) (OlafHit a, OlafHit b) -> Integer.valueOf(a.Δt()).compareTo(Integer.valueOf(b.Δt())));
+			
+			 //view the first and last hits (max 250)
+			 int maxListSize = 250;
+			 List<OlafHit> firstHits = hitlist.subList(0, Math.min(maxListSize,Math.max(minimumUnfilteredHits,hitlist.size()/5)));
+			 List<OlafHit> lastHits  = hitlist.subList(hitlist.size()-Math.min(maxListSize, Math.max(minimumUnfilteredHits,hitlist.size()/5)), hitlist.size());
 			 
 			//find the first x1 where delta t is equals to the median delta t
-			 float y1 = firstHits.get(firstHits.size()/2).Δt();//take the median
+			 float y1 = mostCommonDeltaTforHitList(firstHits);
 			 float x1 = 0;
 			 for(int i = 0 ; i < firstHits.size() ; i++) {
 				 OlafHit hit = firstHits.get(i);
@@ -249,9 +266,9 @@ public class OlafStrategy extends Strategy {
 					 break;
 				 }
 			 }
-			 
+
 			//find the first x2 where delta t is equals to the median delta t
-			 float y2 = lastHits.get(lastHits.size()/2).Δt();
+			 float y2 = mostCommonDeltaTforHitList(lastHits);
 			 float x2 = 0;
 			 for(int i = lastHits.size() - 1 ; i >= 0 ; i--) {
 				 OlafHit hit = lastHits.get(i);
@@ -266,7 +283,7 @@ public class OlafStrategy extends Strategy {
 			 float offset = -x1 * slope + y1;
 			 float timeFactor = 1-slope;
 			 
-			 //System.out.printf("slope %f offset %f  timefactor %f \n",slope,offset,timeFactor);
+			 System.out.printf("slope %f offset %f  timefactor %f \n",slope,offset,timeFactor);
 			 
 			 //threshold in time bins
 			 double threshold = Config.getFloat(Key.OLAF_QUERY_RANGE);
@@ -284,7 +301,7 @@ public class OlafStrategy extends Strategy {
 					 boolean yInExpectedRange = Math.abs(yActual-yPredicted) <= threshold ; 
 					 
 					 //if(hit.identifier!= FileUtils.getIdentifier(queryPath))
-						 //System.out.printf("pred: %f  actual: %f   dif abs: %f  threshold %f \n",yPredicted, yActual, threshold);
+						 //System.out.printf("pred: %f  actual: %f   dif abs: %f  threshold %f \n",yPredicted, yActual,Math.abs(yActual-yPredicted), threshold);
 					 
 					 if(yInExpectedRange) {
 						 filteredHits.add(hit);
@@ -326,15 +343,13 @@ public class OlafStrategy extends Strategy {
 								 matchesPerSecondHistogram.put(secondBin, 0);
 							 matchesPerSecondHistogram.put(secondBin, matchesPerSecondHistogram.get(secondBin)+1);
 						 }
-						 double mean = 0;
-						 for(Map.Entry<Integer,Integer> entry : matchesPerSecondHistogram.entrySet()) {
-							 mean += entry.getValue();
-						 }
+						
 						 //number of seconds bins
-						 int numberOfSecondBins = (int) (refStop - refStart);
-						 mean = mean/(double) numberOfSecondBins;
+						 float numberOfMatchingSeconds = (float) Math.ceil(refStop - refStart);
+						 float emptySeconds = numberOfMatchingSeconds - matchesPerSecondHistogram.size();
+						 float emptyRatio = emptySeconds / numberOfMatchingSeconds;
 						 
-						 QueryResult r = new QueryResult(queryPath,queryStart, queryStop, refPath, "" + identifier, refStart, refStop,  score, timeFactor, frequencyFactor,mean);
+						 QueryResult r = new QueryResult(queryPath,queryStart, queryStop, refPath, "" + identifier, refStart, refStop,  score, timeFactor, frequencyFactor,emptyRatio);
 						 queryResults.add(r);
 					 }
 				 }
@@ -382,6 +397,10 @@ public class OlafStrategy extends Strategy {
 		
 		public int Δt() {
 			return matchTime - queryTime;
+		}
+		
+		public String toString() {
+			return String.format("%d %d %d %d", identifier, matchTime, queryTime, Δt());
 		}
 	}
 	

@@ -342,7 +342,7 @@ public enum Key{
 	 */
 	OLAF_CACHE_FOLDER("/opt/panako/cache"), 
 	
-	OLAF_SAMPLE_RATE("16000"), 
+	OLAF_SAMPLE_RATE("16000"),
 	OLAF_SIZE("1024"), 
 	OLAF_STEP_SIZE("128"), 
 	

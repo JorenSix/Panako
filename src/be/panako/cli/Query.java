@@ -66,13 +66,17 @@ public class Query extends Application{
 		Panako.printQueryResultHeader();
 		
 		if(hasArgument("debug", args) || processors==1){
+			int taskNumber = 1;
 			for(File file: files){
-				new QueryTask(file.getPath()).run();
+				new QueryTask(file.getPath(),taskNumber,files.size()).run();
+				taskNumber++;
 			}
 		}else{
 			ExecutorService executor = Executors.newFixedThreadPool(processors);
+			int taskNumber = 1;
 			for(File file: files){
-				executor.submit(new QueryTask(file.getPath()));
+				executor.submit(new QueryTask(file.getPath(),taskNumber,files.size()));
+				taskNumber++;
 			}
 			executor.shutdown();
 			try {
@@ -104,27 +108,30 @@ public class Query extends Application{
 		private final HashSet<Integer> emptyHashSet = new HashSet<Integer>();
 		private final Strategy strategy;
 		private final int numberOfQueryResults;
+		private final int taskNumber;
+		private final int totalTasks;
 		
-		public QueryTask(String path){
+		public QueryTask(String path,int taskNumber, int totalTasks){
 			this.path = path;
 			this.numberOfQueryResults = Config.getInt(Key.NUMBER_OF_QUERY_RESULTS);
 			strategy = Strategy.getInstance();
+			this.taskNumber = taskNumber;
+			this.totalTasks = totalTasks;
 		}
 
 		@Override
 		public void run() {
-			
 			strategy.query(path, this.numberOfQueryResults,emptyHashSet, this);
 		}
 		
 		@Override
 		public void handleQueryResult(QueryResult r) {
-			Panako.printQueryResult(r);
+			Panako.printQueryResult(r,taskNumber,totalTasks);
 		}
 
 		@Override
 		public void handleEmptyResult(QueryResult r) {
-			Panako.printQueryResult(r);	
+			Panako.printQueryResult(r,taskNumber,totalTasks);	
 		}
 	}	
 	

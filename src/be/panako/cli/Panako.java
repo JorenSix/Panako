@@ -294,18 +294,21 @@ public class Panako {
 		return containsVersion;
 	}
 	
-	
-	public static void printQueryResult(QueryResult r){
-	
+	public static void printQueryResult(QueryResult r,int task, int taskTotal){
+		String taskInfo = String.format("%d ; %d ; ", task,taskTotal);
 		String queryInfo = String.format("%s ; %.3f ; %.3f ; "     ,r.queryPath,r.queryStart   ,r.queryStop);
 		String refInfo = String.format("%s ; %s ; %.3f ; %.3f ; "  ,r.refPath  ,r.refIdentifier,r.refStart       ,r.refStop);
 		String matchInfo = String.format("%.0f ; %.2f %% ; %.2f %%; %.2f",r.score    , r.timeFactor  ,r.frequencyFactor, r.scoreVariance);
-		System.out.println(queryInfo+refInfo+matchInfo);
+		System.out.println(taskInfo + queryInfo+refInfo+matchInfo);
+	}
+	
+	public static void printQueryResult(QueryResult r){
+		printQueryResult(r, 0, 0);
 	}
 	
 	public static void printQueryResultHeader(){
 		String header;
-		header = "Query path;Query start (s);Query stop (s); Match path;Match id; Match start (s); Match stop (s); Match score; Time factor (%); Frequency factor(%), Mean matches per second"; 
+		header = "Index; total ; Query path;Query start (s);Query stop (s); Match path;Match id; Match start (s); Match stop (s); Match score; Time factor (%); Frequency factor(%), Seconds without match (%)"; 
 		System.out.println(header);
 	}
 
