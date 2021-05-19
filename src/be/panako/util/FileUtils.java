@@ -497,7 +497,7 @@ public final class FileUtils {
 		if (tokens.length == 2 && tokens[0].matches("\\d+")) {
 			identifier = Integer.valueOf(tokens[0]);
 		} else {
-			int hashCode = Math.abs(fileName.hashCode());
+			int hashCode = Math.abs(resource.hashCode());
 			int minValue = Integer.MAX_VALUE / 2;
 			identifier = minValue + hashCode / 2;
 		}

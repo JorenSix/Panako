@@ -200,11 +200,5 @@ public class ChromaPrintExtractor implements AudioProcessor {
 	public void processingFinished() {
 		getHash();
 	}
-	
-	public static void main(String... args){
-		ChromaPrintExtractor e = new ChromaPrintExtractor("/media/data/datasets/Fingerprinting datasets/Datasets/small_dataset/queries/84302_232s-252s.mp3",null);
-		e.starExtraction();
-		
-	}
 
 }
