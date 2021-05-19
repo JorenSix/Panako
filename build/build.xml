@@ -22,7 +22,6 @@
 			<classpath>
 				<fileset file="${junit_jar}"/>
 				<fileset dir="../lib" includes="*.jar" excludes="*src*.jar"  />
-				<fileset dir="../lib/redisson" includes="redisson*.jar" excludes="*src*.jar"  />
 				<fileset dir="../lib/mapdb" includes="*.jar" excludes="*src*.jar"  />
 				<fileset dir="../lib/lmdb" includes="*.jar" excludes="*src*.jar"  />
 			</classpath>
@@ -47,7 +46,6 @@
 			version="true" >	
 				<classpath>
 					<fileset dir="../lib" includes="*.jar" excludes="*src*.jar"  />
-					<fileset dir="../lib/redisson" includes="redisson*.jar" excludes="*src*.jar"  />
 					<fileset dir="../lib/mapdb" includes="*.jar" excludes="*src*.jar"  />
 					<fileset dir="../lib/lmdb" includes="*.jar" excludes="*src*.jar"  />
 				</classpath>
@@ -66,8 +64,7 @@
 			
 			<zipgroupfileset dir="../lib/" includes="*.jar"/><!-- panako dependencies -->
 			<zipgroupfileset dir="../lib/mapdb/" includes="*.jar"/><!-- mapdb jar files -->	
-			<zipgroupfileset dir="../lib/lmdb/" includes="*.jar"/><!-- mapdb jar files -->	
-			<zipgroupfileset dir="../lib/redisson" includes="*.jar"/><!-- redisson jar files -->
+			<zipgroupfileset dir="../lib/lmdb/" includes="*.jar"/><!-- mapdb jar files -->
     		
 			<!-- exclude everything except src dir -->
 			<fileset dir="../bin">
@@ -110,8 +107,7 @@
 			
 			<zipgroupfileset dir="../lib/" includes="*.jar"/><!-- panako dependencies -->
 			<zipgroupfileset dir="../lib/mapdb/" includes="*.jar"/><!-- mapdb jar files -->	
-			<zipgroupfileset dir="../lib/lmdb/" includes="*.jar"/><!-- mapdb jar files -->	
-			<zipgroupfileset dir="../lib/redisson" includes="*.jar"/><!-- redisson jar files -->
+			<zipgroupfileset dir="../lib/lmdb/" includes="*.jar"/><!-- mapdb jar files -->
     		
 			<!-- exclude everything except src dir -->
 			<fileset dir="../bin">
