@@ -36,12 +36,8 @@ package be.panako.strategy;
 
 import java.util.Set;
 
-import be.panako.strategy.chromaprint.ChromaPrintStrategy;
-import be.panako.strategy.ncteq.NCteQStrategy;
-import be.panako.strategy.nfft.NFFTStrategy;
 import be.panako.strategy.olaf.OlafStrategy;
 import be.panako.strategy.pch.PitchClassHistogramStrategy;
-import be.panako.strategy.rafs.RafsRepStrategy;
 import be.panako.util.Config;
 import be.panako.util.Key;
 import panako.strategy.gaborator.GaboratorStrategy;
@@ -89,14 +85,6 @@ public abstract class Strategy {
 		if(strategy == null){
 			if ("PCH".equalsIgnoreCase(Config.get(Key.STRATEGY))){
 				strategy = new PitchClassHistogramStrategy();
-			}else if ("NFFT".equalsIgnoreCase(Config.get(Key.STRATEGY))){
-				strategy = new NFFTStrategy();
-			}else if ("NCTEQ".equalsIgnoreCase(Config.get(Key.STRATEGY))){
-				strategy = new NCteQStrategy();
-			}else if("RAFS".equalsIgnoreCase(Config.get(Key.STRATEGY))){
-				strategy = new RafsRepStrategy();
-			}else if("CHROMAPRINT".equalsIgnoreCase(Config.get(Key.STRATEGY))){
-				strategy = new ChromaPrintStrategy();
 			}else if("OLAF".equalsIgnoreCase(Config.get(Key.STRATEGY))){
 				strategy = new OlafStrategy();
 			}else if("GABORATOR".equalsIgnoreCase(Config.get(Key.STRATEGY))){

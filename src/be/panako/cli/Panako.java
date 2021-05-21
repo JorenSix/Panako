@@ -123,15 +123,8 @@ public class Panako {
 		applicationList.add(new Store());
 		applicationList.add(new Configuration());
 		applicationList.add(new Play());
-		applicationList.add(new Browser());
 		applicationList.add(new Monitor());
-		applicationList.add(new Sync());
-		applicationList.add(new Compare());
-		applicationList.add(new Syncsink());
-		applicationList.add(new Server());
-		applicationList.add(new Client());
 		applicationList.add(new Resolve());
-		applicationList.add(new Tap());
 		applicationList.add(new Deduplication());
 		applicationList.add(new Load());
 		applicationList.add(new Delete());
@@ -298,7 +291,7 @@ public class Panako {
 		String taskInfo = String.format("%d ; %d ; ", task,taskTotal);
 		String queryInfo = String.format("%s ; %.3f ; %.3f ; "     ,r.queryPath,r.queryStart   ,r.queryStop);
 		String refInfo = String.format("%s ; %s ; %.3f ; %.3f ; "  ,r.refPath  ,r.refIdentifier,r.refStart       ,r.refStop);
-		String matchInfo = String.format("%.0f ; %.2f %% ; %.2f %%; %.2f",r.score    , r.timeFactor  ,r.frequencyFactor, r.scoreVariance);
+		String matchInfo = String.format("%.0f ; %.3f %% ; %.3f %%; %.2f",r.score    , r.timeFactor  ,r.frequencyFactor, r.scoreVariance);
 		System.out.println(taskInfo + queryInfo+refInfo+matchInfo);
 	}
 	

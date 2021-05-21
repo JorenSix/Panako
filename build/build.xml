@@ -22,7 +22,6 @@
 			<classpath>
 				<fileset file="${junit_jar}"/>
 				<fileset dir="../lib" includes="*.jar" excludes="*src*.jar"  />
-				<fileset dir="../lib/mapdb" includes="*.jar" excludes="*src*.jar"  />
 				<fileset dir="../lib/lmdb" includes="*.jar" excludes="*src*.jar"  />
 			</classpath>
 		</javac>
@@ -46,7 +45,6 @@
 			version="true" >	
 				<classpath>
 					<fileset dir="../lib" includes="*.jar" excludes="*src*.jar"  />
-					<fileset dir="../lib/mapdb" includes="*.jar" excludes="*src*.jar"  />
 					<fileset dir="../lib/lmdb" includes="*.jar" excludes="*src*.jar"  />
 				</classpath>
 			</javadoc>
@@ -63,7 +61,6 @@
 		<jar destfile="panako-${version}.jar" filesetmanifest="skip">
 			
 			<zipgroupfileset dir="../lib/" includes="*.jar"/><!-- panako dependencies -->
-			<zipgroupfileset dir="../lib/mapdb/" includes="*.jar"/><!-- mapdb jar files -->	
 			<zipgroupfileset dir="../lib/lmdb/" includes="*.jar"/><!-- mapdb jar files -->
     		
 			<!-- exclude everything except src dir -->
@@ -76,9 +73,6 @@
 			<fileset dir="../src">
 				<include name="**/*.java" />
 			</fileset>
-			
-			<!-- include API readme -->
-			<fileset file="../src/be/panako/http/api.html" />
 			
 			<manifest>
 				<!-- Standard manifest attributes -->
@@ -106,7 +100,6 @@
 			</manifest>
 			
 			<zipgroupfileset dir="../lib/" includes="*.jar"/><!-- panako dependencies -->
-			<zipgroupfileset dir="../lib/mapdb/" includes="*.jar"/><!-- mapdb jar files -->	
 			<zipgroupfileset dir="../lib/lmdb/" includes="*.jar"/><!-- mapdb jar files -->
     		
 			<!-- exclude everything except src dir -->
@@ -119,9 +112,6 @@
 			<fileset dir="../src">
 				<include name="**/*.java" />
 			</fileset>
-			
-			<!-- include API readme -->
-			<fileset file="../src/be/panako/http/api.html" />
 		</jar>
 	</target>
 
