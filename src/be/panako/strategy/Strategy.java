@@ -32,9 +32,6 @@
 *                                                                          *
 ****************************************************************************/
 
-
-
-
 package be.panako.strategy;
 
 import java.util.Set;
@@ -47,6 +44,7 @@ import be.panako.strategy.pch.PitchClassHistogramStrategy;
 import be.panako.strategy.rafs.RafsRepStrategy;
 import be.panako.util.Config;
 import be.panako.util.Key;
+import panako.strategy.gaborator.GaboratorStrategy;
 
 public abstract class Strategy {
 	
@@ -101,6 +99,8 @@ public abstract class Strategy {
 				strategy = new ChromaPrintStrategy();
 			}else if("OLAF".equalsIgnoreCase(Config.get(Key.STRATEGY))){
 				strategy = new OlafStrategy();
+			}else if("GABORATOR".equalsIgnoreCase(Config.get(Key.STRATEGY))){
+				strategy = new GaboratorStrategy();
 			}
 		}
 		return strategy;
@@ -112,4 +112,10 @@ public abstract class Strategy {
 	 * @return An internal identifier, probably an integer, for a given filename.
 	 */
 	public abstract String resolve(String filename);
+
+	
+	public void print(String path, boolean sonicVisualizerOutput) {
+		// TODO Auto-generated method stub
+		
+	}
 }

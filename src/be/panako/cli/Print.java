@@ -33,16 +33,12 @@
 ****************************************************************************/
 
 
-
-
-
-
 package be.panako.cli;
 
 import java.io.File;
 import java.util.List;
 
-import be.panako.strategy.olaf.OlafStrategy;
+import be.panako.strategy.Strategy;
 
 
 /**
@@ -58,7 +54,7 @@ public class Print extends Application{
 		
 		boolean sonicVisualizerOutput = hasArgument("-sv", args);
 		
-		OlafStrategy strategy = (OlafStrategy) OlafStrategy.getInstance();
+		Strategy strategy = Strategy.getInstance();
 		
 		for(File file: files){
 			strategy.print(file.getPath(),sonicVisualizerOutput);
