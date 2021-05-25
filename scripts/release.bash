@@ -1,6 +1,7 @@
 #!/bin/bash
 
-#build a release
+#build and deploy a release
+cd ../build
 ant release
 
 filename=$(basename Panako-*)

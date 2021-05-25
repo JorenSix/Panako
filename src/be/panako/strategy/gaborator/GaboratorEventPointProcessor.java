@@ -32,7 +32,7 @@
 *                                                                          *
 ****************************************************************************/
 
-package panako.strategy.gaborator;
+package be.panako.strategy.gaborator;
 
 import java.util.ArrayList;
 import java.util.Arrays;

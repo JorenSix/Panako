@@ -1,3 +1,5 @@
+#Creates a test data-set
+
 require 'rubygems'
 require 'json'
 require 'uri'
@@ -45,7 +47,7 @@ def download_audio_files(id_file,files)
 	  #url = url.gsub("mp31","mp32") #downloads better quality mp3
 	  output_file = "#{id}.mp3"
     output_wav_file = "#{id}.wav"
-    command = "wget \"#{url}\" -O \"#{output_file}\""
+    command = "wget --no-check-certificate \"#{url}\" -O \"#{output_file}\""
     if File.exists?(output_wav_file)
       puts "Skipping: #{output_file}"
     else
@@ -56,8 +58,8 @@ def download_audio_files(id_file,files)
 end
 
 
-query_folder = 'be/panako/tests/res/query'
-dataset_folder = 'be/panako/tests/res/dataset'
+query_folder = 'query'
+dataset_folder = 'dataset'
 
 Dir.mkdir(query_folder) unless File.exists? query_folder
 Dir.mkdir(dataset_folder) unless File.exists? dataset_folder

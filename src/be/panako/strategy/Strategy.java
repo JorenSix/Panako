@@ -36,11 +36,11 @@ package be.panako.strategy;
 
 import java.util.Set;
 
+import be.panako.strategy.gaborator.GaboratorStrategy;
 import be.panako.strategy.olaf.OlafStrategy;
 import be.panako.strategy.pch.PitchClassHistogramStrategy;
 import be.panako.util.Config;
 import be.panako.util.Key;
-import panako.strategy.gaborator.GaboratorStrategy;
 
 public abstract class Strategy {
 	

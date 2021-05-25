@@ -25,6 +25,8 @@ class Jamendo
   end
 end
 
+system("unzip all_meta_data.json.zip")
+
 j = Jamendo.new
 j.download_audio_files("all_meta_data.json")
 

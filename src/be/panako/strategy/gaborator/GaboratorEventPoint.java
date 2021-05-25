@@ -1,4 +1,4 @@
-package panako.strategy.gaborator;
+package be.panako.strategy.gaborator;
 
 public class GaboratorEventPoint {
 	

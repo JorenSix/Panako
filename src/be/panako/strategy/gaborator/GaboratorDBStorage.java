@@ -1,4 +1,4 @@
-package panako.strategy.gaborator;
+package be.panako.strategy.gaborator;
 
 import java.io.File;
 import java.nio.ByteBuffer;

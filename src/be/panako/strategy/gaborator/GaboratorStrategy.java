@@ -1,4 +1,4 @@
-package panako.strategy.gaborator;
+package be.panako.strategy.gaborator;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
+import be.panako.strategy.gaborator.GaboratorDBStorage.GaboratorDBHit;
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
@@ -20,7 +21,6 @@ import be.panako.util.StopWatch;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 import be.tarsos.dsp.util.PitchConverter;
-import panako.strategy.gaborator.GaboratorDBStorage.GaboratorDBHit;
 
 public class GaboratorStrategy extends Strategy {
 	private static final int MAX_TIME = 5_000_000;

@@ -32,7 +32,7 @@
 *                                                                          *
 ****************************************************************************/
 
-package panako.strategy.gaborator;
+package be.panako.strategy.gaborator;
 
 import be.panako.util.Morton2D;
 
