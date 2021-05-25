@@ -1,0 +1,16 @@
+h1. Panako - Scripts
+
+This directory contains several scripts to build and interact with Panako. Some scripts are used to evaluate the 
+performance of the algorithms.
+
+The scripts handle these tasks
+
+* Building and releasing Panako
+* Textile readme to HTML
+* Prepare the dependency JAR files for inclusion in a fat jar
+* Prepend the source files with a common header
+* Test dataset creation
+* Automatic evaluation
+* Parse query results
+
+

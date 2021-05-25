@@ -1,7 +1,7 @@
 /***************************************************************************
 *                                                                          *
 * Panako - acoustic fingerprinting                                         *
-* Copyright (C) 2014 - 2017 - Joren Six / IPEM                             *
+* Copyright (C) 2014 - 2021 - Joren Six / IPEM                             *
 *                                                                          *
 * This program is free software: you can redistribute it and/or modify     *
 * it under the terms of the GNU Affero General Public License as           *
@@ -31,10 +31,6 @@
 *                       Acoustic Fingerprinting                            *
 *                                                                          *
 ****************************************************************************/
-
-
-
-
 
 package be.panako.util;
 
@@ -430,6 +426,7 @@ public final class FileUtils {
 	 * @param target
 	 *            the target file.
 	 */
+	@SuppressWarnings("resource")
 	public static void cp(final String source, final String target) {
 		FileChannel inChannel = null;
 		FileChannel outChannel = null;

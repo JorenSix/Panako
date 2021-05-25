@@ -1,4 +1,4 @@
-#A script to create good, realistic queries of arbitrary length.
+#A script to create realistic queries of arbitrary length.
 
 require 'fileutils'
 

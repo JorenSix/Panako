@@ -14,3 +14,6 @@ dbs
 
 *.wav
 
+scripts/reproducibility/mp3_files.txt
+scripts/reproducibility/music
+scripts/reproducibility/queries_*
