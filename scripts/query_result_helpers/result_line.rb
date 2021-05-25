@@ -1,4 +1,14 @@
 class ResultLine
+  #query info
+  attr_reader :query, :query_start, :query_stop
+  #ref info
+  attr_reader :ref,   :ref_start  , :ref_stop
+  #match info
+  attr_reader :match_score , :time_factor, :frequency_factor, :empty_seconds
+
+  def self.valid?(line)
+    line.split(";").size == 13
+  end
 
   def initialize(line)
     data = line.split(";").map(&:strip)
@@ -59,18 +69,6 @@ class ResultLine
     match_duration <= MAX_DURATION and
     @match_score / match_duration > MIN_MATCHES_PER_SECOND and
     @empty_seconds <= MAX_EMPTY_SECONDS
-  end
-
-  def match_score
-    @match_score
-  end
-
-  def query
-    @query
-  end
-
-  def score
-    @match_score
   end
 
   def store_and_play_files(duration_in_seconds)

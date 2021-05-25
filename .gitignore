@@ -17,3 +17,4 @@ dbs
 scripts/reproducibility/mp3_files.txt
 scripts/reproducibility/music
 scripts/reproducibility/queries_*
+scripts/reproducibility/*csv

@@ -2,6 +2,7 @@
 
 require 'fileutils'
 
+query_lengths = ARGV.map(&:to_i)
 
 def file_length(file)
   $1.to_i if `sox "#{file}" -n stat 2>&1` =~ /.*Length .*:\s*(\d*)\..*/
@@ -182,7 +183,7 @@ def create_panako_next_gen_queries(input_files,target_dir=".",target_extension="
 end
 
 
-query_lengths = [20,40,60]
+
 query_lengths.each do |query_length|
   input_file = File.read("mp3_files.txt").split("\n").shuffle
   target_dir = "queries_#{query_length}s"
