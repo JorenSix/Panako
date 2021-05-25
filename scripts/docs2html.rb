@@ -14,7 +14,7 @@ def render
 	template = File.read("docs2html_template.html")
 	docs = rr("../README.textile")
 	html = template.gsub("__content__",docs)
-	File.open("../doc/readme.html", 'w') {|f| f.write(html) }
+	File.open("../build/readme.html", 'w') {|f| f.write(html) }
 end
 
 render

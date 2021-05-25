@@ -252,27 +252,11 @@ public class OlafDBStorage implements OlafStorage {
 		queryQueue.add(queryHash);
 	}
 	
-	public static class OlafDBHit{
-		public final long originalHash;
-		public final long matchedNearHash;
-		
-		public final int t;
-		public final int resourceID;
-		
-		public OlafDBHit(long originalHash, long matchedNearHash,long t, long resourceID) {
-			this.originalHash = originalHash;
-			this.matchedNearHash = matchedNearHash;
-			this.t=(int)t;
-			this.resourceID=(int)resourceID;
-		}
-		
-	}
-	
-	public void processQueryQueue(Map<Long,List<OlafDBHit>> matchAccumulator,int range) {
+	public void processQueryQueue(Map<Long,List<OlafStorageHit>> matchAccumulator,int range) {
 		processQueryQueue(matchAccumulator, range, new HashSet<Integer>());
 	}
 	
-	public void processQueryQueue(Map<Long,List<OlafDBHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid) {
+	public void processQueryQueue(Map<Long,List<OlafStorageHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid) {
 		
 		if(queryQueue.isEmpty())
 			return;
@@ -300,8 +284,8 @@ public class OlafDBStorage implements OlafStorage {
 				      if(fingerprintHash <= stopKey) {
 				    	  if(!resourcesToAvoid.contains((int) resourceID)) {
 				    		  if(!matchAccumulator.containsKey(originalKey))
-				    			  matchAccumulator.put(originalKey,new ArrayList<OlafDBHit>());
-				    		  matchAccumulator.get(originalKey).add(new OlafDBHit(originalKey, fingerprintHash, t, resourceID));
+				    			  matchAccumulator.put(originalKey,new ArrayList<OlafStorageHit>());
+				    		  matchAccumulator.get(originalKey).add(new OlafStorageHit(originalKey, fingerprintHash, t, resourceID));
 				    	  }
 				   
 					      while(true) {
@@ -313,8 +297,8 @@ public class OlafDBStorage implements OlafStorage {
 							      
 							      if(!resourcesToAvoid.contains((int) resourceID)) {
 						    		  if(!matchAccumulator.containsKey(originalKey))
-						    			  matchAccumulator.put(originalKey,new ArrayList<OlafDBHit>());
-						    		  matchAccumulator.get(originalKey).add(new OlafDBHit(originalKey, fingerprintHash, t, resourceID));
+						    			  matchAccumulator.put(originalKey,new ArrayList<OlafStorageHit>());
+						    		  matchAccumulator.get(originalKey).add(new OlafStorageHit(originalKey, fingerprintHash, t, resourceID));
 						    	  }
 						      }
 						      
@@ -330,8 +314,8 @@ public class OlafDBStorage implements OlafStorage {
 							      
 							      if(!resourcesToAvoid.contains((int) resourceID)) {
 						    		  if(!matchAccumulator.containsKey(originalKey))
-						    			  matchAccumulator.put(originalKey,new ArrayList<OlafDBHit>());
-						    		  matchAccumulator.get(originalKey).add(new OlafDBHit(originalKey, fingerprintHash, t, resourceID));
+						    			  matchAccumulator.put(originalKey,new ArrayList<OlafStorageHit>());
+						    		  matchAccumulator.get(originalKey).add(new OlafStorageHit(originalKey, fingerprintHash, t, resourceID));
 						    	  }
 						      } else {
 						    	  //no next found, end of db

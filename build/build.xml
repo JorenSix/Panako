@@ -52,7 +52,7 @@
 	
 	<!-- Creates index.html with info about panako in ../doc/ directory -->
 	<target name="doc" depends="javadoc"> 
-    	<exec dir="../doc/etc" executable="./docs2html"/>
+    	<exec dir="../scripts" executable="./docs2html.rb"/>
     </target>
 
 	<!-- Creates the Panako executable JAR-File client -->
@@ -77,60 +77,34 @@
 			<manifest>
 				<!-- Standard manifest attributes -->
 				<attribute name="Implementation-Version" value="${version}-${DSTAMP}" />
-				<attribute name="Built-By" value="${built_by}" />
-				<attribute name="Created-By" value="${built_by}" />
+				<attribute name="Built-By" value="${user.name}" />
+				<attribute name="Created-By" value="${user.name}" />
 				<attribute name="Built-Date" value="${TODAY}" />
 				<attribute name="Main-Class" value="be.panako.cli.Panako" />
 			</manifest>
 			
 		</jar>
 	</target>
-	
-	<!-- Creates the executable JAR-File -->
-	<target name="syncsink" depends="compile">
-		<!-- with source code panako-${version}.jar -->
-		<jar destfile="SyncSink-${version}.jar" filesetmanifest="mergewithoutmain">
-			<manifest>
-				<!-- Standard manifest attributes -->
-				<attribute name="Implementation-Version" value="${version}-${DSTAMP}" />
-				<attribute name="Built-By" value="${built_by}" />
-				<attribute name="Created-By" value="${built_by}" />
-				<attribute name="Built-Date" value="${TODAY}" />
-				<attribute name="Main-Class" value="be.panako.ui.syncsink.SyncSink" />
-			</manifest>
-			
-			<zipgroupfileset dir="../lib/" includes="*.jar"/><!-- panako dependencies -->
-			<zipgroupfileset dir="../lib/lmdb/" includes="*.jar"/><!-- mapdb jar files -->
-    		
-			<!-- exclude everything except src dir -->
-			<fileset dir="../bin">
-				<exclude name="**/*.wav" />
-				<exclude name="**/test/**" />
-			</fileset>
 
-			<!-- include source files -->
-			<fileset dir="../src">
-				<include name="**/*.java" />
-			</fileset>
-		</jar>
-	</target>
-
-	<!-- builds a release: all examples, documentation and library in the correct folders-->
-	<target name="release" depends="doc,javadoc">
+	<!-- builds a release: documentation and library in the correct folders-->
+	<target name="release" depends="panako,doc,javadoc">
 		
 	    <mkdir dir="Panako-${version}"/>
-	  	<move file="../doc/index.html" tofile="Panako-${version}/readme.html"/>
-		<copy file="../license.txt" tofile="Panako-${version}/LICENSE"/>
+	  	<move file="readme.html" tofile="Panako-${version}/readme.html"/>
+		<move file="panako-${version}.jar" tofile="Panako-${version}/panako-${version}.jar"/>
 		
 		<copy  todir="Panako-${version}/doc/">
 			<fileset dir="../doc/javadoc"/>
 		</copy>
+
+		<copy file="../license.txt" tofile="Panako-${version}/LICENSE"/>
 		
 		 <zip destfile="Panako-${version}/Panako-${version}-src.zip">
 		 	<zipfileset dir="../src" prefix="Panako/src/"/>
 		 	<zipfileset dir="../lib" prefix="Panako/lib/"/>
 		 	<zipfileset dir="../build" prefix="Panako/build/" >
 		 		<exclude name="**/Panako-*/**"/>
+		 		<exclude name="panako-${version}.jar"/>
 		 	</zipfileset>
 		 	
 		 	<zipfileset dir="../doc" prefix="Panako/doc/" ></zipfileset>
@@ -139,17 +113,25 @@
 		 </zip>
 	</target>
 	
-	<!-- Installs the panako jar file to /opt/panako -->
+	<!-- Installs the panako jar file to ~/.panako -->
 	<target name="install" depends="panako">
 		 <!-- Create the panako directory, if it does not exist -->
-		 <mkdir dir="/opt/panako/log"/>
+		 <mkdir dir="${user.home}/.panako/log"/>
 		 <!-- Copy the panako execute script -->
-		 <copy file="../doc/panako" tofile="/opt/panako/panako"/>
+		 <copy file="panako" tofile="${user.home}/.panako/panako"/>
 		 <!-- Copy the main jar file -->
-	     <copy file="panako-${version}.jar" tofile="/opt/panako/panako.jar"/>
+	     <copy file="panako-${version}.jar" tofile="${user.home}/.panako/panako.jar"/>
 		 <!-- Copy the default logging configuration -->
-	     <copy file="../doc/logging.properties" tofile="/opt/panako/logging.properties"/>
+	     <copy file="logging.properties" tofile="${user.home}/.panako/logging.properties"/>
 		 <!-- Do not copy the configuration itself  -->
-		 <!-- <copy file="config.properties" tofile="/opt/panako/config.properties"/>-->
+		 <!-- <copy file="config.properties" tofile="~/.panako/config.properties"/>-->
+		 <!-- Copy the panako execute script -->
+		 <!--<copy file="panako" tofile="/usr/local/bin/panako"/>-->
+	</target>
+
+	<!-- Installs the panako startup script to a place in PATH -->
+	<target name="sys-install" depends="panako">
+		 <!-- Copy the panako execute script -->
+		 <copy file="panako" tofile="/usr/local/bin/panako"/>
 	</target>
 </project>

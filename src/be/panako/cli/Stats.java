@@ -32,17 +32,9 @@
 *                                                                          *
 ****************************************************************************/
 
-
-
-
-
-
-
 package be.panako.cli;
 
 import be.panako.strategy.Strategy;
-
-
 
 /**
  * Shows some statistics about the storage.

@@ -31,9 +31,11 @@
 *                       Acoustic Fingerprinting                            *
 *                                                                          *
 ****************************************************************************/
-
-
 package be.panako.cli;
+
+
+import java.io.File;
+import java.util.List;
 
 import be.panako.strategy.Strategy;
 
@@ -42,7 +44,11 @@ public class Resolve extends Application {
 	@Override
 	public void run(String... args) {
 		Strategy strat = Strategy.getInstance();
-		System.out.println(strat.resolve(args[0]));
+		List<File> files = getFilesFromArguments(args);
+		
+		for(File f : files) {
+			System.out.println(strat.resolve(f.getPath()));
+		}
 	}
 
 	@Override
@@ -52,7 +58,7 @@ public class Resolve extends Application {
 
 	@Override
 	public String synopsis() {
-		return "resolve filemp3";
+		return "[audio_file...]";
 	}
 
 	@Override

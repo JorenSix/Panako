@@ -34,6 +34,10 @@
 
 package be.panako.strategy.olaf;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 public interface OlafStorage {
 
 	void storeMetadata(long resourceID, String resourcePath, float duration, int fingerprints);
@@ -43,5 +47,11 @@ public interface OlafStorage {
 	void processStoreQueue();
 
 	OlafResourceMetadata getMetadata(long identifier);
+	
+	void addToQueryQueue(long queryHash);
+	
+	void processQueryQueue(Map<Long,List<OlafStorageHit>> matchAccumulator,int range);
+	
+	void processQueryQueue(Map<Long,List<OlafStorageHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid);
 
 }

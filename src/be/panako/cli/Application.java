@@ -134,7 +134,7 @@ public abstract class Application {
 	 * @param file The file to check.
 	 * @return True if the file exists and can be read. False otherwise.
 	 */
-	private boolean checkFile(String file){
+	protected boolean checkFile(String file){
 		File f = new File(file);
 		boolean fileOk = false;
 		if(f.exists() && f.canRead()){
@@ -214,4 +214,13 @@ public abstract class Application {
 	 * @return true if this application writes to storage.
 	 */
 	public abstract boolean writesToStorage() ;
+
+	public void printHelp() {
+		System.out.println("Name");
+		System.out.println("\t" + name());
+		System.out.println("Synopsis");
+		System.out.println("\tpanako " + name() + " " + synopsis());
+		System.out.println("Description");
+		System.out.println("\t" + description());
+	}
 }

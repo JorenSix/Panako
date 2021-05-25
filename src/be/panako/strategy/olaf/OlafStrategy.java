@@ -51,7 +51,6 @@ import java.util.logging.Logger;
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
-import be.panako.strategy.olaf.OlafDBStorage.OlafDBHit;
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
@@ -64,6 +63,7 @@ public class OlafStrategy extends Strategy {
 	
 	private final static Logger LOG = Logger.getLogger(OlafStrategy.class.getName());
 	
+	
 	@Override
 	public double store(String resource, String description) {
 
@@ -74,6 +74,8 @@ public class OlafStrategy extends Strategy {
 		}else {
 			db = OlafDBStorage.getInstance();
 		}
+		
+		db = OlafMemoryStorage.getInstance();
 		
 		List<OlafFingerprint> prints = toFingerprints(resource);
 		
@@ -220,7 +222,9 @@ public class OlafStrategy extends Strategy {
 			prints = toFingerprints(query);
 		}
 		
-		OlafDBStorage db = OlafDBStorage.getInstance();
+		//OlafStorage db = OlafDBStorage.getInstance();
+		
+		final OlafStorage db = OlafMemoryStorage.getInstance();
 		
 		Map<Long,OlafFingerprint> printMap = new HashMap<>();
 		
@@ -232,7 +236,7 @@ public class OlafStrategy extends Strategy {
 		}
 		
 		//fingerprint hash to info
-		Map<Long,List<OlafDBHit>> matchAccumulator = new HashMap<>();
+		Map<Long,List<OlafStorageHit>> matchAccumulator = new HashMap<>();
 		
 		StopWatch w = new StopWatch();
 		int queryRange = Config.getInt(Key.OLAF_QUERY_RANGE); 
@@ -381,9 +385,9 @@ public class OlafStrategy extends Strategy {
 						 //number of seconds bins
 						 float numberOfMatchingSeconds = (float) Math.ceil(refStop - refStart);
 						 float emptySeconds = numberOfMatchingSeconds - matchesPerSecondHistogram.size();
-						 float emptyRatio = emptySeconds / numberOfMatchingSeconds;
+						 float percentOfSecondsWithMatches = 1 - (emptySeconds / numberOfMatchingSeconds);
 						 
-						 QueryResult r = new QueryResult(queryPath,queryStart, queryStop, refPath, "" + identifier, refStart, refStop,  score, timeFactor, frequencyFactor,emptyRatio);
+						 QueryResult r = new QueryResult(queryPath,queryStart, queryStop, refPath, "" + identifier, refStart, refStop,  score, timeFactor, frequencyFactor,percentOfSecondsWithMatches);
 						 queryResults.add(r);
 					 }
 				 }

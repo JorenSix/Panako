@@ -89,9 +89,6 @@ public class Query extends Application{
 				LOG.severe("Did not finish all tasks, thread was interrupted!");
 			}
 		}
-		
-		
-		
 	}
 
 	@Override

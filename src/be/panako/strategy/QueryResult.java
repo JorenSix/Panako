@@ -55,8 +55,7 @@ public class QueryResult {
 	public final double score;
 	public final double timeFactor;
 	public final double frequencyFactor;
-	public final double scoreVariance;
-	
+	public final double percentOfSecondsWithMatches;
 	
 	/**
 	 * @param queryTimeOffsetStart
@@ -81,7 +80,7 @@ public class QueryResult {
 	 *            higher frequency compared to the reference. 90 means a 10%
 	 *            lower frequency.
 	 */
-	public QueryResult(String queryPath,double queryStart,double queryStop, String refPath, String refIdentifier, double refStart, double refStop, double score,double timeFactor, double frequencyFactor,double scoreVariance){
+	public QueryResult(String queryPath,double queryStart,double queryStop, String refPath, String refIdentifier, double refStart, double refStop, double score,double timeFactor, double frequencyFactor,double percentOfSecondsWithMatches){
 		this.queryPath = queryPath;
 		this.queryStart = queryStart;
 		this.queryStop = queryStop;
@@ -95,7 +94,7 @@ public class QueryResult {
 		this.timeFactor=timeFactor;
 		this.frequencyFactor = frequencyFactor;
 		
-		this.scoreVariance = scoreVariance;
+		this.percentOfSecondsWithMatches = percentOfSecondsWithMatches;
 	}
 	
 	

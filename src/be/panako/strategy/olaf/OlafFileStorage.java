@@ -37,6 +37,8 @@ package be.panako.strategy.olaf;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
@@ -148,6 +150,29 @@ public class OlafFileStorage implements OlafStorage {
 		String[] data = line.split(" ");
 		long[] dataArray = {Long.valueOf(data[0]),Long.valueOf(data[1]),Long.valueOf(data[2])};
 		return dataArray;
+	}
+
+
+
+	@Override
+	public void addToQueryQueue(long queryHash) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+
+	@Override
+	public void processQueryQueue(Map<Long, List<OlafStorageHit>> matchAccumulator, int range) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void processQueryQueue(Map<Long, List<OlafStorageHit>> matchAccumulator, int range,
+			Set<Integer> resourcesToAvoid) {
+		// TODO Auto-generated method stub
+		
 	}
 }
 

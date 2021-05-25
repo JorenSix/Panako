@@ -1,9 +1,6 @@
 h1. Panako - Acoustic Fingerprinting
 
-
 Panako is an "acoustic fingerprinting":https://en.wikipedia.org/wiki/Acoustic_fingerprint system. The system is able to extract fingerprints from an audio stream, and either store those fingerprints in a database, or find a match between the extracted fingerprints and stored fingerprints.  Several acoustic fingerprinting algorithms are implemented within Panako. The main algorithm, the Panako algorithm, has the feature that audio queries can be identified reliably and quickly even if they has been sped up, time stretched or pitch shifted with respect to the reference audio. The main focus of Panako is to serve as a demonstration of the Panako algorithm. Other acoustic fingerprinting schemes are implemented to serve as a baseline for comparison. More information can be found in the "article about Panako":http://www.terasoft.com.tw/conf/ismir2014/proceedings/T048_122_Paper.pdf.
-
-Panako has also uses for synchronization of data-streams. For those applications please see the article titled "Synchronizing Multimodal Recordings Using Audio-To-Audio Alignment":http://0110.be/posts/Synchronizing_Multimodal_Recordings_Using_Audio-To-Audio_Alignment_-_In_Journal_on_Multimodal_User_Interfaces.
 
 Please be aware of the patents "US7627477 B2":https://www.google.com/patents/US7627477 and "US6990453":https://www.google.com/patents/US6990453 and "perhaps others":http://www.shazam.com/music/web/productfeatures.html?id=1284. They describe techniques used in some algorithms implemented within Panako. The patents limit the use of some algorithms  under various conditions and for several regions. Please make sure to consult your intellectual property rights specialist if you are in doubt about these restrictions. If these restrictions apply, respect the patent holders rights. The first aim of Panako is to serve as a research platform to experiment with and improve fingerprinting algorithms.
 
@@ -68,7 +65,7 @@ unzip Panako-latest-src.zip
 #sudo apt-get install default-jdk ant libav-tools# Optionally install JDK, ant libav-tools (on Ubuntu).
 cd Panako/build
 ant #Builds the core Panako library
-ant install #Installs Panako in the /opt/panako directory
+ant install #Installs Panako in the ~/.panako directory
 ant doc #Creates the documentation in Panako/doc
 cp ../doc/panako /usr/bin #copies the panako startup script to your path
 
@@ -144,7 +141,7 @@ The @config@ subapplication prints the configuration currently in use.
 
 bc. panako config
 
-To override configuration values there are two options. The first option is to create a configuration file, by default at the following location: @/opt/config.properties@. The configuration file is a properties text file. An commented configuration file should be included in the doc directory at @doc/config.properties@.
+To override configuration values there are two options. The first option is to create a configuration file, by default at the following location: @~./panako/config.properties@. The configuration file is a properties text file. An commented configuration file should be included in the doc directory at @doc/config.properties@.
 
 The second option to override configuration values is by adding them to the arguments of the command line call as follows: 
 
@@ -170,228 +167,7 @@ h3(#browser). Browse Fingerprints - **@panako browser@**
 Shows a swing user interface with a spectrogram and dectected event points and fingerprints. It can be used
 to check the effect of configuration parameters on fingerprint detection and to optimize configuration.
 
-h3(#sync). Synchronize media files - **@panako sync@**
 
-This operation extracts fingerprints from a reference media file and returns how much time offset there is to other files with similar audio. This is practical to synchronize video streams with similar audio or recordings of the same performance from several microphones.
-
-The synchonize option uses a two stage algorithm. First fingerprints are extracted from the media files. With these it is checked if the media files contain similar audio. If they do, a rough offset is determined (e.g. with 32ms accuracy). Subsequently crosscovariance of one audio frame is used to improve the offset estimation. This offset is returned.
-
-bc. panako sync reference.avi other.mkv other.mp3
-
-h3(#syncsink). Synchronize Sensor Streams with SyncSink - **@panako syncsink@**
-
-This command starts a Swing user interface to synchronize several audio/video and data files. The aim is to make it easy to synchronize various media files and to allow synchronization of sensor data streams. Syncronization of sensor streams can be done effectively if for each sensor stream there is a corresponding synchronized ambient audio recording. The problem of synchronizing sensor streams is then reduced to audio-to-audio alignment. The SyncSink facilitates this type of data-stream synchronization.
-
-The synchonize option uses a two stage algorithm. First fingerprints are extracted from the media files. With these it is checked if the media files contain similar audio. If they do, a rough offset is determined (e.g. with 32ms accuracy). Subsequently crosscovariance of one audio frame is used to improve the offset estimation. This offset is returned.
-
-<div align="center"><img src="data:image/png;base64,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
-VQUFBabWDxdzcXGxSktL1d3drcbGRuXn58tisaivr0+VlZVyuVzq7e1Vbm6uOjs7NXfuXJ1yyikJ
-iWndunW6+OKLJR1/tHF/f78sFovcbrdqa2tVU1MTNtbAdSXpjTfeUEtLi1wul+x2u6ZPn663ve1t
-I75BlZWVqb29XTabTRdccEHU+BsbG1VcXKyenh7l5+eru7tbM2bM0Jw5c8LGFe2Ywx3n0aNH9c9/
-/lOS9Oijj0qS6urqVFlZGXPZpDqGt956Szt37pTdfvyyUFFR4S/7SGUcaX+RthnqmKMNdfjqSrTP
-1OVy6bXXXlN3d7eKioo0PDwsl8ulhoYGU3U+VD178cUXNWHCBLW3t8swDE2dOlW1tbXKyckJu47Z
-mCOVYSKPO1TjPd7qWLjl33zzTR08eHBED43L5dKGDRt07rnnKj8/P2r5O51O7dixQ52dnSouLlZv
-b6/OOOMMf72KqwcloB0O9RyUmunTtOZ/7tb1116jkhOjGIH++NTTevwPf9CvfnaP/7W+/n6tvvZ6
-rb3nbk2uqNCHb/yo5s6doz1vvKGpUyq18/XXddmqS3TjdddKOj6/5e6f/VzbX9uh2bNn6cCBg/r+
-d77tb7N9SW64xDdpj7qPNMTT1dmliRMnRsyOQg3xPPKbx9TT06Of/c9/y2q16oknn9IP/t9duvN7
-d0iSvvblL6nsxEmy/8AB/cfnvqCV73m3rFarDrW26mtf/qI+dcsnInYrxautrU0zZ86Uy+VSZWWl
-du/erQULFvh7Unbv3q3y8nItW7ZMFotFbW1teuONN/zrR3t///79/u7qnJwc7d69Wzt27FB9fb08
-Hk/U9cMlKNOmTZPH45HH45HT6dRFF10kh8OhgYEBPf3001q+fLlKS0tls9l0+PBhbdy4UbW1tRoa
-GkpITL4u6MWLF2vSpEmy2Wzq6urSn//8Z82ZM8ffkxMca+C6e/fu1eHDh3XOOeeooqJCvb29euGF
-F5STk+NPpgYGBnTeeeepvr7e34W5adOmiPE7nU4tXbpUBQUFstvt6u3t1TPPPKPTTz/dP3wXHFe0
-Yw53nBMnTtTKlSv15JNPjhiq6Ovri7lsUh3D7t27tXjxYk2bNs3/DdFisWhwcDBiHYm0v0jbDFcf
-Hn744RF1a/HixZo8efKIuhLtM92+fbscDodWrFihnJwcud1u/fa3v1Vpaam6urqi1vlQ9ayvr0/L
-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
-AAAyxf8HCl4D/8jZxjwAAAAASUVORK5CYII="/>
-<small>Fig 2. SyncSink user interface.</small></div>
-
-To use the application start it with @panako syncsink@. Subsequently add various audio or video files using drag and drop. If the same audio is found in the various media files a timebox plot appears, as in the screenshot below. To add corresponding data-files click one of the boxes on the timeline and choose a data file that is synchronized with the audio. The datafile should be a CSV-file. The separator should be ',' and the first column should contain a timestamp in fractional seconds. After pressing @Sync@ a new CSV-file is created with the first column containing correctly shifted time stamps. If this is done for multiple files, a synchronized sensor-stream is created. Also, "ffmpeg":https://www.ffmpeg.org/ commands to syncronize the media files themselves are printed to the command line.
-
-It is also possible to start the application with media streams immediately pressent. The first file is considered to be the reference stream. 
-
-bc. panako syncsink reference.avi first.mkv second.mp3 third.wav
-
-By default Panako is configured to synchronize music and to minimize the number of event points and fingerprints per second. This reduces the storage requirements and processing needs. However, it can be of help to change the default configuration to synchronize sparse audio or speech. In such case try to start panako with the following set of configuration values:
-
-bc. panako syncsink \
-  SYNC_MIN_ALIGNED_MATCHES=4 \
-  NFFT_EVENT_POINT_MIN_ENERGY_RATIO_THRESHOLD=0.10 \
-  NFFT_EVENT_POINT_MAX_ENERGY_RATIO_THRESHOLD=0.90 \
-  NFFT_EVENT_POINT_MIN_ENERGY=0.01 \
-  NFFT_MAX_FINGERPRINTS_PER_EVENT_POINT=7
-  
 h3(#compare). Compare the structure of media files - **@panako compare@**
 
 This operation extracts fingerprints from a reference media file and searches for the fingerprints in another media file. The aim is to identify the parts of audio that are present in both input files. If only one audio file is given, a self similarity matrix is constructed. Using the matrix it becomes clear when the exact same audio is repeated within the same song. It can be used to automatically detect where cuts have been made in a long original album edit to end up with a shorter radio edit of the same song. Another use case is musical structure analysis, this works especially well in electronic music. To call the application:
@@ -412,21 +188,6 @@ bc. 10,10
 4000,4000
 4010,4010
 ...
-
-
-h3(#server). Run the REST webservice - **@panako server@**
-
-Panako contains a "lightweight HTTP server":http://acme.com/java/software/Acme.Serve.Serve.html to provide a REST webservice. The REST webservice provides two 
-methods @/v1.0/match@ and @/v1.0/metadata@ to query for a match and to fetch metadata
-for a match respectively. The server can be configured using the @HTTP_SERVER_PORT@ configuration setting. 
-
-@panako server@
-
-h3(#client). Query the REST service - **@panako client@**
-
-Panako contains functionality to send match requests to the REST webservice. 
-
- @panako client "localhost:8080" test.mp3@
 
 
 h2(#read). Further Reading
@@ -490,7 +251,6 @@ The directory @doc/Reproducibility@ contains scripts to reproduce the result fou
 
 h3. Requirements
 
-
 To run the scripts, a UNIX like system with following utilities is required:
 
 * wget: an utility to download files
@@ -511,5 +271,14 @@ h2(#changelog). Changelog
 
 <dt>Version 1.6</dt><dd>2017-03-17</dd> This release adds a simplified version of chromaprint and an implementation of "'A Highly Robust Audio Fingerprinting System' by Haitsma and Kalker":http://www.ismir2002.ismir.net/proceedings/02-FP04-2.pdf
 
-<dt>Version 2.0</dt><dd>2021-04-27</dd> This release add support for LMDB a faster key-value store. A new implementation of the classic Shazam algorithm is included with a near-neigbour search fingerprint. The version bumped to 2.0 to signify incompatibility with older JRE's: lambdas are used so a newer JRE (8+) is needed.
+<dt>Version 2.0</dt><dd>2021-04-27</dd> A major overhaul of Panako. The main aim of this release is to ensure the longevity of Panako. The featureset has been reduced to focus on core functionality. The version bump is also explained by the use of lambdas and the need for a newer JRE (8+). A list of changes: 
+* The number of dependencies has been drastically cut by removing support for multiple key-value stores. 
+* The main key-value store has been changed to a faster and simpler system (from MapDB to LMDB). 
+* The SyncSink functionality has been moved to another project (with Panako as dependency). 
+* The main algorithms have been replaced with simpler and better working versions:
+** Olaf is a new implementation of the classic Shazam algorithm. 
+** The Gaborator algorithm is a new version of the algoritm described in the Panako paper. It uses the "Gabor transform":https://en.wikipedia.org/wiki/Gabor_transform to go from time domain to the spectral domain. It is implemented by "JGaborator":https://github.com/JorenSix/JGaborator which in turn relies on "The Gaborator":https://gaborator.com/ library. 
+* Folder structure has been simplified.
+* with the addition of a number of helper scripts.
+* Moved default panako location to ~/.panako/panako
  

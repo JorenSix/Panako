@@ -130,6 +130,7 @@ public class Panako {
 		applicationList.add(new Load());
 		applicationList.add(new Delete());
 		applicationList.add(new Print());
+		applicationList.add(new Same());
 		for (final Application application : applicationList) {
 			applications.put(application.name(), application);
 			applicationTrie.insert(application.name());
@@ -199,12 +200,7 @@ public class Panako {
 			Application app = applications.get(application);
 			if(containsHelpArgument(applicationArguments)){
 				//show help for the application
-				System.out.println("Name");
-				System.out.println("\t" + application);
-				System.out.println("Synopsis");
-				System.out.println("\tpanako " + application + " " + app.synopsis());
-				System.out.println("Description");
-				System.out.println("\t" + app.description());				
+				app.printHelp();		
 			}else{
 				Panako.currentApplication = app;
 				if(app.needsStorage()){
@@ -292,7 +288,7 @@ public class Panako {
 		String taskInfo = String.format("%d ; %d ; ", task,taskTotal);
 		String queryInfo = String.format("%s ; %.3f ; %.3f ; "     ,r.queryPath,r.queryStart   ,r.queryStop);
 		String refInfo = String.format("%s ; %s ; %.3f ; %.3f ; "  ,r.refPath  ,r.refIdentifier,r.refStart       ,r.refStop);
-		String matchInfo = String.format("%.0f ; %.3f %% ; %.3f %%; %.2f",r.score    , r.timeFactor  ,r.frequencyFactor, r.scoreVariance);
+		String matchInfo = String.format("%.0f ; %.3f %% ; %.3f %%; %.2f",r.score    , r.timeFactor  ,r.frequencyFactor, r.percentOfSecondsWithMatches);
 		System.out.println(taskInfo + queryInfo+refInfo+matchInfo);
 	}
 	

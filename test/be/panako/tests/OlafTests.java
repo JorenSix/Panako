@@ -48,8 +48,8 @@ import org.junit.Test;
 
 import be.panako.strategy.olaf.OlafFingerprint;
 import be.panako.strategy.olaf.OlafResourceMetadata;
+import be.panako.strategy.olaf.OlafStorageHit;
 import be.panako.strategy.olaf.OlafDBStorage;
-import be.panako.strategy.olaf.OlafDBStorage.OlafDBHit;
 import be.panako.strategy.olaf.OlafStrategy;
 
 public class OlafTests {
@@ -100,7 +100,7 @@ public class OlafTests {
 		db.processStoreQueue();	
 		
 		db.addToQueryQueue(3);
-		Map<Long,List<OlafDBHit>> matchAccumulator = new HashMap<>();
+		Map<Long,List<OlafStorageHit>> matchAccumulator = new HashMap<>();
 		db.processQueryQueue(matchAccumulator, 1);
 		
 		db.addToDeleteQueue(1,1,1);
@@ -210,7 +210,7 @@ String rec = "/Volumes/papiom/Datasets/Free Music Archive - FMA/fma_small/013/01
 			long hash = copy.hash();
 			db.addToQueryQueue(hash);
 		}
-		Map<Long,List<OlafDBHit>> matchAccumulator = new HashMap<>();
+		Map<Long,List<OlafStorageHit>> matchAccumulator = new HashMap<>();
 		db.processQueryQueue(matchAccumulator, 5);
 		System.out.println("matches after modification of t1 " + matchAccumulator.size());
 		System.out.println("Prints: " + prints.size());
