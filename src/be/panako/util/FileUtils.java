@@ -78,6 +78,14 @@ public final class FileUtils {
 	private FileUtils() {
 	}
 	
+	public static String expandHomeDir(String dir) {
+		if(dir.startsWith("~/")){
+			String homeDir = System.getProperty("user.home");
+			dir = dir.replace("~/", homeDir + "/");
+		}
+		return dir;
+	}
+	
 	public static boolean isFileLocked(String fileName){
 		return FileUtils.exists(getLockFileName(fileName));
 	}

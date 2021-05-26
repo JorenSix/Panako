@@ -38,6 +38,7 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +53,7 @@ import org.lmdbjava.SeekOp;
 import org.lmdbjava.Stat;
 import org.lmdbjava.Txn;
 
+import be.panako.cli.Application;
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
@@ -82,18 +84,19 @@ public class OlafDBStorage implements OlafStorage {
 		}
 		return instance;
 	}
-	
-	
+		
 	final Dbi<ByteBuffer> fingerprints;
 	final Dbi<ByteBuffer> resourceMap;
 	final Env<ByteBuffer> env;
 	
-	final List<long[]> storeQueue;
-	final List<long[]> deleteQueue;
-	final List<Long> queryQueue;
+	final Map<Long,List<long[]>> storeQueue;
+	final Map<Long,List<long[]>> deleteQueue;
+	final Map<Long,List<Long>> queryQueue;
 	
 	public OlafDBStorage() {
 		String folder = Config.get(Key.OLAF_LMDB_FOLDER);
+		folder = FileUtils.expandHomeDir(folder);
+		
 		if(!new File(folder).exists()) {
 			FileUtils.mkdirs(folder);
 		}
@@ -105,7 +108,7 @@ public class OlafDBStorage implements OlafStorage {
 		env =  org.lmdbjava.Env.create()
         .setMapSize(1024l * 1024l * 1024l * 100l)
         .setMaxDbs(2)
-        .setMaxReaders(2)
+        .setMaxReaders(Application.availableProcessors())
         .open(path);
 		
 		final String fingerprintName = "olaf_fingerprints";
@@ -114,9 +117,9 @@ public class OlafDBStorage implements OlafStorage {
 		final String resourceName = "olaf_resource_map";		
 		resourceMap = env.openDbi(resourceName,DbiFlags.MDB_CREATE, DbiFlags.MDB_INTEGERKEY);
 		
-		storeQueue = new ArrayList<>();
-		deleteQueue = new ArrayList<>();
-		queryQueue = new ArrayList<>();
+		storeQueue = new HashMap<Long,List<long[]>>();
+		deleteQueue = new HashMap<Long,List<long[]>>();
+		queryQueue = new HashMap<Long,List<Long>>();
 	}
 	
 	public void close() {
@@ -161,6 +164,8 @@ public class OlafDBStorage implements OlafStorage {
 		    	metadata.identifier =(int) resourceID;
 		    }
 		    txn.close();
+		}catch(Exception e) {
+			e.printStackTrace();
 		}
 		
 		return metadata;    
@@ -172,7 +177,10 @@ public class OlafDBStorage implements OlafStorage {
 	@Override
 	public void addToStoreQueue(long fingerprintHash, int resourceIdentifier, int t1) {
 		long[] data = {fingerprintHash,resourceIdentifier,t1};
-		storeQueue.add(data);
+		long threadID = Thread.currentThread().getId();
+		if(!storeQueue.containsKey(threadID))
+			storeQueue.put(threadID, new ArrayList<long[]>());
+		storeQueue.get(threadID).add(data);
 	}
 	
 	/* (non-Javadoc)
@@ -180,33 +188,44 @@ public class OlafDBStorage implements OlafStorage {
 	 */
 	@Override	
 	public void processStoreQueue() {
-		if(storeQueue.isEmpty())
+		if (storeQueue.isEmpty())
 			return;
 		
+		long threadID = Thread.currentThread().getId();
+		if(!storeQueue.containsKey(threadID))
+			return;
+		
+		List<long[]> queue = storeQueue.get(threadID);
+		
+		if (queue.isEmpty())
+			return;
+		
+		
 		try (Txn<ByteBuffer> txn = env.txnWrite()) {
-			
-			final ByteBuffer key = ByteBuffer.allocateDirect(8).order(java.nio.ByteOrder.LITTLE_ENDIAN);
-		    final ByteBuffer val = ByteBuffer.allocateDirect(8);
-		    
-		      // A cursor always belongs to a particular Dbi.
-		      final Cursor<ByteBuffer> c = fingerprints.openCursor(txn);
-		      
-		      for(long[] data : storeQueue) {
-		    	  key.putLong(data[0]).flip();
-		    	  val.putInt((int) data[1]).putInt((int) data[2]).flip();
-		    	  
-		    	  c.put(key, val);
 
-		    	  key.clear();
-		    	  val.clear();
-		      }  
-		            
-		      c.close();
-		      txn.commit();
-		      storeQueue.clear();
-		    }catch (Exception e) {
-		    	e.printStackTrace();
-		    }
+			final ByteBuffer key = ByteBuffer.allocateDirect(8).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+			final ByteBuffer val = ByteBuffer.allocateDirect(8);
+
+			// A cursor always belongs to a particular Dbi.
+			final Cursor<ByteBuffer> c = fingerprints.openCursor(txn);
+			
+			for (long[] data : queue) {
+				key.putLong(data[0]).flip();
+				val.putInt((int) data[1]).putInt((int) data[2]).flip();
+
+				c.put(key, val);
+
+				key.clear();
+				val.clear();
+			}
+
+			c.close();
+			txn.commit();
+			queue.clear();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void clearStoreQueue() {
@@ -215,11 +234,23 @@ public class OlafDBStorage implements OlafStorage {
 	
 	public void addToDeleteQueue(long key, int val1, int val2) {
 		long[] data = {key,val1,val2};
-		deleteQueue.add(data);
+		long threadID = Thread.currentThread().getId();
+		if(!deleteQueue.containsKey(threadID))
+			deleteQueue.put(threadID, new ArrayList<long[]>());
+		deleteQueue.get(threadID).add(data);
 	}
 	
 	public void processDeleteQueue() {
-		if(deleteQueue.isEmpty())
+		if (storeQueue.isEmpty())
+			return;
+		
+		long threadID = Thread.currentThread().getId();
+		if(!storeQueue.containsKey(threadID))
+			return;
+		
+		List<long[]> queue = storeQueue.get(threadID);
+		
+		if (queue.isEmpty())
 			return;
 		
 		try (Txn<ByteBuffer> txn = env.txnWrite()) {
@@ -230,7 +261,7 @@ public class OlafDBStorage implements OlafStorage {
 		      // A cursor always belongs to a particular Dbi.
 		      final Cursor<ByteBuffer> c = fingerprints.openCursor(txn);
 		      
-		      for(long[] data : deleteQueue) {
+		      for(long[] data : queue) {
 		    	  key.putLong(data[0]).flip();
 		    	  val.putInt((int) data[1]).putInt((int) data[2]).flip();
 		    	  if(c.get(key,val,SeekOp.MDB_GET_BOTH)) {
@@ -242,14 +273,17 @@ public class OlafDBStorage implements OlafStorage {
 		      
 		      c.close();
 		      txn.commit();
-		      deleteQueue.clear();
+		      queue.clear();
 		    }catch (Exception e) {
 		    	e.printStackTrace();
 		    }
 	}
 	
 	public void addToQueryQueue(long queryHash) {
-		queryQueue.add(queryHash);
+		long threadID = Thread.currentThread().getId();
+		if(!queryQueue.containsKey(threadID))
+			queryQueue.put(threadID, new ArrayList<Long>());
+		queryQueue.get(threadID).add(queryHash);
 	}
 	
 	public void processQueryQueue(Map<Long,List<OlafStorageHit>> matchAccumulator,int range) {
@@ -258,7 +292,16 @@ public class OlafDBStorage implements OlafStorage {
 	
 	public void processQueryQueue(Map<Long,List<OlafStorageHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid) {
 		
-		if(queryQueue.isEmpty())
+		if (queryQueue.isEmpty())
+			return;
+		
+		long threadID = Thread.currentThread().getId();
+		if(!queryQueue.containsKey(threadID))
+			return;
+		
+		List<Long> queue = queryQueue.get(threadID);
+		
+		if (queue.isEmpty())
 			return;
 		
 		try (Txn<ByteBuffer> txn = env.txnRead()) {
@@ -267,7 +310,7 @@ public class OlafDBStorage implements OlafStorage {
 		      
 		      final ByteBuffer keyBuffer = ByteBuffer.allocateDirect(8).order(java.nio.ByteOrder.LITTLE_ENDIAN);
 		      
-		      for(long originalKey : queryQueue) {
+		      for(long originalKey : queue) {
 		    	  
 		    	  long startKey = originalKey - range;
 		    	  long stopKey = originalKey + range;
@@ -327,7 +370,7 @@ public class OlafDBStorage implements OlafStorage {
 		      }
 		      c.close();
 		      txn.commit();
-		      queryQueue.clear();
+		      queue.clear();
 		}
 		
 	}
@@ -371,8 +414,6 @@ public class OlafDBStorage implements OlafStorage {
 		      String maxPrintsPerSecondPath = "";
 		      double minPrintsPerSecond = 100000;
 		      String minPrintsPerSecondPath = "";
-		      
-		      
 		      
 		      while(c.seek(SeekOp.MDB_NEXT)) {
 		    	  

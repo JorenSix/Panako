@@ -69,13 +69,16 @@ public class OlafStrategy extends Strategy {
 
 		OlafStorage db;
 		
-		if (Config.getBoolean(Key.OLAF_CACHE_TO_FILE)) {
-			db = OlafFileStorage.getInstance();
-		}else {
+		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
 			db = OlafDBStorage.getInstance();
+		}else {
+			db = OlafMemoryStorage.getInstance();
 		}
 		
-		db = OlafMemoryStorage.getInstance();
+		OlafStorage fileCache = null;
+		if(Config.getBoolean(Key.OLAF_CACHE_TO_FILE)) {
+			fileCache = OlafFileStorage.getInstance();
+		}
 		
 		List<OlafFingerprint> prints = toFingerprints(resource);
 		
@@ -85,8 +88,15 @@ public class OlafStrategy extends Strategy {
 			long hash = print.hash();			
 			int printT1 = print.t1;
 			db.addToStoreQueue(hash, resourceID, printT1);
+			if(fileCache!=null) {
+				db.addToStoreQueue(hash, resourceID, printT1);
+			}
 		}
 		db.processStoreQueue();
+		
+		if(fileCache!=null) {
+			db.processStoreQueue();
+		}
 		
 		//store meta-data as well
 		float duration = 0;
@@ -142,10 +152,12 @@ public class OlafStrategy extends Strategy {
 	}
 	
 	public List<OlafFingerprint> toFingerprints(String resource){
+		
 		if(Config.getBoolean(Key.OLAF_USE_CACHED_PRINTS)) {
 			String folder = Config.get(Key.OLAF_CACHE_FOLDER);
 			String tdbPath =  FileUtils.combine(folder,resolve(resource) + ".tdb");
 			if(FileUtils.exists(tdbPath)) {
+				
 				List<OlafFingerprint> prints = new ArrayList<>();
 				List<long[]> printData = readFingerprintFile(tdbPath);
 				for(long[] data : printData) {
@@ -154,6 +166,7 @@ public class OlafStrategy extends Strategy {
 					prints.add(new OlafFingerprint(fingerprintHash,t1));
 				}
 				return prints;
+				
 			}
 		}
 		
@@ -222,9 +235,13 @@ public class OlafStrategy extends Strategy {
 			prints = toFingerprints(query);
 		}
 		
-		//OlafStorage db = OlafDBStorage.getInstance();
+		final OlafStorage db;
 		
-		final OlafStorage db = OlafMemoryStorage.getInstance();
+		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
+			db = OlafDBStorage.getInstance();
+		}else {
+			db = OlafMemoryStorage.getInstance();
+		}
 		
 		Map<Long,OlafFingerprint> printMap = new HashMap<>();
 		

@@ -155,7 +155,7 @@ public abstract class Application {
 	 * number of available processors to use or the maximum number of 
 	 * available processors if the configured value is zero or negative.
 	 */
-	protected int availableProcessors(){
+	public static int availableProcessors(){
 		int configuredValue = Config.getInt(Key.AVAILABLE_PROCESSORS);
 		final int actualValue;
 		if(configuredValue > 0 ){

@@ -36,6 +36,7 @@ package be.panako.strategy.olaf;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -72,12 +73,13 @@ public class OlafFileStorage implements OlafStorage {
 	}
 	
 	
-	final List<long[]> storeQueue;
+	final Map<Long,List<long[]>> storeQueue;
 	final File storeDir;
 
 	
 	public OlafFileStorage() {
 		String folder = Config.get(Key.OLAF_CACHE_FOLDER);
+		folder = FileUtils.expandHomeDir(folder);
 		if(!new File(folder).exists()) {
 			FileUtils.mkdirs(folder);
 		}
@@ -87,7 +89,7 @@ public class OlafFileStorage implements OlafStorage {
 		
 		storeDir = new File(folder);
 		
-		storeQueue = new ArrayList<>();
+		storeQueue = new HashMap<Long,List<long[]>>();
 	}
 	
 	
@@ -118,30 +120,52 @@ public class OlafFileStorage implements OlafStorage {
 	
 	public void addToStoreQueue(long fingerprintHash, int resourceIdentifier, int t1) {
 		long[] data = {fingerprintHash,resourceIdentifier,t1};
-		storeQueue.add(data);
+		long threadID = Thread.currentThread().getId();
+		if(!storeQueue.containsKey(threadID))
+			storeQueue.put(threadID, new ArrayList<long[]>());
+		storeQueue.get(threadID).add(data);
 	}
 	
-	public String storeQueueToString() {		
+	public String storeQueueToString(List<long[]> queue ) {		
 		//sort by hash asc
 		//storeQueue.sort((a, b) -> Long.valueOf(a[0]).compareTo(b[0]));
 		StringBuilder sb = new StringBuilder();
-		for(long[] data : storeQueue) {
+		for(long[] data : queue) {
 			sb.append(data[0]).append(" ").append(data[1]).append(" ").append(data[2]).append("\n");
 		}
 		
 		// Clears the store queue
-		storeQueue.clear();
+		queue.clear();
 		
 		return sb.toString();
 	}
 	
+	public String storeQueueToString( ) {
+		if(storeQueue.isEmpty()) return null;
+		long threadID = Thread.currentThread().getId();
+		if(!storeQueue.containsKey(threadID)) return null;
+		
+		List<long[]> queue = storeQueue.get(threadID);
+		
+		if (queue.isEmpty()) return null;
+		
+		return storeQueueToString(queue);
+	}
+
+	
 	public void processStoreQueue() {
 		if(storeQueue.isEmpty()) return;
+		long threadID = Thread.currentThread().getId();
+		if(!storeQueue.containsKey(threadID)) return;
 		
-		int resourceIdentifier = (int) storeQueue.get(0)[1];
+		List<long[]> queue = storeQueue.get(threadID);
+		
+		if (queue.isEmpty()) return;
+		
+		int resourceIdentifier = (int) queue.get(0)[1];
 		
 		// Clears the store queue
-		String fingerprintsAsString = storeQueueToString();
+		String fingerprintsAsString = storeQueueToString(queue);
 		String path = FileUtils.combine(storeDir.getAbsolutePath(),resourceIdentifier + ".tdb");
 		FileUtils.writeFile(fingerprintsAsString, path);
 	}
@@ -156,23 +180,19 @@ public class OlafFileStorage implements OlafStorage {
 
 	@Override
 	public void addToQueryQueue(long queryHash) {
-		// TODO Auto-generated method stub
-		
+
 	}
 
 
 
 	@Override
 	public void processQueryQueue(Map<Long, List<OlafStorageHit>> matchAccumulator, int range) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void processQueryQueue(Map<Long, List<OlafStorageHit>> matchAccumulator, int range,
 			Set<Integer> resourcesToAvoid) {
-		// TODO Auto-generated method stub
-		
+
 	}
 }
 

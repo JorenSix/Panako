@@ -57,11 +57,12 @@ public class Store extends Application {
 	public void run(final String... args) {
 		int processors = availableProcessors();
 		int counter=0;
+		
 		final ExecutorService executor = Executors.newFixedThreadPool(processors);
+		
 		final List<File> files = this.getFilesFromArguments(args);
 		if(files.size() > 1){
 			String msg = "Processing " + files.size() + " files on " + processors + " seperate threads.";
-			System.out.println(msg);
 			LOG.info("Store task started. " +  msg);
 		}
 		System.out.println("Audiofile;Audio duration;Fingerprinting duration;ratio");
@@ -120,7 +121,6 @@ public class Store extends Application {
 				
 				Strategy strategy = Strategy.getInstance();
 				
-				
 				boolean isDouble = false;				
 				if(Config.getBoolean(Key.CHECK_DUPLICATE_FILE_NAMES) ){
 					isDouble =  strategy.hasResource(file.getAbsolutePath());
@@ -144,11 +144,15 @@ public class Store extends Application {
 		
 		private boolean checkFile(File file){
 			boolean fileOk = false;
+	
 			//file must be smaller than a configured number of bytes
-			if(file.length() != 0 && file.length() < Config.getInt(Key.MAX_FILE_SIZE)){
+			long maxFileSize =  Config.getInt(Key.MAX_FILE_SIZE);
+			//from megabytes to bytes
+			maxFileSize = maxFileSize * 1024 * 1024;
+			if(file.length() != 0 && file.length() < maxFileSize ){
 				fileOk = true;
 			}else{
-				String message = "Could not process " + file.getName() + " it has an unacceptable file size: zero or larger than " + Config.getInt(Key.MAX_FILE_SIZE) + "bytes ).";
+				String message = "Could not process " + file.getName() + " it has an unacceptable file size.\n\tFile is " + file.length() + " bytes. \n\tShould be more than zero and smaller than " + Config.getInt(Key.MAX_FILE_SIZE) + " bytes ).";
 				LOG.warning(message);
 				System.out.println(message);
 			}

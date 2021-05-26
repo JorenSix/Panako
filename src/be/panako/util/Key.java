@@ -48,9 +48,9 @@ public enum Key{
 	CHECK_DUPLICATE_FILE_NAMES("TRUE"), 
 	
 	/**
-	 * The maximum file size (in bytes) of files that are stored. Default is 60 megabytes.
+	 * The maximum file size (in MB) of files that are stored. Default is 6000 megabytes.
 	 */
-	MAX_FILE_SIZE("62914560"),
+	MAX_FILE_SIZE("6000"),
 	
 	/**
 	 * The step size while monitoring a long audio fragment, in seconds.

@@ -39,12 +39,12 @@ public class OlafMemoryStorage implements OlafStorage {
 	private final TreeMap<Long, List<int[]>> fingerprints;
 	private final HashMap<Long, OlafResourceMetadata> resourceMap;
 	
-	final List<Long> queryQueue;
+	final Map<Long,List<Long>> queryQueue;
 	
 	public OlafMemoryStorage() {
 		fingerprints = new TreeMap<>();
 		resourceMap = new HashMap<>();
-		queryQueue = new ArrayList<>();
+		queryQueue = new HashMap<Long,List<Long>>();
 	}
 	
 	@Override
@@ -80,7 +80,10 @@ public class OlafMemoryStorage implements OlafStorage {
 	}
 	
 	public void addToQueryQueue(long queryHash) {
-		queryQueue.add(queryHash);
+		long threadID = Thread.currentThread().getId();
+		if(!queryQueue.containsKey(threadID))
+			queryQueue.put(threadID, new ArrayList<Long>());
+		queryQueue.get(threadID).add(queryHash);
 	}
 
 	public void processQueryQueue(Map<Long,List<OlafStorageHit>> matchAccumulator,int range) {
@@ -88,10 +91,19 @@ public class OlafMemoryStorage implements OlafStorage {
 	}
 	
 	public void processQueryQueue(Map<Long,List<OlafStorageHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid) {
-		if(queryQueue.isEmpty())
+		if (queryQueue.isEmpty())
 			return;
 		
-		for (long originalKey : queryQueue) {
+		long threadID = Thread.currentThread().getId();
+		if(!queryQueue.containsKey(threadID))
+			return;
+		
+		List<Long> queue = queryQueue.get(threadID);
+		
+		if (queue.isEmpty())
+			return;
+		
+		for (long originalKey : queue) {
 			long startKey = originalKey - range;
 			long stopKey = originalKey + range;
 			for (long key = startKey; key <= stopKey; key++) {
@@ -110,6 +122,6 @@ public class OlafMemoryStorage implements OlafStorage {
 				}
 			}
 		}
-		queryQueue.clear();
+		queue.clear();
 	}
 }
