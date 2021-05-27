@@ -27,18 +27,22 @@ public class Same extends Application{
 	
 	private void same(String first,String other) {
 		OlafStrategy olaf = (OlafStrategy) OlafStrategy.getInstance();
+		
+		//use in memory data storage
 		Config.set(Key.OLAF_STORAGE,"MEM");
+		Config.set(Key.PANAKO_STORAGE,"MEM");
+		
 		olaf.store(first, "first");
 		
 		QueryResultHandler handler = new QueryResultHandler() {
 			@Override
 			public void handleQueryResult(QueryResult result) {
-				System.out.println("Percentage of seconds with matches: " + Math.round(result.percentOfSecondsWithMatches * 100) + "%");
+				System.out.println("Percentage of seconds with fingerprint matches: " + Math.round(result.percentOfSecondsWithMatches * 100) + "%");
 			}
 
 			@Override
 			public void handleEmptyResult(QueryResult result) {
-				System.out.println("Percentage of seconds with matches: 0%");
+				System.out.println("Percentage of seconds with fingerprint matches: 0%");
 			}};
 		olaf.query(other,1 , new HashSet<Integer>(),handler);
 	}

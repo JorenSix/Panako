@@ -77,11 +77,11 @@ public class PanakoFingerprint {
 		assert t3 > t2;
 	}
 	
-	public PanakoFingerprint(long hash,int t1){
+	public PanakoFingerprint(long hash,int t1,int f1){
 		this.hash = hash;
 		
 		this.t1 = t1;
-		this.f1 = -1;
+		this.f1 = f1;
 		this.m1 = -1;
 		
 		this.t2 = -1;

@@ -158,7 +158,9 @@ public class PanakoStorageFile implements PanakoStorage {
 	
 	public void processStoreQueue() {
 		if(storeQueue.isEmpty()) return;
+		
 		long threadID = Thread.currentThread().getId();
+		
 		if(!storeQueue.containsKey(threadID)) return;
 		
 		List<long[]> queue = storeQueue.get(threadID);
@@ -183,9 +185,7 @@ public class PanakoStorageFile implements PanakoStorage {
 	public void addToQueryQueue(long queryHash) {
 
 	}
-
-
-
+	
 	@Override
 	public void processQueryQueue(Map<Long, List<PanakoHit>> matchAccumulator, int range) {
 	}
@@ -194,6 +194,18 @@ public class PanakoStorageFile implements PanakoStorage {
 	public void processQueryQueue(Map<Long, List<PanakoHit>> matchAccumulator, int range,
 			Set<Integer> resourcesToAvoid) {
 
+	}
+
+	public void clear() {
+		FileUtils.rm(storeDir.getAbsolutePath());
+		
+		if(!FileUtils.exists(storeDir.getAbsolutePath()))
+			return;
+		
+		for(File f : storeDir.listFiles()) {
+			FileUtils.rm(f.getAbsolutePath());
+		}
+		System.out.println("Removed cached files from " + storeDir.getAbsolutePath());
 	}
 }
 

@@ -475,4 +475,22 @@ public class PanakoStorageKV implements PanakoStorage{
 	    	e.printStackTrace();
 	    }
 	}
+
+	public void clear() {
+		fingerprints.close();
+		resourceMap.close();
+		env.close();
+		
+		String folder = Config.get(Key.PANAKO_LMDB_FOLDER);
+		folder = FileUtils.expandHomeDir(folder);
+		
+		if(!FileUtils.exists(folder))
+			return;
+	
+		for(File f : new File(folder).listFiles()) {
+			FileUtils.rm(f.getAbsolutePath());
+			System.out.println("Removed " + f.getAbsolutePath());
+		}
+		
+	}
 }

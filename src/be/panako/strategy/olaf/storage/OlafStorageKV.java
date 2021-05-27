@@ -487,4 +487,14 @@ public class OlafStorageKV implements OlafStorage {
 		
 	}
 
+	public void clear() {
+		fingerprints.close();
+		resourceMap.close();
+		env.close();
+		
+		String folder = Config.get(Key.OLAF_LMDB_FOLDER);
+		folder = FileUtils.expandHomeDir(folder);
+		FileUtils.rm(folder);
+	}
+
 }

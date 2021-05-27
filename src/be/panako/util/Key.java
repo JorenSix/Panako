@@ -50,25 +50,22 @@ public enum Key{
 	/**
 	 * The maximum file size (in MB) of files that are stored. Default is 6000 megabytes.
 	 */
-	MAX_FILE_SIZE("6000"),
+	MAX_FILE_SIZE(6000),
 	
 	/**
 	 * The step size while monitoring a long audio fragment, in seconds.
 	 */
-	MONITOR_STEP_SIZE("25"),
+	MONITOR_STEP_SIZE(25),
 
 	/**
 	 * The overlap, also in seconds. By default detection resolution is 
 	 * 25-5=20 seconds.
 	 */
-	MONITOR_OVERLAP("5"),
-	
+	MONITOR_OVERLAP(5),
 	
 	/**
-	 * Enabling JLibAV allows support for almost all audio formats in the
-	 * known universe. When disabled Panako supports Flac, MP3, and Vorbis,
-	 * using buggy Java implementations Configuring libAV and enabling
-	 * JLibAV is strongly advised (see readme.txt).
+	 * Enabling the ffmpeg pipe allows support for almost all audio formats in the
+	 * known universe. When disabled Panako supports 16bit mono WAV.
 	 */
 	DECODER("PIPE"),
 	
@@ -90,7 +87,7 @@ public enum Key{
 	 * The buffer used to cache the results from 
 	 * the pipe. 44100 bytes is half a second.
 	 */
-	DECODER_PIPE_BUFFER_SIZE("44100"),
+	DECODER_PIPE_BUFFER_SIZE(44100),
 	
 	/**
 	 * The log file for the pipe decoder.
@@ -107,18 +104,17 @@ public enum Key{
 	/**
 	 * The strategy (algorithm) to use, OLAF|PANAKO|PCH.
 	 */
-	STRATEGY("OLAF"),	
+	STRATEGY("PANAKO"),	
 	
-	NUMBER_OF_QUERY_RESULTS(1000), 
+	NUMBER_OF_QUERY_RESULTS(1000),
 	
-	
-	PCH_FILES("dbs/pch"),
+	PCH_FILES("~/.panako/dbs/pch"),
 	PCH_SAMPLE_RATE(22050),
 	PCH_OVERLAP(1024),
 	PCH_SIZE(2048), 
 	
 	/**
-	 * The storage to use: MEM|FILE|LMDB
+	 * The storage to use: MEM|LMDB
 	 * Stands for Memory, files on disk or the LMDB key-value store
 	 */
 	OLAF_STORAGE("LMDB"), 
@@ -131,15 +127,17 @@ public enum Key{
 	 */
 	OLAF_CACHE_FOLDER("~/.panako/dbs/olaf_cache"), 
 	
-	OLAF_SAMPLE_RATE("16000"),
-	OLAF_SIZE("1024"), 
-	OLAF_STEP_SIZE("128"), 
+	OLAF_CACHE_TO_FILE("TRUE"), 
+	OLAF_USE_CACHED_PRINTS("TRUE"),
 	
-	OLAF_MIN_HITS_UNFILTERED("10"), 
-	OLAF_MIN_HITS_FILTERED("5"), 
-	OLAF_MIN_TIME_FACTOR("0.9"), 
-	OLAF_MAX_TIME_FACTOR("1.1"),
+	OLAF_SAMPLE_RATE(16000),
+	OLAF_SIZE(1024), 
+	OLAF_STEP_SIZE(128), 
 	
+	OLAF_MIN_HITS_UNFILTERED(10), 
+	OLAF_MIN_HITS_FILTERED(5), 
+	OLAF_MIN_TIME_FACTOR(0.9), 
+	OLAF_MAX_TIME_FACTOR(1.1),
 	OLAF_FREQ_MAX_FILTER_SIZE(103), 
 	OLAF_TIME_MAX_FILTER_SIZE(25), 
 	OLAF_FP_MIN_FREQ_DIST(1), 
@@ -147,10 +145,7 @@ public enum Key{
 	OLAF_FP_MIN_TIME_DIST(2), 
 	OLAF_FP_MAX_TIME_DIST(33),
 	
-	OLAF_CACHE_TO_FILE("FALSE"), 
-	OLAF_QUERY_RANGE(1), 
-	OLAF_USE_CACHED_PRINTS("FALSE"),
-	
+	OLAF_QUERY_RANGE(2),
 	
 	//Event point filter settings
 	PANAKO_FREQ_MAX_FILTER_SIZE(103),
@@ -158,7 +153,7 @@ public enum Key{
 	
 	PANAKO_FP_MIN_FREQ_DIST(1), 
 	PANAKO_FP_MAX_FREQ_DIST(128), 
-	PANAKO_FP_MIN_TIME_DIST(2), 
+	PANAKO_FP_MIN_TIME_DIST(2),
 	PANAKO_FP_MAX_TIME_DIST(33),
 	
 	//audio dispatcher config
@@ -174,18 +169,24 @@ public enum Key{
 	PANAKO_TRANSF_TIME_RESOLUTION(128),//audio samples at 16kHz
 	
 	//query config
-	PANAKO_QUERY_RANGE(1),
+	PANAKO_QUERY_RANGE(2),
 	
-	PANAKO_MIN_HITS_UNFILTERED("10"), 
-	PANAKO_MIN_HITS_FILTERED("5"), 
-	PANAKO_MIN_TIME_FACTOR("0.8"), 
-	PANAKO_MAX_TIME_FACTOR("1.2"),
-	PANAKO_MIN_FREQ_FACTOR("0.8"), 
-	PANAKO_MAX_FREQ_FACTOR("1.2"), 
+	PANAKO_MIN_HITS_UNFILTERED(10), 
+	PANAKO_MIN_HITS_FILTERED(5), 
+	PANAKO_MIN_TIME_FACTOR(0.8), 
+	PANAKO_MAX_TIME_FACTOR(1.2),
+	PANAKO_MIN_FREQ_FACTOR(0.8), 
+	PANAKO_MAX_FREQ_FACTOR(1.2),
 	
+	/**
+	 * The storage to use: MEM|LMDB
+	 * Stands for Memory, files on disk or the LMDB key-value store
+	 */
+	PANAKO_STORAGE("LMDB"), 
 	PANAKO_LMDB_FOLDER("~/.panako/dbs/panako_db"), 
 	PANAKO_CACHE_FOLDER("~/.panako/dbs/panako_cache"),
-	
+	PANAKO_CACHE_TO_FILE("TRUE"), 
+	PANAKO_USE_CACHED_PRINTS("TRUE"),
 	;
 	
 	
@@ -196,7 +197,7 @@ public enum Key{
 	private Key(int defaultValue){
 		this(String.valueOf(defaultValue));
 	}
-	private Key(float defaultValue){
+	private Key(double defaultValue){
 		this(String.valueOf(defaultValue));
 	}
 	public String getDefaultValue() {

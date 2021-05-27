@@ -34,6 +34,10 @@
 
 package be.panako.strategy.panako;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -47,9 +51,12 @@ import java.util.logging.Logger;
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
-import be.panako.strategy.panako.storage.PanakoStorageKV;
-import be.panako.strategy.panako.storage.PanakoResourceMetadata;
 import be.panako.strategy.panako.storage.PanakoHit;
+import be.panako.strategy.panako.storage.PanakoResourceMetadata;
+import be.panako.strategy.panako.storage.PanakoStorage;
+import be.panako.strategy.panako.storage.PanakoStorageFile;
+import be.panako.strategy.panako.storage.PanakoStorageKV;
+import be.panako.strategy.panako.storage.PanakoStorageMemory;
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
@@ -66,10 +73,18 @@ public class PanakoStrategy extends Strategy {
 	@Override
 	public double store(String resource, String description) {
 
-		PanakoStorageKV db;
+		PanakoStorage db;
 		
-		db = PanakoStorageKV.getInstance();
+		if (Config.get(Key.PANAKO_STORAGE).equalsIgnoreCase("LMDB")) {
+			db = PanakoStorageKV.getInstance();
+		}else {
+			db = PanakoStorageMemory.getInstance();
+		}
 		
+		PanakoStorage fileCache = null;
+		if(Config.getBoolean(Key.PANAKO_CACHE_TO_FILE)) {
+			fileCache = PanakoStorageFile.getInstance();
+		}
 		
 		List<PanakoFingerprint> prints = toFingerprints(resource);
 		
@@ -78,8 +93,15 @@ public class PanakoStrategy extends Strategy {
 		for(PanakoFingerprint print : prints) {
 			long hash = print.hash();
 			db.addToStoreQueue(hash, resourceID, print.t1,print.f1);
+			if(fileCache!=null) {
+				fileCache.addToStoreQueue(hash, resourceID, print.t1, print.f1);
+			}
 		}
 		db.processStoreQueue();
+		
+		if(fileCache!=null) {
+			fileCache.processStoreQueue();
+		}
 		
 		//store meta-data as well
 		float duration = 0;
@@ -88,7 +110,6 @@ public class PanakoStrategy extends Strategy {
 			LOG.info(String.format("Stored %d fingerprints for '%s', id: %d", prints.size() , resource ,resourceID));
 		}else {
 			LOG.warning("Warning: no prints extracted for " + resource);
-			
 		}
 		int numberOfPrints = prints.size();
 		
@@ -134,7 +155,25 @@ public class PanakoStrategy extends Strategy {
 	}
 	
 	public List<PanakoFingerprint> toFingerprints(String resource){
-		
+		if(Config.getBoolean(Key.PANAKO_USE_CACHED_PRINTS)) {
+			String folder = Config.get(Key.PANAKO_CACHE_FOLDER);
+			folder = FileUtils.expandHomeDir(folder);
+			String tdbPath =  FileUtils.combine(folder,resolve(resource) + ".tdb");
+			if(FileUtils.exists(tdbPath)) {
+				
+				List<PanakoFingerprint> prints = new ArrayList<>();
+				List<long[]> printData = readFingerprintFile(tdbPath);
+				for(long[] data : printData) {
+					long fingerprintHash = data[0];
+					int t1 = (int) data[2];
+					int f1 = (int) data[3];
+					prints.add(new PanakoFingerprint(fingerprintHash,t1,f1));
+				}
+				
+				LOG.info(String.format("Read %d cached fingerprints from file %s for %s", prints.size(),tdbPath,resource));
+				return prints;
+			}
+		}
 		
 		return toFingerprints(resource,0,MAX_TIME);
 	}
@@ -412,14 +451,6 @@ public class PanakoStrategy extends Strategy {
 		 }
 	}
 	
-	
-	public static class OlafFingerprintQueryMatch{
-		public int identifier;
-		public double starttime;
-		public int score;
-		public int mostPopularOffset;
-	}
-
 	@Override
 	public void monitor(String query, int maxNumberOfReqults, Set<Integer> avoid, QueryResultHandler handler) {
 		int overlapInSeconds = Config.getInt(Key.MONITOR_OVERLAP); // 5
@@ -461,6 +492,28 @@ public class PanakoStrategy extends Strategy {
 		return "" + FileUtils.getIdentifier(filename);
 	}
 	
+	private List<long[]> readFingerprintFile(String fingerprintFilePath) {
+		List<long[]> prints = new ArrayList<>();
+		try {
+			PanakoStorageFile fileDb = PanakoStorageFile.getInstance();
+			final File file = new File(fingerprintFilePath);
+			FileReader fileReader = new FileReader(file);
+			final BufferedReader reader = new BufferedReader(fileReader);
+			String inputLine = reader.readLine();
+			while (inputLine != null) {
+				long[] data = fileDb.dataFromLine(inputLine);
+				prints.add(data);
+				inputLine = reader.readLine();
+			}
+			reader.close();
+		} catch (final IOException i1) {
+			System.err.println("Can't open file:" + fingerprintFilePath);
+			i1.printStackTrace();
+		}
+		return prints;
+	}
+	
+	
 	private void addToMap(TreeMap<Integer,float[]> map,int t,int f,float m) {
 		if(!map.containsKey(t)) {
 			map.put(t, new float[Config.getInt(Key.OLAF_SIZE)/2]);
@@ -486,10 +539,24 @@ public class PanakoStrategy extends Strategy {
 			
 			sb.append(blocksToSeconds(t)).append(",");
 			for(int i = 0 ; i < spectrum.length ; i++) {
-				//sb.append(spectrum[i]).append(",");
+				sb.append(spectrum[i]).append(",");
 			}
 			sb.append("\n");
 		}
 		System.out.println(sb.toString());		
+	}
+	
+	public String name() {
+		return "Panako";
+	}
+
+	@Override
+	public void clear() {
+		if(Config.getBoolean(Key.PANAKO_CACHE_TO_FILE)) {
+			PanakoStorageFile.getInstance().clear();
+		}
+		if (Config.get(Key.PANAKO_STORAGE).equalsIgnoreCase("LMDB")) {
+			PanakoStorageKV.getInstance().clear();
+		}
 	}
 }

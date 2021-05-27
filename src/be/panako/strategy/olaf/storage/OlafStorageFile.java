@@ -194,5 +194,15 @@ public class OlafStorageFile implements OlafStorage {
 			Set<Integer> resourcesToAvoid) {
 
 	}
+
+	public void clear() {
+		if(!FileUtils.exists(storeDir.getAbsolutePath()))
+			return;
+		
+		for(File f : storeDir.listFiles()) {
+			FileUtils.rm(f.getAbsolutePath());
+		}
+		System.out.println("Removed cached files from " + storeDir.getAbsolutePath());
+	}
 }
 

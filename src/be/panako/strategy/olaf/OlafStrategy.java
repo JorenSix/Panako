@@ -51,12 +51,12 @@ import java.util.logging.Logger;
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
-import be.panako.strategy.olaf.storage.OlafStorageKV;
-import be.panako.strategy.olaf.storage.OlafStorageFile;
-import be.panako.strategy.olaf.storage.OlafStorageMemory;
+import be.panako.strategy.olaf.storage.OlafHit;
 import be.panako.strategy.olaf.storage.OlafResourceMetadata;
 import be.panako.strategy.olaf.storage.OlafStorage;
-import be.panako.strategy.olaf.storage.OlafHit;
+import be.panako.strategy.olaf.storage.OlafStorageFile;
+import be.panako.strategy.olaf.storage.OlafStorageKV;
+import be.panako.strategy.olaf.storage.OlafStorageMemory;
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
@@ -95,13 +95,13 @@ public class OlafStrategy extends Strategy {
 			int printT1 = print.t1;
 			db.addToStoreQueue(hash, resourceID, printT1);
 			if(fileCache!=null) {
-				db.addToStoreQueue(hash, resourceID, printT1);
+				fileCache.addToStoreQueue(hash, resourceID, printT1);
 			}
 		}
 		db.processStoreQueue();
 		
 		if(fileCache!=null) {
-			db.processStoreQueue();
+			fileCache.processStoreQueue();
 		}
 		
 		//store meta-data as well
@@ -161,6 +161,7 @@ public class OlafStrategy extends Strategy {
 		
 		if(Config.getBoolean(Key.OLAF_USE_CACHED_PRINTS)) {
 			String folder = Config.get(Key.OLAF_CACHE_FOLDER);
+			folder = FileUtils.expandHomeDir(folder);
 			String tdbPath =  FileUtils.combine(folder,resolve(resource) + ".tdb");
 			if(FileUtils.exists(tdbPath)) {
 				
@@ -433,14 +434,6 @@ public class OlafStrategy extends Strategy {
 			 }
 		 }
 	}
-	
-	
-	public static class OlafFingerprintQueryMatch{
-		public int identifier;
-		public double starttime;
-		public int score;
-		public int mostPopularOffset;
-	}
 
 	@Override
 	public void monitor(String query, int maxNumberOfReqults, Set<Integer> avoid, QueryResultHandler handler) {
@@ -512,6 +505,7 @@ public class OlafStrategy extends Strategy {
 		OlafStorageFile fileDb = OlafStorageFile.getInstance();
 		
 		String folder = Config.get(Key.OLAF_CACHE_FOLDER);
+		folder = FileUtils.expandHomeDir(folder);
 		
 		List<String> tdbFiles =  FileUtils.glob(folder,".*.tdb", false);
 		
@@ -591,6 +585,22 @@ public class OlafStrategy extends Strategy {
 			}
 			String printString = db.storeQueueToString();
 			System.out.print(printString);
+		}
+		
+	}
+	
+	public String name() {
+		return "Olaf";
+	}
+
+	@Override
+	public void clear() {
+		
+		if(Config.getBoolean(Key.OLAF_CACHE_TO_FILE)) {
+			OlafStorageFile.getInstance().clear();
+		}
+		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
+			OlafStorageKV.getInstance().clear();
 		}
 		
 	}

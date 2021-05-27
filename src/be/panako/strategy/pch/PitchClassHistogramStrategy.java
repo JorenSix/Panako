@@ -119,6 +119,7 @@ public class PitchClassHistogramStrategy extends Strategy {
 			sb.append(i).append("\n");
 		}
 		String directory = Config.get(Key.PCH_FILES);
+		directory = FileUtils.expandHomeDir(directory);
 		String fileName = FileUtils.combine(directory,identifier + ".txt");
 		FileUtils.writeFile(sb.toString(), fileName);
 	}
@@ -237,6 +238,15 @@ public class PitchClassHistogramStrategy extends Strategy {
 	@Override
 	public String resolve(String filename) {
 		return "" + FileUtils.getIdentifier(filename);
+	}
+	
+	public String name() {
+		return "PCH";
+	}
+
+	@Override
+	public void clear() {
+		
 	}
 
 }
