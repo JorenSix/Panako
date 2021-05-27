@@ -103,13 +103,13 @@ public class OlafDBStorage implements OlafStorage {
 		if(!new File(folder).exists()) {
 			throw new RuntimeException("Could not create LMDB folder: " + folder);
 		}
-		File path = new File(folder);
+
 		
 		env =  org.lmdbjava.Env.create()
-        .setMapSize(1024l * 1024l * 1024l * 100l)
+        .setMapSize(1024l * 1024l * 1024l * 1024l)//1 TB max!
         .setMaxDbs(2)
         .setMaxReaders(Application.availableProcessors())
-        .open(path);
+        .open(new File(folder));
 		
 		final String fingerprintName = "olaf_fingerprints";
 		fingerprints = env.openDbi(fingerprintName, DbiFlags.MDB_CREATE, DbiFlags.MDB_INTEGERKEY, DbiFlags.MDB_DUPSORT, DbiFlags.MDB_DUPFIXED);

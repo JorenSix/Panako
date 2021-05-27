@@ -47,7 +47,6 @@ import java.util.logging.Logger;
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
-import be.panako.strategy.panako.PanakoDBStorage.GaboratorDBHit;
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
@@ -228,7 +227,7 @@ public class PanakoStrategy extends Strategy {
 		}
 		
 		//fingerprint hash to info
-		Map<Long,List<GaboratorDBHit>> matchAccumulator = new HashMap<>();
+		Map<Long,List<PanakoStorageHit>> matchAccumulator = new HashMap<>();
 		
 		StopWatch w = new StopWatch();
 		int queryRange = Config.getInt(Key.PANAKO_QUERY_RANGE);

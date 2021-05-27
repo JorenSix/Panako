@@ -38,6 +38,7 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -89,12 +90,13 @@ public class PanakoDBStorage {
 	final Dbi<ByteBuffer> resourceMap;
 	final Env<ByteBuffer> env;
 	
-	final List<long[]> storeQueue;
-	final List<long[]> deleteQueue;
-	final List<Long> queryQueue;
+	final Map<Long,List<long[]>> storeQueue;
+	final Map<Long,List<long[]>> deleteQueue;
+	final Map<Long,List<Long>> queryQueue;
 	
 	public PanakoDBStorage() {
 		String folder = Config.get(Key.PANAKO_LMDB_FOLDER);
+		folder = FileUtils.expandHomeDir(folder);
 		
 		if(!new File(folder).exists()) {
 			FileUtils.mkdirs(folder);
@@ -102,13 +104,12 @@ public class PanakoDBStorage {
 		if(!new File(folder).exists()) {
 			throw new RuntimeException("Could not create LMDB folder: " + folder);
 		}
-		File path = new File(folder);
 		
 		env =  org.lmdbjava.Env.create()
-        .setMapSize(1024l * 1024l * 1024l * 100l)
+        .setMapSize(1024l * 1024l * 1024l * 1024l)//1 TB max!
         .setMaxDbs(2)
         .setMaxReaders(Application.availableProcessors())
-        .open(path);
+        .open(new File(folder));
 		
 		final String fingerprintName = "panako_fingerprints";
 		fingerprints = env.openDbi(fingerprintName, DbiFlags.MDB_CREATE, DbiFlags.MDB_INTEGERKEY, DbiFlags.MDB_DUPSORT, DbiFlags.MDB_DUPFIXED);
@@ -116,9 +117,9 @@ public class PanakoDBStorage {
 		final String resourceName = "panako_resource_map";		
 		resourceMap = env.openDbi(resourceName,DbiFlags.MDB_CREATE, DbiFlags.MDB_INTEGERKEY);
 		
-		storeQueue = new ArrayList<>();
-		deleteQueue = new ArrayList<>();
-		queryQueue = new ArrayList<>();
+		storeQueue = new HashMap<Long,List<long[]>>();
+		deleteQueue = new HashMap<Long,List<long[]>>();
+		queryQueue = new HashMap<Long,List<Long>>();
 	}
 	
 	public void close() {
@@ -159,6 +160,9 @@ public class PanakoDBStorage {
 		    	metadata.identifier =(int) resourceID;
 		    }
 		    txn.close();
+		    
+		}catch(Exception e) {
+			e.printStackTrace();
 		}
 		
 		return metadata;    
@@ -167,12 +171,24 @@ public class PanakoDBStorage {
 
 	public void addToStoreQueue(long fingerprintHash, int resourceIdentifier, int t1,int f1) {
 		long[] data = {fingerprintHash,resourceIdentifier,t1,f1};
-		storeQueue.add(data);
+		long threadID = Thread.currentThread().getId();
+		if(!storeQueue.containsKey(threadID))
+			storeQueue.put(threadID, new ArrayList<long[]>());
+		storeQueue.get(threadID).add(data);
 	}
 	
 
 	public void processStoreQueue() {
-		if(storeQueue.isEmpty())
+		if (storeQueue.isEmpty())
+			return;
+		
+		long threadID = Thread.currentThread().getId();
+		if(!storeQueue.containsKey(threadID))
+			return;
+		
+		List<long[]> queue = storeQueue.get(threadID);
+		
+		if (queue.isEmpty())
 			return;
 		
 		try (Txn<ByteBuffer> txn = env.txnWrite()) {
@@ -183,7 +199,7 @@ public class PanakoDBStorage {
 		      // A cursor always belongs to a particular Dbi.
 		      final Cursor<ByteBuffer> c = fingerprints.openCursor(txn);
 		      
-		      for(long[] data : storeQueue) {
+		      for(long[] data : queue) {
 		    	  key.putLong(data[0]).flip();
 		    	  val.putInt((int) data[1]).putInt((int) data[2]).putInt((int) data[3]).flip();
 		    	  
@@ -195,7 +211,7 @@ public class PanakoDBStorage {
 		            
 		      c.close();
 		      txn.commit();
-		      storeQueue.clear();
+		      queue.clear();
 		    }catch (Exception e) {
 		    	e.printStackTrace();
 		    }
@@ -207,11 +223,23 @@ public class PanakoDBStorage {
 	
 	public void addToDeleteQueue(long fingerprintHash, int resourceIdentifier, int t1,int f1) {
 		long[] data = {fingerprintHash,resourceIdentifier,t1,f1};
-		deleteQueue.add(data);
+		long threadID = Thread.currentThread().getId();
+		if(!deleteQueue.containsKey(threadID))
+			deleteQueue.put(threadID, new ArrayList<long[]>());
+		deleteQueue.get(threadID).add(data);
 	}
 	
 	public void processDeleteQueue() {
-		if(deleteQueue.isEmpty())
+		if (storeQueue.isEmpty())
+			return;
+		
+		long threadID = Thread.currentThread().getId();
+		if(!storeQueue.containsKey(threadID))
+			return;
+		
+		List<long[]> queue = storeQueue.get(threadID);
+		
+		if (queue.isEmpty())
 			return;
 		
 		try (Txn<ByteBuffer> txn = env.txnWrite()) {
@@ -222,7 +250,7 @@ public class PanakoDBStorage {
 		      // A cursor always belongs to a particular Dbi.
 		      final Cursor<ByteBuffer> c = fingerprints.openCursor(txn);
 		      
-		      for(long[] data : deleteQueue) {
+		      for(long[] data : queue) {
 		    	  key.putLong(data[0]).flip();
 		    	  val.putInt((int) data[1]).putInt((int) data[2]).putInt((int) data[3]).flip();
 		    	  if(c.get(key,val,SeekOp.MDB_GET_BOTH)) {
@@ -234,41 +262,35 @@ public class PanakoDBStorage {
 		      
 		      c.close();
 		      txn.commit();
-		      deleteQueue.clear();
+		      queue.clear();
 		    }catch (Exception e) {
 		    	e.printStackTrace();
 		    }
 	}
 	
 	public void addToQueryQueue(long queryHash) {
-		queryQueue.add(queryHash);
+		long threadID = Thread.currentThread().getId();
+		if(!queryQueue.containsKey(threadID))
+			queryQueue.put(threadID, new ArrayList<Long>());
+		queryQueue.get(threadID).add(queryHash);
 	}
 	
-	public static class GaboratorDBHit{
-		public final long originalHash;
-		public final long matchedNearHash;
-		
-		public final int t;
-		public final int f;
-		public final int resourceID;
-		
-		public GaboratorDBHit(long originalHash, long matchedNearHash,long t, long resourceID, long f) {
-			this.originalHash = originalHash;
-			this.matchedNearHash = matchedNearHash;
-			this.t=(int)t;
-			this.f =(int)f;
-			this.resourceID=(int)resourceID;
-		}
-		
-	}
-	
-	public void processQueryQueue(Map<Long,List<GaboratorDBHit>> matchAccumulator,int range) {
+	public void processQueryQueue(Map<Long,List<PanakoStorageHit>> matchAccumulator,int range) {
 		processQueryQueue(matchAccumulator, range, new HashSet<Integer>());
 	}
 	
-	public void processQueryQueue(Map<Long,List<GaboratorDBHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid) {
+	public void processQueryQueue(Map<Long,List<PanakoStorageHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid) {
 		
-		if(queryQueue.isEmpty())
+		if (queryQueue.isEmpty())
+			return;
+		
+		long threadID = Thread.currentThread().getId();
+		if(!queryQueue.containsKey(threadID))
+			return;
+		
+		List<Long> queue = queryQueue.get(threadID);
+		
+		if (queue.isEmpty())
 			return;
 		
 		try (Txn<ByteBuffer> txn = env.txnRead()) {
@@ -277,7 +299,7 @@ public class PanakoDBStorage {
 		      
 		      final ByteBuffer keyBuffer = ByteBuffer.allocateDirect(8).order(java.nio.ByteOrder.LITTLE_ENDIAN);
 		      
-		      for(long originalKey : queryQueue) {
+		      for(long originalKey : queue) {
 		    	  
 		    	  long startKey = originalKey - range;
 		    	  long stopKey = originalKey + range;
@@ -295,8 +317,8 @@ public class PanakoDBStorage {
 				      if(fingerprintHash <= stopKey) {
 				    	  if(!resourcesToAvoid.contains((int) resourceID)) {
 				    		  if(!matchAccumulator.containsKey(originalKey))
-				    			  matchAccumulator.put(originalKey,new ArrayList<GaboratorDBHit>());
-				    		  matchAccumulator.get(originalKey).add(new GaboratorDBHit(originalKey, fingerprintHash, t, resourceID, f));
+				    			  matchAccumulator.put(originalKey,new ArrayList<PanakoStorageHit>());
+				    		  matchAccumulator.get(originalKey).add(new PanakoStorageHit(originalKey, fingerprintHash, t, resourceID, f));
 				    	  }
 				   
 					      while(true) {
@@ -309,8 +331,8 @@ public class PanakoDBStorage {
 							      
 							      if(!resourcesToAvoid.contains((int) resourceID)) {
 						    		  if(!matchAccumulator.containsKey(originalKey))
-						    			  matchAccumulator.put(originalKey,new ArrayList<GaboratorDBHit>());
-						    		  matchAccumulator.get(originalKey).add(new GaboratorDBHit(originalKey, fingerprintHash, t, resourceID,f));
+						    			  matchAccumulator.put(originalKey,new ArrayList<PanakoStorageHit>());
+						    		  matchAccumulator.get(originalKey).add(new PanakoStorageHit(originalKey, fingerprintHash, t, resourceID,f));
 						    	  }
 						      }
 						      
@@ -327,8 +349,8 @@ public class PanakoDBStorage {
 							      
 							      if(!resourcesToAvoid.contains((int) resourceID)) {
 						    		  if(!matchAccumulator.containsKey(originalKey))
-						    			  matchAccumulator.put(originalKey,new ArrayList<GaboratorDBHit>());
-						    		  matchAccumulator.get(originalKey).add(new GaboratorDBHit(originalKey, fingerprintHash, t, resourceID,f));
+						    			  matchAccumulator.put(originalKey,new ArrayList<PanakoStorageHit>());
+						    		  matchAccumulator.get(originalKey).add(new PanakoStorageHit(originalKey, fingerprintHash, t, resourceID,f));
 						    	  }
 						      } else {
 						    	  //no next found, end of db
@@ -340,7 +362,7 @@ public class PanakoDBStorage {
 		      }
 		      c.close();
 		      txn.commit();
-		      queryQueue.clear();
+		      queue.clear();
 		}
 		
 	}
