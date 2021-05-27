@@ -32,9 +32,9 @@
 *                                                                          *
 ****************************************************************************/
 
-package be.panako.strategy.gaborator;
+package be.panako.strategy.panako;
 
-public class GaboratorResourceMetadata {
+public class PanakoResourceMetadata {
 	public int numFingerprints;
 	public double duration;
 	public String path;

@@ -32,7 +32,7 @@
 *                                                                          *
 ****************************************************************************/
 
-package be.panako.strategy.gaborator;
+package be.panako.strategy.panako;
 
 import java.io.File;
 import java.nio.ByteBuffer;
@@ -52,16 +52,17 @@ import org.lmdbjava.SeekOp;
 import org.lmdbjava.Stat;
 import org.lmdbjava.Txn;
 
+import be.panako.cli.Application;
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
 
-public class GaboratorDBStorage {
+public class PanakoDBStorage {
 	
 	/**
 	 * The single instance of the storage.
 	 */
-	private static GaboratorDBStorage instance;
+	private static PanakoDBStorage instance;
 
 	/**
 	 * A mutex for synchronization purposes
@@ -72,11 +73,11 @@ public class GaboratorDBStorage {
 	 * @return Returns or creates a storage instance. This should be a thread
 	 *         safe operation.
 	 */
-	public synchronized static GaboratorDBStorage getInstance() {
+	public synchronized static PanakoDBStorage getInstance() {
 		if (instance == null) {
 			synchronized (mutex) {
 				if (instance == null) {
-					instance = new GaboratorDBStorage();
+					instance = new PanakoDBStorage();
 				}
 			}
 		}
@@ -92,8 +93,9 @@ public class GaboratorDBStorage {
 	final List<long[]> deleteQueue;
 	final List<Long> queryQueue;
 	
-	public GaboratorDBStorage() {
-		String folder = Config.get(Key.OLAF_LMDB_FOLDER);
+	public PanakoDBStorage() {
+		String folder = Config.get(Key.PANAKO_LMDB_FOLDER);
+		
 		if(!new File(folder).exists()) {
 			FileUtils.mkdirs(folder);
 		}
@@ -105,13 +107,13 @@ public class GaboratorDBStorage {
 		env =  org.lmdbjava.Env.create()
         .setMapSize(1024l * 1024l * 1024l * 100l)
         .setMaxDbs(2)
-        .setMaxReaders(2)
+        .setMaxReaders(Application.availableProcessors())
         .open(path);
 		
-		final String fingerprintName = "olaf_fingerprints";
+		final String fingerprintName = "panako_fingerprints";
 		fingerprints = env.openDbi(fingerprintName, DbiFlags.MDB_CREATE, DbiFlags.MDB_INTEGERKEY, DbiFlags.MDB_DUPSORT, DbiFlags.MDB_DUPFIXED);
 		
-		final String resourceName = "olaf_resource_map";		
+		final String resourceName = "panako_resource_map";		
 		resourceMap = env.openDbi(resourceName,DbiFlags.MDB_CREATE, DbiFlags.MDB_INTEGERKEY);
 		
 		storeQueue = new ArrayList<>();
@@ -138,9 +140,9 @@ public class GaboratorDBStorage {
 	}
 	
 
-	public GaboratorResourceMetadata getMetadata(long resourceID) {
+	public PanakoResourceMetadata getMetadata(long resourceID) {
 		
-		GaboratorResourceMetadata metadata = null;
+		PanakoResourceMetadata metadata = null;
 	    
 		try (Txn<ByteBuffer> txn = env.txnRead()) {
 			final ByteBuffer key = ByteBuffer.allocateDirect(8);
@@ -149,7 +151,7 @@ public class GaboratorDBStorage {
 		    final ByteBuffer found = resourceMap.get(txn, key);
 		    
 		    if(found != null) {
-		    	metadata = new GaboratorResourceMetadata();
+		    	metadata = new PanakoResourceMetadata();
 		    	final ByteBuffer fetchedVal = txn.val();
 		    	metadata.duration = fetchedVal.getFloat();
 		    	metadata.numFingerprints = fetchedVal.getInt();

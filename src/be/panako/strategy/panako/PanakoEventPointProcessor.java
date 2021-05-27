@@ -33,7 +33,7 @@
 ****************************************************************************/
 
 
-package be.panako.strategy.gaborator;
+package be.panako.strategy.panako;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,7 +48,7 @@ import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
 import be.ugent.jgaborator.JGaborator;
 
-public class GaboratorEventPointProcessor implements AudioProcessor {
+public class PanakoEventPointProcessor implements AudioProcessor {
 
 	private final JGaborator gaborator;
 		
@@ -70,29 +70,29 @@ public class GaboratorEventPointProcessor implements AudioProcessor {
 	private final Map<Integer,float[]> previousMaxMagnitudes;
 	private final Map<Integer,float[]> previousMagnitudes;
 	
-	private final List<GaboratorEventPoint> eventPoints = new ArrayList<>();
-	private final List<GaboratorFingerprint> fingerprints = new ArrayList<>();
+	private final List<PanakoEventPoint> eventPoints = new ArrayList<>();
+	private final List<PanakoFingerprint> fingerprints = new ArrayList<>();
 
 	private int analysisFrameIndex = 0;
 	
 	private final LemireMinMaxFilter maxFilterVertical;
 
-	private final int maxFilterWindowSizeFrequency = Config.getInt(Key.GABORATOR_FREQ_MAX_FILTER_SIZE);
-	private final int maxFilterWindowSizeTime = Config.getInt(Key.GABORATOR_TIME_MAX_FILTER_SIZE);
+	private final int maxFilterWindowSizeFrequency = Config.getInt(Key.PANAKO_FREQ_MAX_FILTER_SIZE);
+	private final int maxFilterWindowSizeTime = Config.getInt(Key.PANAKO_TIME_MAX_FILTER_SIZE);
 	
 	private final float[] maxHorizontal;
 	
 	//private final int maxFingerprintsPerEventPoint = 10;
 	
-	public GaboratorEventPointProcessor(final int fftSize){
+	public PanakoEventPointProcessor(final int fftSize){
 		
-		int stepSize = Config.getInt(Key.GABORATOR_AUDIO_BLOCK_SIZE);
-		int sampleRate = Config.getInt(Key.GABORATOR_SAMPLE_RATE);
-		int minFrequency = Config.getInt(Key.GABORATOR_TRANSF_MIN_FREQ); 
-		int maxFrequency = Config.getInt(Key.GABORATOR_TRANSF_MAX_FREQ); 
-		int bandsPerOctave =Config.getInt(Key.GABORATOR_TRANSF_BANDS_PER_OCTAVE) ; // with 6 octaves this means that band index fits in 512, or 9 bits 
-		int refFrequency = Config.getInt(Key.GABORATOR_TRANSF_REF_FREQ); //center 440Hz
-		int resolution = Config.getInt(Key.GABORATOR_TRANSF_TIME_RESOLUTION);//in audio samples, 8 ms
+		int stepSize = Config.getInt(Key.PANAKO_AUDIO_BLOCK_SIZE);
+		int sampleRate = Config.getInt(Key.PANAKO_SAMPLE_RATE);
+		int minFrequency = Config.getInt(Key.PANAKO_TRANSF_MIN_FREQ); 
+		int maxFrequency = Config.getInt(Key.PANAKO_TRANSF_MAX_FREQ); 
+		int bandsPerOctave =Config.getInt(Key.PANAKO_TRANSF_BANDS_PER_OCTAVE) ; // with 6 octaves this means that band index fits in 512, or 9 bits 
+		int refFrequency = Config.getInt(Key.PANAKO_TRANSF_REF_FREQ); //center 440Hz
+		int resolution = Config.getInt(Key.PANAKO_TRANSF_TIME_RESOLUTION);//in audio samples, 8 ms
 		
 		gaborator = new JGaborator(stepSize, sampleRate, bandsPerOctave, minFrequency, maxFrequency, refFrequency, resolution);
 		
@@ -196,7 +196,7 @@ public class GaboratorEventPointProcessor implements AudioProcessor {
 									+ frameMagnitudes[f+1] + prevFrameMagnitudes[f+1] + nextFrameMagnitudes[f+1]
 									+ frameMagnitudes[f-1] + prevFrameMagnitudes[f-1] + nextFrameMagnitudes[f-1];
 							
-							eventPoints.add(new GaboratorEventPoint(t, f,totalMagnitude));
+							eventPoints.add(new PanakoEventPoint(t, f,totalMagnitude));
 						}
 					}
 				}
@@ -219,21 +219,21 @@ public class GaboratorEventPointProcessor implements AudioProcessor {
 		packEventPointsIntoFingerprints();
 	}
 	
-	public List<GaboratorFingerprint> getFingerprints(){
+	public List<PanakoFingerprint> getFingerprints(){
 		return fingerprints;
 	}
 
-	public List<GaboratorEventPoint> getEventPoints() {
+	public List<PanakoEventPoint> getEventPoints() {
 		return eventPoints;
 	}
 	
 	private void packEventPointsIntoFingerprints(){
 		
-		int minFreqDistance = Config.getInt(Key.GABORATOR_FP_MIN_FREQ_DIST);
-		int maxFreqDistance = Config.getInt(Key.GABORATOR_FP_MAX_FREQ_DIST);
+		int minFreqDistance = Config.getInt(Key.PANAKO_FP_MIN_FREQ_DIST);
+		int maxFreqDistance = Config.getInt(Key.PANAKO_FP_MAX_FREQ_DIST);
 		
-		int minTimeDistance = Config.getInt(Key.GABORATOR_FP_MIN_TIME_DIST);
-		int maxTimeDistance = Config.getInt(Key.GABORATOR_FP_MAX_TIME_DIST);
+		int minTimeDistance = Config.getInt(Key.PANAKO_FP_MIN_TIME_DIST);
+		int maxTimeDistance = Config.getInt(Key.PANAKO_FP_MAX_TIME_DIST);
 		
 		for(int i = 0; i < eventPoints.size();i++){
 			int t1 = eventPoints.get(i).t;
@@ -265,8 +265,8 @@ public class GaboratorEventPointProcessor implements AudioProcessor {
 					if(fDiff < minFreqDistance) continue;
 					if(fDiff > maxFreqDistance ) continue;
 					
-					GaboratorFingerprint fingerprint;
-					fingerprint = new GaboratorFingerprint(eventPoints.get(i),eventPoints.get(j),eventPoints.get(k));
+					PanakoFingerprint fingerprint;
+					fingerprint = new PanakoFingerprint(eventPoints.get(i),eventPoints.get(j),eventPoints.get(k));
 					fingerprints.add(fingerprint);
 				}
 			}

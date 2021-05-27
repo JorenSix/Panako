@@ -37,8 +37,8 @@ package be.panako.strategy;
 
 import java.util.Set;
 
-import be.panako.strategy.gaborator.GaboratorStrategy;
 import be.panako.strategy.olaf.OlafStrategy;
+import be.panako.strategy.panako.PanakoStrategy;
 import be.panako.strategy.pch.PitchClassHistogramStrategy;
 import be.panako.util.Config;
 import be.panako.util.Key;
@@ -88,8 +88,8 @@ public abstract class Strategy {
 				strategy = new PitchClassHistogramStrategy();
 			}else if("OLAF".equalsIgnoreCase(Config.get(Key.STRATEGY))){
 				strategy = new OlafStrategy();
-			}else if("GABORATOR".equalsIgnoreCase(Config.get(Key.STRATEGY))){
-				strategy = new GaboratorStrategy();
+			}else if("PANAKO".equalsIgnoreCase(Config.get(Key.STRATEGY))){
+				strategy = new PanakoStrategy();
 			}
 		}
 		return strategy;
@@ -103,8 +103,6 @@ public abstract class Strategy {
 	public abstract String resolve(String filename);
 
 	
-	public void print(String path, boolean sonicVisualizerOutput) {
-		// TODO Auto-generated method stub
-		
+	public void print(String path, boolean sonicVisualizerOutput) {		
 	}
 }

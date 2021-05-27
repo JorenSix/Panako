@@ -32,7 +32,7 @@
 *                                                                          *
 ****************************************************************************/
 
-package be.panako.strategy.gaborator;
+package be.panako.strategy.panako;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,7 +47,7 @@ import java.util.logging.Logger;
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
-import be.panako.strategy.gaborator.GaboratorDBStorage.GaboratorDBHit;
+import be.panako.strategy.panako.PanakoDBStorage.GaboratorDBHit;
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
@@ -56,25 +56,24 @@ import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 import be.tarsos.dsp.util.PitchConverter;
 
-public class GaboratorStrategy extends Strategy {
+public class PanakoStrategy extends Strategy {
 	private static final int MAX_TIME = 5_000_000;
 	
-	private final static Logger LOG = Logger.getLogger(GaboratorStrategy.class.getName());
+	private final static Logger LOG = Logger.getLogger(PanakoStrategy.class.getName());
 	
 	@Override
 	public double store(String resource, String description) {
 
-		GaboratorDBStorage db;
+		PanakoDBStorage db;
+		
+		db = PanakoDBStorage.getInstance();
 		
 		
-		db = GaboratorDBStorage.getInstance();
-		
-		
-		List<GaboratorFingerprint> prints = toFingerprints(resource);
+		List<PanakoFingerprint> prints = toFingerprints(resource);
 		
 		int resourceID = FileUtils.getIdentifier(resource);
 		//store
-		for(GaboratorFingerprint print : prints) {
+		for(PanakoFingerprint print : prints) {
 			long hash = print.hash();
 			db.addToStoreQueue(hash, resourceID, print.t1,print.f1);
 		}
@@ -102,13 +101,13 @@ public class GaboratorStrategy extends Strategy {
 	
 	public double delete(String resource, String description) {
 
-		GaboratorDBStorage db = GaboratorDBStorage.getInstance();
+		PanakoDBStorage db = PanakoDBStorage.getInstance();
 		
-		List<GaboratorFingerprint> prints = toFingerprints(resource);
+		List<PanakoFingerprint> prints = toFingerprints(resource);
 		
 		int resourceID = FileUtils.getIdentifier(resource);
 		//delete
-		for(GaboratorFingerprint print : prints) {
+		for(PanakoFingerprint print : prints) {
 			long hash = print.hash();
 			db.addToDeleteQueue(hash, resourceID, print.t1,print.f1);
 		}
@@ -132,17 +131,17 @@ public class GaboratorStrategy extends Strategy {
 		return duration;
 	}
 	
-	public List<GaboratorFingerprint> toFingerprints(String resource){
+	public List<PanakoFingerprint> toFingerprints(String resource){
 		
 		
 		return toFingerprints(resource,0,MAX_TIME);
 	}
 	
-	public List<GaboratorFingerprint> toFingerprints(String resource,double startTimeOffset,double numberOfSeconds){
+	public List<PanakoFingerprint> toFingerprints(String resource,double startTimeOffset,double numberOfSeconds){
 		int samplerate, size, overlap;
-		samplerate = Config.getInt(Key.GABORATOR_SAMPLE_RATE);
-		size = Config.getInt(Key.GABORATOR_AUDIO_BLOCK_SIZE);
-		overlap = Config.getInt(Key.GABORATOR_AUDIO_BLOCK_OVERLAP);
+		samplerate = Config.getInt(Key.PANAKO_SAMPLE_RATE);
+		size = Config.getInt(Key.PANAKO_AUDIO_BLOCK_SIZE);
+		overlap = Config.getInt(Key.PANAKO_AUDIO_BLOCK_OVERLAP);
 		
 		AudioDispatcher d;
 		
@@ -151,7 +150,7 @@ public class GaboratorStrategy extends Strategy {
 		else
 			d = AudioDispatcherFactory.fromPipe(resource, samplerate, size, overlap,startTimeOffset,numberOfSeconds);
 		
-		GaboratorEventPointProcessor eventPointProcessor = new GaboratorEventPointProcessor(size);
+		PanakoEventPointProcessor eventPointProcessor = new PanakoEventPointProcessor(size);
 		latency = eventPointProcessor.latency();
 		d.addAudioProcessor(eventPointProcessor);
 		d.run();
@@ -162,15 +161,15 @@ public class GaboratorStrategy extends Strategy {
 	
 	int latency;
 	private float blocksToSeconds(int t) {
-		float timeResolution = Config.getFloat(Key.GABORATOR_TRANSF_TIME_RESOLUTION);
-		float sampleRate = Config.getFloat(Key.GABORATOR_SAMPLE_RATE);
+		float timeResolution = Config.getFloat(Key.PANAKO_TRANSF_TIME_RESOLUTION);
+		float sampleRate = Config.getFloat(Key.PANAKO_SAMPLE_RATE);
 		
 		return t * (timeResolution/sampleRate) + latency/(float) sampleRate;
 	}
 	
 	private float binToHz(int f) {
-		float minFreq = Config.getFloat(Key.GABORATOR_TRANSF_MIN_FREQ);
-		float binsPerOctave = Config.getFloat(Key.GABORATOR_TRANSF_BANDS_PER_OCTAVE);
+		float minFreq = Config.getFloat(Key.PANAKO_TRANSF_MIN_FREQ);
+		float binsPerOctave = Config.getFloat(Key.PANAKO_TRANSF_BANDS_PER_OCTAVE);
 		float centsPerBin = 1200.0f / binsPerOctave;
 		
 		float diffFromMinFreqInCents = f * centsPerBin;
@@ -208,7 +207,7 @@ public class GaboratorStrategy extends Strategy {
 	public void query(String query, int maxNumberOfResults, Set<Integer> avoid, QueryResultHandler handler, double startTimeOffset,double numberOfSeconds ) {
 		
 		final String queryPath ;
-		List<GaboratorFingerprint> prints;
+		List<PanakoFingerprint> prints;
 		if(numberOfSeconds != MAX_TIME) {
 			queryPath = query + "-" + startTimeOffset + "_" + (startTimeOffset+numberOfSeconds);
 			prints = toFingerprints(query,startTimeOffset,numberOfSeconds);
@@ -217,12 +216,12 @@ public class GaboratorStrategy extends Strategy {
 			prints = toFingerprints(query);
 		}
 		
-		GaboratorDBStorage db = GaboratorDBStorage.getInstance();
+		PanakoDBStorage db = PanakoDBStorage.getInstance();
 		
-		Map<Long,GaboratorFingerprint> printMap = new HashMap<>();
+		Map<Long,PanakoFingerprint> printMap = new HashMap<>();
 		
 		//query
-		for(GaboratorFingerprint print : prints) {
+		for(PanakoFingerprint print : prints) {
 			long hash = print.hash();
 			db.addToQueryQueue(hash);
 			printMap.put(hash, print);
@@ -232,7 +231,7 @@ public class GaboratorStrategy extends Strategy {
 		Map<Long,List<GaboratorDBHit>> matchAccumulator = new HashMap<>();
 		
 		StopWatch w = new StopWatch();
-		int queryRange = Config.getInt(Key.GABORATOR_QUERY_RANGE);
+		int queryRange = Config.getInt(Key.PANAKO_QUERY_RANGE);
 		db.processQueryQueue(matchAccumulator,queryRange , avoid);
 		
 		LOG.info(String.format("Query for %d prints, %d matches in %s \n", printMap.size(),matchAccumulator.size(), w.formattedToString()));
@@ -264,8 +263,8 @@ public class GaboratorStrategy extends Strategy {
 			 });
 		 });
 		 
-		 int minimumUnfilteredHits = Config.getInt(Key.GABORATOR_MIN_HITS_UNFILTERED);
-		 int minimumFilteredHits = Config.getInt(Key.GABORATOR_MIN_HITS_FILTERED);
+		 int minimumUnfilteredHits = Config.getInt(Key.PANAKO_MIN_HITS_UNFILTERED);
+		 int minimumFilteredHits = Config.getInt(Key.PANAKO_MIN_HITS_FILTERED);
 		 
 		 List<Integer> matchesToDelete = new ArrayList<>();
 		 hitsPerIdentifer.forEach((identifier, hitlist) -> {
@@ -323,11 +322,11 @@ public class GaboratorStrategy extends Strategy {
 			 //System.out.printf("slope %f offset %f  timefactor %f  freqfactor %f \n",slope,offset,timeFactor,frequencyFactor);
 			 
 			 //threshold in time bins
-			 double threshold = Config.getFloat(Key.GABORATOR_QUERY_RANGE);
+			 double threshold = Config.getFloat(Key.PANAKO_QUERY_RANGE);
 			 
 			 //only continue processing when time factor is reasonable
-			 if(timeFactor > Config.getFloat(Key.GABORATOR_MIN_TIME_FACTOR) && timeFactor < Config.getFloat(Key.GABORATOR_MAX_TIME_FACTOR) && 
-					 frequencyFactor> Config.getFloat(Key.GABORATOR_MIN_FREQ_FACTOR) &&  timeFactor < Config.getFloat(Key.GABORATOR_MAX_FREQ_FACTOR)	 ) {
+			 if(timeFactor > Config.getFloat(Key.PANAKO_MIN_TIME_FACTOR) && timeFactor < Config.getFloat(Key.PANAKO_MAX_TIME_FACTOR) && 
+					 frequencyFactor> Config.getFloat(Key.PANAKO_MIN_FREQ_FACTOR) &&  timeFactor < Config.getFloat(Key.PANAKO_MAX_FREQ_FACTOR)	 ) {
 				 List<GaboratorHit> filteredHits = new ArrayList<>();
 				 
 				 hitlist.forEach( hit ->{				 
@@ -363,7 +362,7 @@ public class GaboratorStrategy extends Strategy {
 						 float refStop =  blocksToSeconds(filteredHits.get(filteredHits.size()-1).matchTime);
 						 
 						 //retrieve meta-data
-						 GaboratorResourceMetadata metadata = db.getMetadata((long) identifier);
+						 PanakoResourceMetadata metadata = db.getMetadata((long) identifier);
 						 String refPath = "metadata unavailable!";
 						 if(metadata != null )
 							 refPath = metadata.path;
@@ -479,8 +478,8 @@ public class GaboratorStrategy extends Strategy {
 	@Override
 	public boolean hasResource(String resource) {
 		int identifier = FileUtils.getIdentifier(resource);
-		GaboratorDBStorage db;
-		db = GaboratorDBStorage.getInstance();
+		PanakoDBStorage db;
+		db = PanakoDBStorage.getInstance();
 		
 		return db.getMetadata(identifier) != null;
 	}
@@ -492,7 +491,7 @@ public class GaboratorStrategy extends Strategy {
 
 	@Override
 	public void printStorageStatistics() {
-		GaboratorDBStorage.getInstance().entries(true);
+		PanakoDBStorage.getInstance().entries(true);
 	}
 
 	@Override
@@ -508,10 +507,10 @@ public class GaboratorStrategy extends Strategy {
 	}
 
 	public void print(String path, boolean sonicVisualizerOutput) {
-		List<GaboratorFingerprint> prints = toFingerprints(path);
+		List<PanakoFingerprint> prints = toFingerprints(path);
 
 		TreeMap<Integer,float[]> timeIndexedSpectralPeaks = new TreeMap<>();
-		for(GaboratorFingerprint print : prints) {
+		for(PanakoFingerprint print : prints) {
 			addToMap(timeIndexedSpectralPeaks,print.t1,print.f1,print.m1);
 			addToMap(timeIndexedSpectralPeaks,print.t2,print.f2,print.m2);
 			addToMap(timeIndexedSpectralPeaks,print.t2,print.f2,print.m3);

@@ -33,7 +33,7 @@
 ****************************************************************************/
 
 
-package be.panako.strategy.gaborator;
+package be.panako.strategy.panako;
 
 import be.panako.util.Morton2D;
 
@@ -44,7 +44,7 @@ import be.panako.util.Morton2D;
  * 
  * @author Joren Six
  */
-public class GaboratorFingerprint {
+public class PanakoFingerprint {
 	
 	public final int t1;
 	public final int f1;
@@ -60,7 +60,7 @@ public class GaboratorFingerprint {
 	
 	private long hash;
 	
-	public GaboratorFingerprint(int t1,int f1,float m1,int t2,int f2,float m2,int t3,int f3,float m3){
+	public PanakoFingerprint(int t1,int f1,float m1,int t2,int f2,float m2,int t3,int f3,float m3){
 		this.t1 = t1;
 		this.f1 = f1;
 		this.m1 = m1;
@@ -77,7 +77,7 @@ public class GaboratorFingerprint {
 		assert t3 > t2;
 	}
 	
-	public GaboratorFingerprint(long hash,int t1){
+	public PanakoFingerprint(long hash,int t1){
 		this.hash = hash;
 		
 		this.t1 = t1;
@@ -93,7 +93,7 @@ public class GaboratorFingerprint {
 		this.m3 = -1;
 	}	
 	
-	public GaboratorFingerprint(GaboratorEventPoint e1, GaboratorEventPoint e2, GaboratorEventPoint e3){
+	public PanakoFingerprint(PanakoEventPoint e1, PanakoEventPoint e2, PanakoEventPoint e3){
 		this(e1.t,e1.f,e1.m,  e2.t,e2.f,e2.m,  e3.t,e3.f,e3.m);
 	}
 	
@@ -219,10 +219,10 @@ public class GaboratorFingerprint {
 	    if (other == this){
 	    	return true;
 	    }
-	    if (!(other instanceof GaboratorFingerprint)){
+	    if (!(other instanceof PanakoFingerprint)){
 	    	return false;
 	    }
-	    GaboratorFingerprint otherFingerprint = (GaboratorFingerprint) other;
+	    PanakoFingerprint otherFingerprint = (PanakoFingerprint) other;
 	    boolean sameHash = otherFingerprint.hash() == this.hash();
 	    //if closer than 100 analysis frames (of e.g. 32ms), than hash is deemed the same).
 	    boolean closeInTime = Math.abs(otherFingerprint.t1 - this.t1) < 100;

@@ -126,7 +126,7 @@ public enum Key{
 	/**
 	 * The folder to store the LMDB database
 	 */
-	OLAF_LMDB_FOLDER("~/.panako/dbs/default"), 
+	OLAF_LMDB_FOLDER("~/.panako/dbs/olaf_db"), 
 	/**
 	 * File cache directory for bulk import
 	 */
@@ -154,35 +154,37 @@ public enum Key{
 	
 	
 	//Event point filter settings
-	GABORATOR_FREQ_MAX_FILTER_SIZE(103),
-	GABORATOR_TIME_MAX_FILTER_SIZE(25),
+	PANAKO_FREQ_MAX_FILTER_SIZE(103),
+	PANAKO_TIME_MAX_FILTER_SIZE(25),
 	
-	GABORATOR_FP_MIN_FREQ_DIST(1), 
-	GABORATOR_FP_MAX_FREQ_DIST(128), 
-	GABORATOR_FP_MIN_TIME_DIST(2), 
-	GABORATOR_FP_MAX_TIME_DIST(33),
+	PANAKO_FP_MIN_FREQ_DIST(1), 
+	PANAKO_FP_MAX_FREQ_DIST(128), 
+	PANAKO_FP_MIN_TIME_DIST(2), 
+	PANAKO_FP_MAX_TIME_DIST(33),
 	
 	//audio dispatcher config
-	GABORATOR_AUDIO_BLOCK_SIZE(8192),
-	GABORATOR_AUDIO_BLOCK_OVERLAP(0),
-	GABORATOR_SAMPLE_RATE(16000),
+	PANAKO_AUDIO_BLOCK_SIZE(8192),
+	PANAKO_AUDIO_BLOCK_OVERLAP(0),
+	PANAKO_SAMPLE_RATE(16000),
 	
 	//Spectral tranform configuration
-	GABORATOR_TRANSF_MIN_FREQ(110),//min frequency (Hz)
-	GABORATOR_TRANSF_MAX_FREQ(7040),//max frequency (Hz), 6 octaves above 110Hz
-	GABORATOR_TRANSF_REF_FREQ(440),//reference frequency (Hz), determines bin bin centers
-	GABORATOR_TRANSF_BANDS_PER_OCTAVE(85),//bins for each octave
-	GABORATOR_TRANSF_TIME_RESOLUTION(128),//audio samples at 16kHz
+	PANAKO_TRANSF_MIN_FREQ(110),//min frequency (Hz)
+	PANAKO_TRANSF_MAX_FREQ(7040),//max frequency (Hz), 6 octaves above 110Hz
+	PANAKO_TRANSF_REF_FREQ(440),//reference frequency (Hz), determines bin bin centers
+	PANAKO_TRANSF_BANDS_PER_OCTAVE(85),//bins for each octave
+	PANAKO_TRANSF_TIME_RESOLUTION(128),//audio samples at 16kHz
 	
 	//query config
-	GABORATOR_QUERY_RANGE(1),
+	PANAKO_QUERY_RANGE(1),
 	
-	GABORATOR_MIN_HITS_UNFILTERED("10"), 
-	GABORATOR_MIN_HITS_FILTERED("5"), 
-	GABORATOR_MIN_TIME_FACTOR("0.8"), 
-	GABORATOR_MAX_TIME_FACTOR("1.2"),
-	GABORATOR_MIN_FREQ_FACTOR("0.8"), 
-	GABORATOR_MAX_FREQ_FACTOR("1.2"),
+	PANAKO_MIN_HITS_UNFILTERED("10"), 
+	PANAKO_MIN_HITS_FILTERED("5"), 
+	PANAKO_MIN_TIME_FACTOR("0.8"), 
+	PANAKO_MAX_TIME_FACTOR("1.2"),
+	PANAKO_MIN_FREQ_FACTOR("0.8"), 
+	PANAKO_MAX_FREQ_FACTOR("1.2"), 
+	
+	PANAKO_LMDB_FOLDER("~/.panako/dbs/panako_db"),
 	;
 	
 	

@@ -18,11 +18,7 @@ h2. Overview
 ## "Monitor Stream for Matches":#monitor
 ## "Print Storage Statistics":#stats
 ## "Print Configuration":#configuration
-## "Synchronize Media Files":#sync
-## "Synchronize Sensor Streams with SyncSink":#syncsink
 ## "Compare Media Files":#compare
-## "Run the REST webservice":#server
-## "Query the REST service":#client
 # "Further reading":#read
 # "Credits":#credits
 # "Reproduce the ISMIR Paper Results":#ismir

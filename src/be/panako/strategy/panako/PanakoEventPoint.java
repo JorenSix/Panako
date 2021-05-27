@@ -32,9 +32,9 @@
 *                                                                          *
 ****************************************************************************/
 
-package be.panako.strategy.gaborator;
+package be.panako.strategy.panako;
 
-public class GaboratorEventPoint {
+public class PanakoEventPoint {
 	
 	/**
 	 * The time expressed using an analysis frame index.
@@ -57,7 +57,7 @@ public class GaboratorEventPoint {
 	 * @param f The frequency expressed using the bin number in the constant Q transform.
 	 * @param m The energy value of the element.
 	 */
-	public GaboratorEventPoint(int t,int f,float m){
+	public PanakoEventPoint(int t,int f,float m){
 		this.t = t;
 		this.f = f;
 		this.m = m;
