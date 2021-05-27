@@ -47,6 +47,9 @@ import java.util.logging.Logger;
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
+import be.panako.strategy.panako.storage.PanakoStorageKV;
+import be.panako.strategy.panako.storage.PanakoResourceMetadata;
+import be.panako.strategy.panako.storage.PanakoHit;
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
@@ -63,9 +66,9 @@ public class PanakoStrategy extends Strategy {
 	@Override
 	public double store(String resource, String description) {
 
-		PanakoDBStorage db;
+		PanakoStorageKV db;
 		
-		db = PanakoDBStorage.getInstance();
+		db = PanakoStorageKV.getInstance();
 		
 		
 		List<PanakoFingerprint> prints = toFingerprints(resource);
@@ -100,7 +103,7 @@ public class PanakoStrategy extends Strategy {
 	
 	public double delete(String resource, String description) {
 
-		PanakoDBStorage db = PanakoDBStorage.getInstance();
+		PanakoStorageKV db = PanakoStorageKV.getInstance();
 		
 		List<PanakoFingerprint> prints = toFingerprints(resource);
 		
@@ -178,7 +181,7 @@ public class PanakoStrategy extends Strategy {
 		return (float) PitchConverter.absoluteCentToHertz(binInAbsCents);
 	}
 
-	private int mostCommonDeltaTforHitList(List<PanakoHit> hitList) {
+	private int mostCommonDeltaTforHitList(List<PanakoMatch> hitList) {
 		Map<Integer,Integer> countPerDiff = new HashMap<>();
 		hitList.forEach((hit)->{
 			int deltaT = hit.Δt();
@@ -215,7 +218,7 @@ public class PanakoStrategy extends Strategy {
 			prints = toFingerprints(query);
 		}
 		
-		PanakoDBStorage db = PanakoDBStorage.getInstance();
+		PanakoStorageKV db = PanakoStorageKV.getInstance();
 		
 		Map<Long,PanakoFingerprint> printMap = new HashMap<>();
 		
@@ -227,7 +230,7 @@ public class PanakoStrategy extends Strategy {
 		}
 		
 		//fingerprint hash to info
-		Map<Long,List<PanakoStorageHit>> matchAccumulator = new HashMap<>();
+		Map<Long,List<PanakoHit>> matchAccumulator = new HashMap<>();
 		
 		StopWatch w = new StopWatch();
 		int queryRange = Config.getInt(Key.PANAKO_QUERY_RANGE);
@@ -235,7 +238,7 @@ public class PanakoStrategy extends Strategy {
 		
 		LOG.info(String.format("Query for %d prints, %d matches in %s \n", printMap.size(),matchAccumulator.size(), w.formattedToString()));
 		
-		 HashMap<Integer,List<PanakoHit>> hitsPerIdentifer = new HashMap<>();
+		 HashMap<Integer,List<PanakoMatch>> hitsPerIdentifer = new HashMap<>();
 		 
 		 final List<QueryResult> queryResults = new ArrayList<>();
 		 
@@ -246,9 +249,9 @@ public class PanakoStrategy extends Strategy {
 				 int identifier = dbHit.resourceID;
 				 int matchTime = dbHit.t;
 				 if(!hitsPerIdentifer.containsKey(identifier)){
-					hitsPerIdentifer.put(identifier, new ArrayList<PanakoHit>());
+					hitsPerIdentifer.put(identifier, new ArrayList<PanakoMatch>());
 				 }
-				 PanakoHit hit = new PanakoHit();
+				 PanakoMatch hit = new PanakoMatch();
 				 hit.identifier = identifier;
 				 hit.matchTime = matchTime;
 				 hit.originalHash = dbHit.originalHash;
@@ -281,19 +284,19 @@ public class PanakoStrategy extends Strategy {
 			 //System.out.println("Matches " + identifier + " matches " + hitlist.size());
 			 
 			 //sort by query time
-			 Collections.sort(hitlist, (Comparator<? super PanakoHit>) (PanakoHit a, PanakoHit b) -> Integer.valueOf(a.queryTime).compareTo(Integer.valueOf(b.queryTime)));
+			 Collections.sort(hitlist, (Comparator<? super PanakoMatch>) (PanakoMatch a, PanakoMatch b) -> Integer.valueOf(a.queryTime).compareTo(Integer.valueOf(b.queryTime)));
 			
 			 //view the first and last hits (max 250)
 			 int maxListSize = 250;
-			 List<PanakoHit> firstHits = hitlist.subList(0, Math.min(maxListSize,Math.max(minimumUnfilteredHits,hitlist.size()/5)));
-			 List<PanakoHit> lastHits  = hitlist.subList(hitlist.size()-Math.min(maxListSize, Math.max(minimumUnfilteredHits,hitlist.size()/5)), hitlist.size());
+			 List<PanakoMatch> firstHits = hitlist.subList(0, Math.min(maxListSize,Math.max(minimumUnfilteredHits,hitlist.size()/5)));
+			 List<PanakoMatch> lastHits  = hitlist.subList(hitlist.size()-Math.min(maxListSize, Math.max(minimumUnfilteredHits,hitlist.size()/5)), hitlist.size());
 			 
 			//find the first x1 where delta t is equals to the median delta t
 			 float y1 = mostCommonDeltaTforHitList(firstHits);
 			 float x1 = 0;
 			 float frequencyFactor = 0;
 			 for(int i = 0 ; i < firstHits.size() ; i++) {
-				 PanakoHit hit = firstHits.get(i);
+				 PanakoMatch hit = firstHits.get(i);
 				 int diff = hit.Δt();
 				 if(diff == y1) {
 					 x1 = hit.queryTime;
@@ -306,7 +309,7 @@ public class PanakoStrategy extends Strategy {
 			 float y2 = mostCommonDeltaTforHitList(lastHits);
 			 float x2 = 0;
 			 for(int i = lastHits.size() - 1 ; i >= 0 ; i--) {
-				 PanakoHit hit = lastHits.get(i);
+				 PanakoMatch hit = lastHits.get(i);
 				 int diff = hit.Δt();
 				 if(diff == y2) {
 					 x2 = hit.queryTime;
@@ -326,7 +329,7 @@ public class PanakoStrategy extends Strategy {
 			 //only continue processing when time factor is reasonable
 			 if(timeFactor > Config.getFloat(Key.PANAKO_MIN_TIME_FACTOR) && timeFactor < Config.getFloat(Key.PANAKO_MAX_TIME_FACTOR) && 
 					 frequencyFactor> Config.getFloat(Key.PANAKO_MIN_FREQ_FACTOR) &&  timeFactor < Config.getFloat(Key.PANAKO_MAX_FREQ_FACTOR)	 ) {
-				 List<PanakoHit> filteredHits = new ArrayList<>();
+				 List<PanakoMatch> filteredHits = new ArrayList<>();
 				 
 				 hitlist.forEach( hit ->{				 
 					 float yActual = hit.Δt();
@@ -370,7 +373,7 @@ public class PanakoStrategy extends Strategy {
 						 //Ideally there is a more or less equal number of matches each second
 						 // note that the last second might not be a full second
 						 TreeMap<Integer,Integer> matchesPerSecondHistogram = new TreeMap<>();
-						 for(PanakoHit hit : filteredHits) {
+						 for(PanakoMatch hit : filteredHits) {
 							 //if(hit.identifier!= FileUtils.getIdentifier(queryPath))
 								 //System.out.printf("%d %d %d %d %d\n", hit.identifier, hit.matchTime, hit.queryTime, hit.originalHash, hit.matchedNearHash);
 							 float offsetInSec = blocksToSeconds(hit.matchTime) - refStart;
@@ -410,46 +413,6 @@ public class PanakoStrategy extends Strategy {
 	}
 	
 	
-	public  static class PanakoHit {
-		
-		public long matchedNearHash;
-
-		public long originalHash;
-
-		/**
-		 * The match audio identifier
-		 */
-		public int identifier;
-		
-		/**
-		 * Time in blocks in the original, matched audio.
-		 */
-		public int matchTime;
-		
-		/**
-		 * Time in blocks in the query.
-		 */
-		public int queryTime;
-		
-		/**
-		 * Frequency bin in the original, matched audio.
-		 */
-		public int matchF1;
-		
-		/**
-		 * Frequency bin the query.
-		 */
-		public int queryF1;
-		
-		public int Δt() {
-			return matchTime - queryTime;
-		}
-		
-		public String toString() {
-			return String.format("%d %d %d %d", identifier, matchTime, queryTime, Δt());
-		}
-	}
-	
 	public static class OlafFingerprintQueryMatch{
 		public int identifier;
 		public double starttime;
@@ -477,8 +440,8 @@ public class PanakoStrategy extends Strategy {
 	@Override
 	public boolean hasResource(String resource) {
 		int identifier = FileUtils.getIdentifier(resource);
-		PanakoDBStorage db;
-		db = PanakoDBStorage.getInstance();
+		PanakoStorageKV db;
+		db = PanakoStorageKV.getInstance();
 		
 		return db.getMetadata(identifier) != null;
 	}
@@ -490,7 +453,7 @@ public class PanakoStrategy extends Strategy {
 
 	@Override
 	public void printStorageStatistics() {
-		PanakoDBStorage.getInstance().entries(true);
+		PanakoStorageKV.getInstance().entries(true);
 	}
 
 	@Override

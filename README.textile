@@ -18,7 +18,6 @@ h2. Overview
 ## "Monitor Stream for Matches":#monitor
 ## "Print Storage Statistics":#stats
 ## "Print Configuration":#configuration
-## "Compare Media Files":#compare
 # "Further reading":#read
 # "Credits":#credits
 # "Reproduce the ISMIR Paper Results":#ismir
@@ -217,7 +216,6 @@ The directory @scripts/reproducibility@ contains scripts to reproduce the result
 # Query files are created from the Jamendo data set.
 # Panako is queried for each query file, results are logged
 # Results are parsed.
-
 
 To run the evaluation scripts, a UNIX like system with following utilities is required:
 

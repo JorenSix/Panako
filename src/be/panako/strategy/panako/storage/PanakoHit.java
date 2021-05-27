@@ -1,6 +1,6 @@
-package be.panako.strategy.panako;
+package be.panako.strategy.panako.storage;
 
-public class PanakoStorageHit{
+public class PanakoHit{
 	public final long originalHash;
 	public final long matchedNearHash;
 	
@@ -8,7 +8,7 @@ public class PanakoStorageHit{
 	public final int f;
 	public final int resourceID;
 	
-	public PanakoStorageHit(long originalHash, long matchedNearHash,long t, long resourceID, long f) {
+	public PanakoHit(long originalHash, long matchedNearHash,long t, long resourceID, long f) {
 		this.originalHash = originalHash;
 		this.matchedNearHash = matchedNearHash;
 		this.t=(int)t;

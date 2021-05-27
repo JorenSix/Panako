@@ -117,7 +117,6 @@ public enum Key{
 	PCH_OVERLAP(1024),
 	PCH_SIZE(2048), 
 	
-	
 	/**
 	 * The storage to use: MEM|FILE|LMDB
 	 * Stands for Memory, files on disk or the LMDB key-value store
@@ -130,7 +129,7 @@ public enum Key{
 	/**
 	 * File cache directory for bulk import
 	 */
-	OLAF_CACHE_FOLDER("~/.panako/cache"), 
+	OLAF_CACHE_FOLDER("~/.panako/dbs/olaf_cache"), 
 	
 	OLAF_SAMPLE_RATE("16000"),
 	OLAF_SIZE("1024"), 
@@ -184,7 +183,9 @@ public enum Key{
 	PANAKO_MIN_FREQ_FACTOR("0.8"), 
 	PANAKO_MAX_FREQ_FACTOR("1.2"), 
 	
-	PANAKO_LMDB_FOLDER("~/.panako/dbs/panako_db"),
+	PANAKO_LMDB_FOLDER("~/.panako/dbs/panako_db"), 
+	PANAKO_CACHE_FOLDER("~/.panako/dbs/panako_cache"),
+	
 	;
 	
 	

@@ -34,13 +34,24 @@
 
 package be.panako.strategy.panako.storage;
 
-public class PanakoResourceMetadata {
-	public int numFingerprints;
-	public double duration;
-	public String path;
-	int identifier;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+public interface PanakoStorage {
+
+	void storeMetadata(long resourceID, String resourcePath, float duration, int fingerprints);
+
+	void addToStoreQueue(long fingerprintHash, int resourceIdentifier, int t1, int f1);
+
+	void processStoreQueue();
+
+	PanakoResourceMetadata getMetadata(long identifier);
 	
-	public double printsPerSecond() {
-		return numFingerprints / duration;
-	}
+	void addToQueryQueue(long queryHash);
+	
+	void processQueryQueue(Map<Long,List<PanakoHit>> matchAccumulator,int range);
+	
+	void processQueryQueue(Map<Long,List<PanakoHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid);
+
 }

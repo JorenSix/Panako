@@ -32,7 +32,7 @@
 *                                                                          *
 ****************************************************************************/
 
-package be.panako.strategy.panako;
+package be.panako.strategy.panako.storage;
 
 import java.io.File;
 import java.nio.ByteBuffer;
@@ -58,12 +58,12 @@ import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
 
-public class PanakoDBStorage {
+public class PanakoStorageKV implements PanakoStorage{
 	
 	/**
 	 * The single instance of the storage.
 	 */
-	private static PanakoDBStorage instance;
+	private static PanakoStorageKV instance;
 
 	/**
 	 * A mutex for synchronization purposes
@@ -74,11 +74,11 @@ public class PanakoDBStorage {
 	 * @return Returns or creates a storage instance. This should be a thread
 	 *         safe operation.
 	 */
-	public synchronized static PanakoDBStorage getInstance() {
+	public synchronized static PanakoStorageKV getInstance() {
 		if (instance == null) {
 			synchronized (mutex) {
 				if (instance == null) {
-					instance = new PanakoDBStorage();
+					instance = new PanakoStorageKV();
 				}
 			}
 		}
@@ -94,7 +94,7 @@ public class PanakoDBStorage {
 	final Map<Long,List<long[]>> deleteQueue;
 	final Map<Long,List<Long>> queryQueue;
 	
-	public PanakoDBStorage() {
+	public PanakoStorageKV() {
 		String folder = Config.get(Key.PANAKO_LMDB_FOLDER);
 		folder = FileUtils.expandHomeDir(folder);
 		
@@ -274,11 +274,11 @@ public class PanakoDBStorage {
 		queryQueue.get(threadID).add(queryHash);
 	}
 	
-	public void processQueryQueue(Map<Long,List<PanakoStorageHit>> matchAccumulator,int range) {
+	public void processQueryQueue(Map<Long,List<PanakoHit>> matchAccumulator,int range) {
 		processQueryQueue(matchAccumulator, range, new HashSet<Integer>());
 	}
 	
-	public void processQueryQueue(Map<Long,List<PanakoStorageHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid) {
+	public void processQueryQueue(Map<Long,List<PanakoHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid) {
 		
 		if (queryQueue.isEmpty())
 			return;
@@ -316,8 +316,8 @@ public class PanakoDBStorage {
 				      if(fingerprintHash <= stopKey) {
 				    	  if(!resourcesToAvoid.contains((int) resourceID)) {
 				    		  if(!matchAccumulator.containsKey(originalKey))
-				    			  matchAccumulator.put(originalKey,new ArrayList<PanakoStorageHit>());
-				    		  matchAccumulator.get(originalKey).add(new PanakoStorageHit(originalKey, fingerprintHash, t, resourceID, f));
+				    			  matchAccumulator.put(originalKey,new ArrayList<PanakoHit>());
+				    		  matchAccumulator.get(originalKey).add(new PanakoHit(originalKey, fingerprintHash, t, resourceID, f));
 				    	  }
 				   
 					      while(true) {
@@ -330,8 +330,8 @@ public class PanakoDBStorage {
 							      
 							      if(!resourcesToAvoid.contains((int) resourceID)) {
 						    		  if(!matchAccumulator.containsKey(originalKey))
-						    			  matchAccumulator.put(originalKey,new ArrayList<PanakoStorageHit>());
-						    		  matchAccumulator.get(originalKey).add(new PanakoStorageHit(originalKey, fingerprintHash, t, resourceID,f));
+						    			  matchAccumulator.put(originalKey,new ArrayList<PanakoHit>());
+						    		  matchAccumulator.get(originalKey).add(new PanakoHit(originalKey, fingerprintHash, t, resourceID,f));
 						    	  }
 						      }
 						      
@@ -348,8 +348,8 @@ public class PanakoDBStorage {
 							      
 							      if(!resourcesToAvoid.contains((int) resourceID)) {
 						    		  if(!matchAccumulator.containsKey(originalKey))
-						    			  matchAccumulator.put(originalKey,new ArrayList<PanakoStorageHit>());
-						    		  matchAccumulator.get(originalKey).add(new PanakoStorageHit(originalKey, fingerprintHash, t, resourceID,f));
+						    			  matchAccumulator.put(originalKey,new ArrayList<PanakoHit>());
+						    		  matchAccumulator.get(originalKey).add(new PanakoHit(originalKey, fingerprintHash, t, resourceID,f));
 						    	  }
 						      } else {
 						    	  //no next found, end of db
