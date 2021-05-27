@@ -128,7 +128,7 @@ public class Store extends Application {
 
 				String message=null;
 				if(isDouble){
-					message = String.format("%d/%d;%s;%s;%s",taskID,totalTasks,file.getName(),StopWatch.toTime("", 0),"Skipped: resource already stored;");
+					message = String.format("%d/%d;%s;%s",taskID,totalTasks,file.getName(),"Skipped: resource already stored;");
 				}else{
 					double durationInSeconds = strategy.store(file.getAbsolutePath(), file.getName());
 					double cpuSecondsPassed = w.timePassed(TimeUnit.SECONDS);

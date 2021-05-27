@@ -455,11 +455,11 @@ public class OlafStrategy extends Strategy {
 	@Override
 	public boolean hasResource(String resource) {
 		int identifier = FileUtils.getIdentifier(resource);
-		OlafStorage db;
-		if (Config.getBoolean(Key.OLAF_CACHE_TO_FILE)) {
-			db = OlafStorageFile.getInstance();
-		}else {
+		final OlafStorage db;
+		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
 			db = OlafStorageKV.getInstance();
+		}else {
+			db = OlafStorageMemory.getInstance();
 		}
 		return db.getMetadata(identifier) != null;
 	}
