@@ -51,6 +51,12 @@ import java.util.logging.Logger;
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
+import be.panako.strategy.olaf.storage.OlafStorageKV;
+import be.panako.strategy.olaf.storage.OlafStorageFile;
+import be.panako.strategy.olaf.storage.OlafStorageMemory;
+import be.panako.strategy.olaf.storage.OlafResourceMetadata;
+import be.panako.strategy.olaf.storage.OlafStorage;
+import be.panako.strategy.olaf.storage.OlafHit;
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
@@ -70,14 +76,14 @@ public class OlafStrategy extends Strategy {
 		OlafStorage db;
 		
 		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
-			db = OlafDBStorage.getInstance();
+			db = OlafStorageKV.getInstance();
 		}else {
-			db = OlafMemoryStorage.getInstance();
+			db = OlafStorageMemory.getInstance();
 		}
 		
 		OlafStorage fileCache = null;
 		if(Config.getBoolean(Key.OLAF_CACHE_TO_FILE)) {
-			fileCache = OlafFileStorage.getInstance();
+			fileCache = OlafStorageFile.getInstance();
 		}
 		
 		List<OlafFingerprint> prints = toFingerprints(resource);
@@ -120,7 +126,7 @@ public class OlafStrategy extends Strategy {
 	
 	public double delete(String resource, String description) {
 
-		OlafDBStorage db = OlafDBStorage.getInstance();
+		OlafStorageKV db = OlafStorageKV.getInstance();
 		
 		List<OlafFingerprint> prints = toFingerprints(resource);
 		
@@ -198,7 +204,7 @@ public class OlafStrategy extends Strategy {
 		return t * (Config.getInt(Key.OLAF_STEP_SIZE)/(float) Config.getInt(Key.OLAF_SAMPLE_RATE));
 	}
 
-	private int mostCommonDeltaTforHitList(List<OlafHit> hitList) {
+	private int mostCommonDeltaTforHitList(List<OlafMatch> hitList) {
 		Map<Integer,Integer> countPerDiff = new HashMap<>();
 		hitList.forEach((hit)->{
 			int deltaT = hit.Δt();
@@ -238,9 +244,9 @@ public class OlafStrategy extends Strategy {
 		final OlafStorage db;
 		
 		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
-			db = OlafDBStorage.getInstance();
+			db = OlafStorageKV.getInstance();
 		}else {
-			db = OlafMemoryStorage.getInstance();
+			db = OlafStorageMemory.getInstance();
 		}
 		
 		Map<Long,OlafFingerprint> printMap = new HashMap<>();
@@ -253,7 +259,7 @@ public class OlafStrategy extends Strategy {
 		}
 		
 		//fingerprint hash to info
-		Map<Long,List<OlafStorageHit>> matchAccumulator = new HashMap<>();
+		Map<Long,List<OlafHit>> matchAccumulator = new HashMap<>();
 		
 		StopWatch w = new StopWatch();
 		int queryRange = Config.getInt(Key.OLAF_QUERY_RANGE); 
@@ -261,7 +267,7 @@ public class OlafStrategy extends Strategy {
 		
 		LOG.info(String.format("Query for %d prints, %d matches in %s \n", printMap.size(),matchAccumulator.size(), w.formattedToString()));
 		
-		 HashMap<Integer,List<OlafHit>> hitsPerIdentifer = new HashMap<>();
+		 HashMap<Integer,List<OlafMatch>> hitsPerIdentifer = new HashMap<>();
 		 
 		 final List<QueryResult> queryResults = new ArrayList<>();
 		 
@@ -272,9 +278,9 @@ public class OlafStrategy extends Strategy {
 				 int identifier = dbHit.resourceID;
 				 int matchTime = dbHit.t;
 				 if(!hitsPerIdentifer.containsKey(identifier)){
-					hitsPerIdentifer.put(identifier, new ArrayList<OlafHit>());
+					hitsPerIdentifer.put(identifier, new ArrayList<OlafMatch>());
 				 }
-				 OlafHit hit = new OlafHit();
+				 OlafMatch hit = new OlafMatch();
 				 hit.identifier = identifier;
 				 hit.matchTime = matchTime;
 				 hit.originalHash = dbHit.originalHash;
@@ -303,18 +309,18 @@ public class OlafStrategy extends Strategy {
 			 //System.out.println("Matches " + identifier + " matches " + hitlist.size());
 			 
 			 //sort by query time
-			 Collections.sort(hitlist, (Comparator<? super OlafHit>) (OlafHit a, OlafHit b) -> Integer.valueOf(a.queryTime).compareTo(Integer.valueOf(b.queryTime)));
+			 Collections.sort(hitlist, (Comparator<? super OlafMatch>) (OlafMatch a, OlafMatch b) -> Integer.valueOf(a.queryTime).compareTo(Integer.valueOf(b.queryTime)));
 			
 			 //view the first and last hits (max 250)
 			 int maxListSize = 250;
-			 List<OlafHit> firstHits = hitlist.subList(0, Math.min(maxListSize,Math.max(minimumUnfilteredHits,hitlist.size()/5)));
-			 List<OlafHit> lastHits  = hitlist.subList(hitlist.size()-Math.min(maxListSize, Math.max(minimumUnfilteredHits,hitlist.size()/5)), hitlist.size());
+			 List<OlafMatch> firstHits = hitlist.subList(0, Math.min(maxListSize,Math.max(minimumUnfilteredHits,hitlist.size()/5)));
+			 List<OlafMatch> lastHits  = hitlist.subList(hitlist.size()-Math.min(maxListSize, Math.max(minimumUnfilteredHits,hitlist.size()/5)), hitlist.size());
 			 
 			//find the first x1 where delta t is equals to the median delta t
 			 float y1 = mostCommonDeltaTforHitList(firstHits);
 			 float x1 = 0;
 			 for(int i = 0 ; i < firstHits.size() ; i++) {
-				 OlafHit hit = firstHits.get(i);
+				 OlafMatch hit = firstHits.get(i);
 				 int diff = hit.Δt();
 				 if(diff == y1) {
 					 x1 = hit.queryTime;
@@ -326,7 +332,7 @@ public class OlafStrategy extends Strategy {
 			 float y2 = mostCommonDeltaTforHitList(lastHits);
 			 float x2 = 0;
 			 for(int i = lastHits.size() - 1 ; i >= 0 ; i--) {
-				 OlafHit hit = lastHits.get(i);
+				 OlafMatch hit = lastHits.get(i);
 				 int diff = hit.Δt();
 				 if(diff == y2) {
 					 x2 = hit.queryTime;
@@ -345,7 +351,7 @@ public class OlafStrategy extends Strategy {
 			 
 			 //only continue processing when time factor is reasonable
 			 if(timeFactor > Config.getFloat(Key.OLAF_MIN_TIME_FACTOR) && timeFactor < Config.getFloat(Key.OLAF_MAX_TIME_FACTOR)) {
-				 List<OlafHit> filteredHits = new ArrayList<>();
+				 List<OlafMatch> filteredHits = new ArrayList<>();
 				 
 				 hitlist.forEach( hit ->{				 
 					 float yActual = hit.Δt();
@@ -389,7 +395,7 @@ public class OlafStrategy extends Strategy {
 						 //Ideally there is a more or less equal number of matches each second
 						 // note that the last second might not be a full second
 						 TreeMap<Integer,Integer> matchesPerSecondHistogram = new TreeMap<>();
-						 for(OlafHit hit : filteredHits) {
+						 for(OlafMatch hit : filteredHits) {
 							 //if(hit.identifier!= FileUtils.getIdentifier(queryPath))
 								 //System.out.printf("%d %d %d %d %d\n", hit.identifier, hit.matchTime, hit.queryTime, hit.originalHash, hit.matchedNearHash);
 							 float offsetInSec = blocksToSeconds(hit.matchTime) - refStart;
@@ -429,36 +435,6 @@ public class OlafStrategy extends Strategy {
 	}
 	
 	
-	public  static class OlafHit {
-		
-		public long matchedNearHash;
-
-		public long originalHash;
-
-		/**
-		 * The match audio identifier
-		 */
-		public int identifier;
-		
-		/**
-		 * Time in blocks in the original, matched audio.
-		 */
-		public int matchTime;
-		
-		/**
-		 * Time in blocks in the query.
-		 */
-		public int queryTime;
-		
-		public int Δt() {
-			return matchTime - queryTime;
-		}
-		
-		public String toString() {
-			return String.format("%d %d %d %d", identifier, matchTime, queryTime, Δt());
-		}
-	}
-	
 	public static class OlafFingerprintQueryMatch{
 		public int identifier;
 		public double starttime;
@@ -488,9 +464,9 @@ public class OlafStrategy extends Strategy {
 		int identifier = FileUtils.getIdentifier(resource);
 		OlafStorage db;
 		if (Config.getBoolean(Key.OLAF_CACHE_TO_FILE)) {
-			db = OlafFileStorage.getInstance();
+			db = OlafStorageFile.getInstance();
 		}else {
-			db = OlafDBStorage.getInstance();
+			db = OlafStorageKV.getInstance();
 		}
 		return db.getMetadata(identifier) != null;
 	}
@@ -502,7 +478,7 @@ public class OlafStrategy extends Strategy {
 
 	@Override
 	public void printStorageStatistics() {
-		OlafDBStorage.getInstance().entries(true);
+		OlafStorageKV.getInstance().entries(true);
 	}
 
 	@Override
@@ -513,7 +489,7 @@ public class OlafStrategy extends Strategy {
 	private List<long[]> readFingerprintFile(String fingerprintFilePath) {
 		List<long[]> prints = new ArrayList<>();
 		try {
-			OlafFileStorage fileDb = OlafFileStorage.getInstance();
+			OlafStorageFile fileDb = OlafStorageFile.getInstance();
 			final File file = new File(fingerprintFilePath);
 			FileReader fileReader = new FileReader(file);
 			final BufferedReader reader = new BufferedReader(fileReader);
@@ -532,8 +508,8 @@ public class OlafStrategy extends Strategy {
 	}
 
 	public void load() {
-		OlafDBStorage db = OlafDBStorage.getInstance();
-		OlafFileStorage fileDb = OlafFileStorage.getInstance();
+		OlafStorageKV db = OlafStorageKV.getInstance();
+		OlafStorageFile fileDb = OlafStorageFile.getInstance();
 		
 		String folder = Config.get(Key.OLAF_CACHE_FOLDER);
 		
@@ -606,7 +582,7 @@ public class OlafStrategy extends Strategy {
 			System.out.println(sb.toString());
 			
 		}else {
-			OlafFileStorage db = OlafFileStorage.getInstance();
+			OlafStorageFile db = OlafStorageFile.getInstance();
 			int resourceID = FileUtils.getIdentifier(path);
 			for(OlafFingerprint print : prints) {
 				long hash = print.hash();			

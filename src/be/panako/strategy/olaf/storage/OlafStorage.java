@@ -32,15 +32,26 @@
 *                                                                          *
 ****************************************************************************/
 
-package be.panako.strategy.olaf;
+package be.panako.strategy.olaf.storage;
 
-public class OlafResourceMetadata {
-	public int numFingerprints;
-	public double duration;
-	public String path;
-	int identifier;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+public interface OlafStorage {
+
+	void storeMetadata(long resourceID, String resourcePath, float duration, int fingerprints);
+
+	void addToStoreQueue(long fingerprintHash, int resourceIdentifier, int t1);
+
+	void processStoreQueue();
+
+	OlafResourceMetadata getMetadata(long identifier);
 	
-	public double printsPerSecond() {
-		return numFingerprints / duration;
-	}
+	void addToQueryQueue(long queryHash);
+	
+	void processQueryQueue(Map<Long,List<OlafHit>> matchAccumulator,int range);
+	
+	void processQueryQueue(Map<Long,List<OlafHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid);
+
 }

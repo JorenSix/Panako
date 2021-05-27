@@ -32,10 +32,7 @@
 *                                                                          *
 ****************************************************************************/
 
-
 package be.panako.strategy.olaf;
-
-import be.panako.util.Morton2D;
 
 /**
  * A fingerprint connects three event points in a spectrogram. The points are defined
@@ -95,72 +92,6 @@ public class OlafFingerprint {
 	
 	public OlafFingerprint(OlafEventPoint e1, OlafEventPoint e2, OlafEventPoint e3){
 		this(e1.t,e1.f,e1.m,  e2.t,e2.f,e2.m,  e3.t,e3.f,e3.m);
-	}
-	
-	/**
-	 * Calculate a hash representing this fingerprint.
-	 * 
-	 * @return a hash representing this fingerprint.
-	 */
-	public int robustHash(){
-		int hash = 0;
-		
-		int f1LargerThanF2 = f2 > f3 ? 1 : 0;
-		int f2LargerThanF3 = f2 > f3 ? 1 : 0;
-		int f3LargerThanF1 = f3 > f1 ? 1 : 0;
-
-		int m1LargerThanm2 = m1 > m2 ? 1 : 0;
-		int m2LargerThanm3 = m2 > m3 ? 1 : 0;
-		int m3LargerThanm1 = m3 > m1 ? 1 : 0;
-
-		int dt1t2LargerThant3t2 = (t2 - t1) > (t3 - t2) ? 1 : 0;
-
-		//9 bits f in range( 0 - 512) to 2 bits
-		int f1Range = (f1 >> 7);
-		int f2Range = (f2 >> 7);
-		int f3Range = (f3 >> 7);
-
-		float diffT2T1 = (t2 - t1);
-	    float diffT3T1 = t3 - t2;
-	    float timeRatio = diffT2T1 / diffT3T1;
-
-	    float maxTDiff = 31-1;
-	    float minTDiff = 2;
-	    float mappedTRatio = (float) Math.log(timeRatio);
-	    float minTRatio = (float) Math.log(minTDiff/maxTDiff);
-	    float maxTRatio = (float) Math.log(maxTDiff/minTDiff);
-	    float spreadT = maxTRatio - minTRatio;
-	    int timeRatioHash = Math.round((mappedTRatio - minTRatio) / spreadT * (1<<9));
-	    
-	    float diffF2F1 = f2 - f1;
-	    float diffF3F2 = f3 - f2;
-	    float freqRatio = diffF2F1 / diffF3F2;
-	    
-	    float maxFDiff = 127-1;
-	    float minFDiff = 1;
-	    float mappedFRatio = (float) Math.log(Math.abs(freqRatio));
-	    float minFRatio = (float) Math.log(minFDiff/maxFDiff);
-	    float maxFRatio = (float) Math.log(maxFDiff/minFDiff);
-	    float spreadF = maxFRatio - minFRatio;
-	    int freqRatioHash = Math.round((mappedFRatio - minFRatio) / spreadF * (1<<9));
-
-	    int interleavedRatios = (int) Morton2D.encode(freqRatioHash,timeRatioHash);
-
-		//combine the hash components into a single 32 bit integer
-		hash = 
-				((interleavedRatios        &  ((1<<18) -1)   ) << 0 ) +
-		        ((f1LargerThanF2           &  ((1<<1 ) -1)   ) << 18) +
-		        ((f2LargerThanF3           &  ((1<<1 ) -1)   ) << 19) +
-		        ((f3LargerThanF1           &  ((1<<1 ) -1)   ) << 20) +
-		        ((m1LargerThanm2           &  ((1<<1 ) -1)   ) << 21) +
-		        ((m2LargerThanm3           &  ((1<<1 ) -1)   ) << 22) +
-		        ((m3LargerThanm1           &  ((1<<1 ) -1)   ) << 23) +
-		        ((f1Range           	   &  ((1<<2 ) -1)   ) << 24) +
-		        ((f2Range                  &  ((1<<2 ) -1)   ) << 26) +
-		        ((f3Range                  &  ((1<<2 ) -1)   ) << 28) +
-		        ((dt1t2LargerThant3t2      &  ((1<<1 ) -1)   ) << 29) ;
-		
-		return hash;
 	}
 	
 	public long hash(){

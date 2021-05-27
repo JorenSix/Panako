@@ -126,7 +126,6 @@ public class PanakoDBStorage {
 		env.close();
 	}
 	
-	
 	public void storeMetadata(long resourceID,String resourcePath,float duration, int fingerprints) {
 		final ByteBuffer key = ByteBuffer.allocateDirect(8);
 		byte[] resourcePathBytes = resourcePath.getBytes(java.nio.charset.StandardCharsets.UTF_8);

@@ -47,10 +47,10 @@ import java.util.Random;
 import org.junit.Test;
 
 import be.panako.strategy.olaf.OlafFingerprint;
-import be.panako.strategy.olaf.OlafResourceMetadata;
-import be.panako.strategy.olaf.OlafStorageHit;
-import be.panako.strategy.olaf.OlafDBStorage;
 import be.panako.strategy.olaf.OlafStrategy;
+import be.panako.strategy.olaf.storage.OlafStorageKV;
+import be.panako.strategy.olaf.storage.OlafResourceMetadata;
+import be.panako.strategy.olaf.storage.OlafHit;
 
 public class OlafTests {
 	
@@ -86,7 +86,7 @@ public class OlafTests {
 	
 	@Test
 	public void testOlafStorage() {
-		OlafDBStorage db = OlafDBStorage.getInstance();
+		OlafStorageKV db = OlafStorageKV.getInstance();
 		
 		
 		for(int i = 0 ; i < 7 ; i++) {
@@ -100,7 +100,7 @@ public class OlafTests {
 		db.processStoreQueue();	
 		
 		db.addToQueryQueue(3);
-		Map<Long,List<OlafStorageHit>> matchAccumulator = new HashMap<>();
+		Map<Long,List<OlafHit>> matchAccumulator = new HashMap<>();
 		db.processQueryQueue(matchAccumulator, 1);
 		
 		db.addToDeleteQueue(1,1,1);
@@ -196,7 +196,7 @@ String rec = "/Volumes/papiom/Datasets/Free Music Archive - FMA/fma_small/013/01
 		
 		String resource;
 		List<OlafFingerprint> prints;
-		OlafDBStorage db = OlafDBStorage.getInstance();
+		OlafStorageKV db = OlafStorageKV.getInstance();
 		
 		db.entries(true);
 		
@@ -210,7 +210,7 @@ String rec = "/Volumes/papiom/Datasets/Free Music Archive - FMA/fma_small/013/01
 			long hash = copy.hash();
 			db.addToQueryQueue(hash);
 		}
-		Map<Long,List<OlafStorageHit>> matchAccumulator = new HashMap<>();
+		Map<Long,List<OlafHit>> matchAccumulator = new HashMap<>();
 		db.processQueryQueue(matchAccumulator, 5);
 		System.out.println("matches after modification of t1 " + matchAccumulator.size());
 		System.out.println("Prints: " + prints.size());

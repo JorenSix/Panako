@@ -1,4 +1,4 @@
-package be.panako.strategy.olaf;
+package be.panako.strategy.olaf.storage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,12 +8,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-public class OlafMemoryStorage implements OlafStorage {
+public class OlafStorageMemory implements OlafStorage {
 
 	/**
 	 * The single instance of the storage.
 	 */
-	private static OlafMemoryStorage instance;
+	private static OlafStorageMemory instance;
 
 	/**
 	 * A mutex for synchronization purposes
@@ -24,11 +24,11 @@ public class OlafMemoryStorage implements OlafStorage {
 	 * @return Returns or creates a storage instance. This should be a thread
 	 *         safe operation.
 	 */
-	public synchronized static OlafMemoryStorage getInstance() {
+	public synchronized static OlafStorageMemory getInstance() {
 		if (instance == null) {
 			synchronized (mutex) {
 				if (instance == null) {
-					instance = new OlafMemoryStorage();
+					instance = new OlafStorageMemory();
 				}
 			}
 		}
@@ -41,7 +41,7 @@ public class OlafMemoryStorage implements OlafStorage {
 	
 	final Map<Long,List<Long>> queryQueue;
 	
-	public OlafMemoryStorage() {
+	public OlafStorageMemory() {
 		fingerprints = new TreeMap<>();
 		resourceMap = new HashMap<>();
 		queryQueue = new HashMap<Long,List<Long>>();
@@ -86,11 +86,11 @@ public class OlafMemoryStorage implements OlafStorage {
 		queryQueue.get(threadID).add(queryHash);
 	}
 
-	public void processQueryQueue(Map<Long,List<OlafStorageHit>> matchAccumulator,int range) {
+	public void processQueryQueue(Map<Long,List<OlafHit>> matchAccumulator,int range) {
 		processQueryQueue(matchAccumulator, range, new HashSet<Integer>());
 	}
 	
-	public void processQueryQueue(Map<Long,List<OlafStorageHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid) {
+	public void processQueryQueue(Map<Long,List<OlafHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid) {
 		if (queryQueue.isEmpty())
 			return;
 		
@@ -111,13 +111,13 @@ public class OlafMemoryStorage implements OlafStorage {
 				if (results != null) {
 					for (int[] result : results) {
 						if (!matchAccumulator.containsKey(originalKey))
-							matchAccumulator.put(originalKey, new ArrayList<OlafStorageHit>());
+							matchAccumulator.put(originalKey, new ArrayList<OlafHit>());
 						long fingerprintHash = key;
 						long resourceID = result[0];
 						long t = result[1];
 						if(!resourcesToAvoid.contains((int) resourceID))
 						matchAccumulator.get(originalKey)
-								.add(new OlafStorageHit(originalKey, fingerprintHash, t, resourceID));
+								.add(new OlafHit(originalKey, fingerprintHash, t, resourceID));
 					}
 				}
 			}

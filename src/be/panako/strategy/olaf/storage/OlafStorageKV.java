@@ -32,7 +32,7 @@
 *                                                                          *
 ****************************************************************************/
 
-package be.panako.strategy.olaf;
+package be.panako.strategy.olaf.storage;
 
 import java.io.File;
 import java.nio.ByteBuffer;
@@ -58,12 +58,12 @@ import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
 
-public class OlafDBStorage implements OlafStorage {
+public class OlafStorageKV implements OlafStorage {
 	
 	/**
 	 * The single instance of the storage.
 	 */
-	private static OlafDBStorage instance;
+	private static OlafStorageKV instance;
 
 	/**
 	 * A mutex for synchronization purposes
@@ -74,11 +74,11 @@ public class OlafDBStorage implements OlafStorage {
 	 * @return Returns or creates a storage instance. This should be a thread
 	 *         safe operation.
 	 */
-	public synchronized static OlafDBStorage getInstance() {
+	public synchronized static OlafStorageKV getInstance() {
 		if (instance == null) {
 			synchronized (mutex) {
 				if (instance == null) {
-					instance = new OlafDBStorage();
+					instance = new OlafStorageKV();
 				}
 			}
 		}
@@ -93,7 +93,7 @@ public class OlafDBStorage implements OlafStorage {
 	final Map<Long,List<long[]>> deleteQueue;
 	final Map<Long,List<Long>> queryQueue;
 	
-	public OlafDBStorage() {
+	public OlafStorageKV() {
 		String folder = Config.get(Key.OLAF_LMDB_FOLDER);
 		folder = FileUtils.expandHomeDir(folder);
 		
@@ -286,11 +286,11 @@ public class OlafDBStorage implements OlafStorage {
 		queryQueue.get(threadID).add(queryHash);
 	}
 	
-	public void processQueryQueue(Map<Long,List<OlafStorageHit>> matchAccumulator,int range) {
+	public void processQueryQueue(Map<Long,List<OlafHit>> matchAccumulator,int range) {
 		processQueryQueue(matchAccumulator, range, new HashSet<Integer>());
 	}
 	
-	public void processQueryQueue(Map<Long,List<OlafStorageHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid) {
+	public void processQueryQueue(Map<Long,List<OlafHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid) {
 		
 		if (queryQueue.isEmpty())
 			return;
@@ -327,8 +327,8 @@ public class OlafDBStorage implements OlafStorage {
 				      if(fingerprintHash <= stopKey) {
 				    	  if(!resourcesToAvoid.contains((int) resourceID)) {
 				    		  if(!matchAccumulator.containsKey(originalKey))
-				    			  matchAccumulator.put(originalKey,new ArrayList<OlafStorageHit>());
-				    		  matchAccumulator.get(originalKey).add(new OlafStorageHit(originalKey, fingerprintHash, t, resourceID));
+				    			  matchAccumulator.put(originalKey,new ArrayList<OlafHit>());
+				    		  matchAccumulator.get(originalKey).add(new OlafHit(originalKey, fingerprintHash, t, resourceID));
 				    	  }
 				   
 					      while(true) {
@@ -340,8 +340,8 @@ public class OlafDBStorage implements OlafStorage {
 							      
 							      if(!resourcesToAvoid.contains((int) resourceID)) {
 						    		  if(!matchAccumulator.containsKey(originalKey))
-						    			  matchAccumulator.put(originalKey,new ArrayList<OlafStorageHit>());
-						    		  matchAccumulator.get(originalKey).add(new OlafStorageHit(originalKey, fingerprintHash, t, resourceID));
+						    			  matchAccumulator.put(originalKey,new ArrayList<OlafHit>());
+						    		  matchAccumulator.get(originalKey).add(new OlafHit(originalKey, fingerprintHash, t, resourceID));
 						    	  }
 						      }
 						      
@@ -357,8 +357,8 @@ public class OlafDBStorage implements OlafStorage {
 							      
 							      if(!resourcesToAvoid.contains((int) resourceID)) {
 						    		  if(!matchAccumulator.containsKey(originalKey))
-						    			  matchAccumulator.put(originalKey,new ArrayList<OlafStorageHit>());
-						    		  matchAccumulator.get(originalKey).add(new OlafStorageHit(originalKey, fingerprintHash, t, resourceID));
+						    			  matchAccumulator.put(originalKey,new ArrayList<OlafHit>());
+						    		  matchAccumulator.get(originalKey).add(new OlafHit(originalKey, fingerprintHash, t, resourceID));
 						    	  }
 						      } else {
 						    	  //no next found, end of db

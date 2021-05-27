@@ -32,7 +32,7 @@
 *                                                                          *
 ****************************************************************************/
 
-package be.panako.strategy.olaf;
+package be.panako.strategy.olaf.storage;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -45,12 +45,12 @@ import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
 
-public class OlafFileStorage implements OlafStorage {
+public class OlafStorageFile implements OlafStorage {
 	
 	/**
 	 * The single instance of the storage.
 	 */
-	private static OlafFileStorage instance;
+	private static OlafStorageFile instance;
 
 	/**
 	 * A mutex for synchronization purposes
@@ -61,11 +61,11 @@ public class OlafFileStorage implements OlafStorage {
 	 * @return Returns or creates a storage instance. This should be a thread
 	 *         safe operation.
 	 */
-	public synchronized static OlafFileStorage getInstance() {
+	public synchronized static OlafStorageFile getInstance() {
 		if (instance == null) {
 			synchronized (mutex) {
 				if (instance == null) {
-					instance = new OlafFileStorage();
+					instance = new OlafStorageFile();
 				}
 			}
 		}
@@ -77,7 +77,7 @@ public class OlafFileStorage implements OlafStorage {
 	final File storeDir;
 
 	
-	public OlafFileStorage() {
+	public OlafStorageFile() {
 		String folder = Config.get(Key.OLAF_CACHE_FOLDER);
 		folder = FileUtils.expandHomeDir(folder);
 		if(!new File(folder).exists()) {
@@ -186,11 +186,11 @@ public class OlafFileStorage implements OlafStorage {
 
 
 	@Override
-	public void processQueryQueue(Map<Long, List<OlafStorageHit>> matchAccumulator, int range) {
+	public void processQueryQueue(Map<Long, List<OlafHit>> matchAccumulator, int range) {
 	}
 
 	@Override
-	public void processQueryQueue(Map<Long, List<OlafStorageHit>> matchAccumulator, int range,
+	public void processQueryQueue(Map<Long, List<OlafHit>> matchAccumulator, int range,
 			Set<Integer> resourcesToAvoid) {
 
 	}

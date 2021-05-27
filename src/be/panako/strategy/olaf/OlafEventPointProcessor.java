@@ -32,7 +32,6 @@
 *                                                                          *
 ****************************************************************************/
 
-
 package be.panako.strategy.olaf;
 
 import java.util.ArrayList;
