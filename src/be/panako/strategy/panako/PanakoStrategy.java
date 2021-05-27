@@ -178,7 +178,7 @@ public class PanakoStrategy extends Strategy {
 		return (float) PitchConverter.absoluteCentToHertz(binInAbsCents);
 	}
 
-	private int mostCommonDeltaTforHitList(List<GaboratorHit> hitList) {
+	private int mostCommonDeltaTforHitList(List<PanakoHit> hitList) {
 		Map<Integer,Integer> countPerDiff = new HashMap<>();
 		hitList.forEach((hit)->{
 			int deltaT = hit.Δt();
@@ -235,7 +235,7 @@ public class PanakoStrategy extends Strategy {
 		
 		LOG.info(String.format("Query for %d prints, %d matches in %s \n", printMap.size(),matchAccumulator.size(), w.formattedToString()));
 		
-		 HashMap<Integer,List<GaboratorHit>> hitsPerIdentifer = new HashMap<>();
+		 HashMap<Integer,List<PanakoHit>> hitsPerIdentifer = new HashMap<>();
 		 
 		 final List<QueryResult> queryResults = new ArrayList<>();
 		 
@@ -246,9 +246,9 @@ public class PanakoStrategy extends Strategy {
 				 int identifier = dbHit.resourceID;
 				 int matchTime = dbHit.t;
 				 if(!hitsPerIdentifer.containsKey(identifier)){
-					hitsPerIdentifer.put(identifier, new ArrayList<GaboratorHit>());
+					hitsPerIdentifer.put(identifier, new ArrayList<PanakoHit>());
 				 }
-				 GaboratorHit hit = new GaboratorHit();
+				 PanakoHit hit = new PanakoHit();
 				 hit.identifier = identifier;
 				 hit.matchTime = matchTime;
 				 hit.originalHash = dbHit.originalHash;
@@ -281,19 +281,19 @@ public class PanakoStrategy extends Strategy {
 			 //System.out.println("Matches " + identifier + " matches " + hitlist.size());
 			 
 			 //sort by query time
-			 Collections.sort(hitlist, (Comparator<? super GaboratorHit>) (GaboratorHit a, GaboratorHit b) -> Integer.valueOf(a.queryTime).compareTo(Integer.valueOf(b.queryTime)));
+			 Collections.sort(hitlist, (Comparator<? super PanakoHit>) (PanakoHit a, PanakoHit b) -> Integer.valueOf(a.queryTime).compareTo(Integer.valueOf(b.queryTime)));
 			
 			 //view the first and last hits (max 250)
 			 int maxListSize = 250;
-			 List<GaboratorHit> firstHits = hitlist.subList(0, Math.min(maxListSize,Math.max(minimumUnfilteredHits,hitlist.size()/5)));
-			 List<GaboratorHit> lastHits  = hitlist.subList(hitlist.size()-Math.min(maxListSize, Math.max(minimumUnfilteredHits,hitlist.size()/5)), hitlist.size());
+			 List<PanakoHit> firstHits = hitlist.subList(0, Math.min(maxListSize,Math.max(minimumUnfilteredHits,hitlist.size()/5)));
+			 List<PanakoHit> lastHits  = hitlist.subList(hitlist.size()-Math.min(maxListSize, Math.max(minimumUnfilteredHits,hitlist.size()/5)), hitlist.size());
 			 
 			//find the first x1 where delta t is equals to the median delta t
 			 float y1 = mostCommonDeltaTforHitList(firstHits);
 			 float x1 = 0;
 			 float frequencyFactor = 0;
 			 for(int i = 0 ; i < firstHits.size() ; i++) {
-				 GaboratorHit hit = firstHits.get(i);
+				 PanakoHit hit = firstHits.get(i);
 				 int diff = hit.Δt();
 				 if(diff == y1) {
 					 x1 = hit.queryTime;
@@ -306,7 +306,7 @@ public class PanakoStrategy extends Strategy {
 			 float y2 = mostCommonDeltaTforHitList(lastHits);
 			 float x2 = 0;
 			 for(int i = lastHits.size() - 1 ; i >= 0 ; i--) {
-				 GaboratorHit hit = lastHits.get(i);
+				 PanakoHit hit = lastHits.get(i);
 				 int diff = hit.Δt();
 				 if(diff == y2) {
 					 x2 = hit.queryTime;
@@ -326,7 +326,7 @@ public class PanakoStrategy extends Strategy {
 			 //only continue processing when time factor is reasonable
 			 if(timeFactor > Config.getFloat(Key.PANAKO_MIN_TIME_FACTOR) && timeFactor < Config.getFloat(Key.PANAKO_MAX_TIME_FACTOR) && 
 					 frequencyFactor> Config.getFloat(Key.PANAKO_MIN_FREQ_FACTOR) &&  timeFactor < Config.getFloat(Key.PANAKO_MAX_FREQ_FACTOR)	 ) {
-				 List<GaboratorHit> filteredHits = new ArrayList<>();
+				 List<PanakoHit> filteredHits = new ArrayList<>();
 				 
 				 hitlist.forEach( hit ->{				 
 					 float yActual = hit.Δt();
@@ -370,7 +370,7 @@ public class PanakoStrategy extends Strategy {
 						 //Ideally there is a more or less equal number of matches each second
 						 // note that the last second might not be a full second
 						 TreeMap<Integer,Integer> matchesPerSecondHistogram = new TreeMap<>();
-						 for(GaboratorHit hit : filteredHits) {
+						 for(PanakoHit hit : filteredHits) {
 							 //if(hit.identifier!= FileUtils.getIdentifier(queryPath))
 								 //System.out.printf("%d %d %d %d %d\n", hit.identifier, hit.matchTime, hit.queryTime, hit.originalHash, hit.matchedNearHash);
 							 float offsetInSec = blocksToSeconds(hit.matchTime) - refStart;
@@ -410,7 +410,7 @@ public class PanakoStrategy extends Strategy {
 	}
 	
 	
-	public  static class GaboratorHit {
+	public  static class PanakoHit {
 		
 		public long matchedNearHash;
 

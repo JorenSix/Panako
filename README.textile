@@ -26,10 +26,10 @@ h2. Overview
 
 h2(#why). Why Panako?
 
-Content based music search algorithms make it possible to identify a small audio fragment in a digital music archive with potentially millions of songs. Current search algorithms are able to respond quickly and reliably on an audio query, even if there is noise or other distortions present. During the last decade they have been used successfully as digital music archive management tools, music identification services for smartphones or for digital rights management. 
+Content based music search algorithms make it possible to identify a small audio fragment in a digital music archive with potentially millions of songs. Current search algorithms are able to respond quickly and reliably on an audio query, even if there is noise or other distortions present. During the last decades they have been used successfully as digital music archive management tools, music identification services for smartphones or for digital rights management. 
 
 <div align="center"><img src="data:image/png;base64,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"/>
-<small>Fig 1. General content based audio search scheme.</small></div>
+<small>Fig. General content based audio search scheme.</small></div>
 
 
 Most algorithms, as they are described in the literature, do not allow substantial changes in replay speed. The speed of the audio query needs to be the same as the reference audio for the current algorithms to work. This poses a problem, since changes in replay speed do occur commonly, they are either introduced by accident during an analog to digital conversion or are introduced deliberately. 
@@ -38,7 +38,7 @@ Analogue physical media such as wax cylinders, wire recordings, magnetic tapes a
 
 Next to accidental speed changes, deliberate speed manipulations are sometimes introduced during radio broadcasts: occasionally songs are played a bit faster to fit into a timeslot. During a DJ-set speed changes are almost always present. To correctly identify audio in these cases as well, a music search algorithm robust against pitch shifting, time stretching and speed changes is desired.
 
-The Panako algorithm allows such changes while maintaining other desired features as scalability, robustness and reliability. Next to two versions of the Panako algorithm (internally identified as CTEQ and NCTEQ), two versions of the algorithm described in "An Industrial-Strength Audio Search Algorithm":http://www.ee.columbia.edu/~dpwe/papers/Wang03-shazam.pdf are implemented (internally identified as FFT and NFFT). Also the algorithm in "A Robust Audio Fingerprinter Based on Pitch Class Histograms - Applications for Ethnic Music Archives":http://0110.be/files/attachments/415/2012.01.20.fingerprinter.submitted.pdf is available. To make comparisons between fingerprinting systems easy, researchers are kindly invited to contribute algorithms to the Panako project. 
+The Panako algorithm allows such changes while maintaining other desired features as scalability, robustness and reliability.  Next to the panako algorithm there is also an implementation of the algorithm described in "An Industrial-Strength Audio Search Algorithm":http://www.ee.columbia.edu/~dpwe/papers/Wang03-shazam.pdf (internally identified as Olaf). Also the algorithm in "A Robust Audio Fingerprinter Based on Pitch Class Histograms - Applications for Ethnic Music Archives":http://0110.be/files/attachments/415/2012.01.20.fingerprinter.submitted.pdf is available. To make comparisons between fingerprinting systems easy, researchers are kindly invited to contribute algorithms to the Panako project.
 
 Alternative open source music identification systems are "audfprint":http://www.ee.columbia.edu/~dpwe/resources/matlab/audfprint/ and "echoprint":http://echoprint.me/. Alternative systems with similar features are described in "US7627477 B2":https://www.google.com/patents/US7627477 and in  "__Quad-based Audio Fingerprinting Robust To Time And Frequency Scaling__ (2014)":http://www.dafx14.fau.de/papers/dafx14_reinhard_sonnleitner_quad_based_audio_fingerpr.pdf by Reinhard Sonnleitner and Gerhard Widmer.
 
@@ -50,9 +50,9 @@ To download the latest Panako version, @wget@ needs to be installed on your syst
 * @src@ contains the Java source files.
 * @lib@ contains the dependencies (JAR-files).
 * @build@ contains an ant build file to compile Panako and the documentation. Use @ant release@ to build the source and compile Panako.
-* @doc@ contains "documentation for the source files":doc/, generated with @javadoc@.
+* @scripts@ contains helper scripts to analyse results
 
-To compile Panako, the JDK 7 or later is required. See the "installation instructions":http://java.com/en/download/help/index_installing.xml on the Java website, for installation on your operating system. See for example how to "install Java 7 on Debian 7":http://d.stavrovski.net/blog/post/installing-oracle-java-7-on-debian-wheezy.
+To compile Panako, the JDK 8 or later is required. See the "installation instructions":http://java.com/en/download/help/index_installing.xml on the Java website, for installation on your operating system.
 
 Panako uses the "Apache Ant":https://ant.apache.org/ build system. Install it on your system. Once ant and the other components are installed correctly the following commands should get you started:
 
@@ -62,17 +62,16 @@ unzip Panako-latest-src.zip
 cd Panako/build
 ant #Builds the core Panako library
 ant install #Installs Panako in the ~/.panako directory
-ant doc #Creates the documentation in Panako/doc
-cp ../doc/panako /usr/bin #copies the panako startup script to your path
+ant doc #Creates the documentation in doc
+sudo cp panako /usr/local/bin #copies the panako startup script to your path
 
-The last command copies the startup script in @doc/panako@ to a directory in your path. The script allows for easy access to Panako's functionality. If this does not work for you, you can still call Panako using @java -jar /opt/panako/panako.jar [..args]@.
+The last command copies the startup script in @build/panako@ to a directory in your path. The script allows for easy access to Panako's functionality. If this does not work for you, you can still call Panako using @java -jar ~/.panako/panako.jar [..args]@.
 
-Panako decodes audio using by calling ffmpeg, an utility for decoding audio. If it is not present on your system, Panako automatically tries to download a suitable version. If this attempt fails, however, it needs to be installed manually and should be available on your systems path.  On a Debian like system:
+Panako decodes audio using by calling @ffmpeg@, an utility for decoding audio. If it is not present on your system, Panako automatically tries to download a suitable version. If this attempt fails, however, it needs to be installed manually and should be available on your systems path. On a Debian like system:
 
 bc. apt-get install ffmpeg
 
 Panako calls a sub-process (ffmpeg) and reads decoded PCM audio samples via a pipe. By default Panako calls @ffmpeg@. Alternatively, Panako can be configured to use any utility (like @avconv@) that can pipe decoded audio streams in the format PCM, one channel, 16bit per sample.
-
 
 **Test Panako**. You might need a new shell to use @panako@.
 	
@@ -91,11 +90,10 @@ h3(#store). Store Fingerprints - **@panako store@**
 
 The @store@ instruction extracts fingerprints from audio tracks and stores those in the datastorage. The command expects a list of audio files, video files or a text file with a list of file names.
 
-
 bc.. #Audio is converted automatically
 panako store audio.mp3 audio.ogg audio.flac audio.wav 
 
-#The first audio stream of video containers formats is used.
+#The first audio stream of video containers formats are used.
 panako store audio.mpc audio.mp4 audio.acc audio.avi audio.ogv audio.wma 
 
 #Glob characters can be practical
@@ -108,9 +106,18 @@ find . -name '*.mp3' > list.txt
 #Iterate the list
 panako store list.txt
 
+h3(#delete). Remove fingerprints  - **@panako delete@**
+
+This application removes fingerprints from the index. It essentially reverses the @store@ operation. The operation can be checked with @panako stats@
+
+@panako delete test.mp3@
+
+The default key-value-store is backed by some kind of B-tree structure. Removing many elements from such structure might leave the tree in an unbalanced state, which results in worse performance. I am not sure about the performance implications of deletion for LMDB but it might be of interest to either rebuild the index or avoid deletion as much as possible. 
+
+
 h3(#query). Query for Matches - **@panako query@**
 
-The @query@ command extracts fingerprints from a short audio frament and tries to match the fingerprints with the database. 
+The @query@ command extracts fingerprints from an audio frament and tries to match the fingerprints with the database. 
 	
 bc. panako query short_audio.mp3
 
@@ -153,37 +160,18 @@ h3(#resolve). Resolve an identifier for a filename - **@panako resolve@**
 
 This application simply returns the identifier that is used internally for a filename. The following call returns for example @54657653@: 
 
- @panako resolve test.mp3@
+@panako resolve test.mp3@
  
 The internal identifiers are currently defined using integers.
- 
-
-h3(#browser). Browse Fingerprints - **@panako browser@**
-
-Shows a swing user interface with a spectrogram and dectected event points and fingerprints. It can be used
-to check the effect of configuration parameters on fingerprint detection and to optimize configuration.
 
 
-h3(#compare). Compare the structure of media files - **@panako compare@**
+h3(#same). Prints how similar two audio files are - **@panako same@**
 
-This operation extracts fingerprints from a reference media file and searches for the fingerprints in another media file. The aim is to identify the parts of audio that are present in both input files. If only one audio file is given, a self similarity matrix is constructed. Using the matrix it becomes clear when the exact same audio is repeated within the same song. It can be used to automatically detect where cuts have been made in a long original album edit to end up with a shorter radio edit of the same song. Another use case is musical structure analysis, this works especially well in electronic music. To call the application:
+This application checks the similarity of two files. The percentage returned indicates the percentage of seconds for which fingerprints match between the first and second file. So 100% that matches are found in every second. A result of 30% still means that much of the audio matches. 
 
-bc. panako compare audio.wav > self_similarity.csv
-bc. panako compare original_edit.wav radio_edit.wav > cuts_where.csv
+@panako same first.mp3 second.mp3@
 
-The output is a CSV file with millisecond values. When only one file is given, the diagonal is detected in a self similarity matrix and the output could look like below, if there is a repetiion of the audio between 3s-3.5s at 90-90.5s. The data is easy to visualize in a spreadsheet application.
-
-bc. 10,10
-15,15
-20,20
-...
-3000,3000,90000
-3010,3010,90010
-3500,3500,90500
-...
-4000,4000
-4010,4010
-...
+Note that this operation is performed in memory. Nothing changes on disk.
 
 
 h2(#read). Further Reading
@@ -217,25 +205,11 @@ bc. @inproceedings{six2014panako,
   year        =  2014
 }
 
-If you use the synchronization algorithms for research purposes, please cite the following work:
-
-bc. @article{six2015multimodal,
-  author      = {Joren Six and Marc Leman},
-  title       = {{Synchronizing Multimodal Recordings Using Audio-To-Audio Alignment}},
-  issn        = {1783-7677},
-  volume      = {9},
-  number      = {3},
-  pages       = {223-229},
-  doi         = {10.1007/s12193-015-0196-1},
-  journal     = {{Journal of Multimodal User Interfaces}}, 
-  publisher   = {Springer Berlin Heidelberg},
-  year        = 2015
-}
 
 
 h2(#ismir). Reproduce the ISMIR Paper Results
 
-The directory @doc/Reproducibility@ contains scripts to reproduce the result found in the 
+The directory @scripts/reproducibility@ contains scripts to reproduce the result found in the 
 "Panako ISMIR 2014 paper":http://www.terasoft.com.tw/conf/ismir2014/proceedings/T048_122_Paper.pdf. The scripts follow this procedure:
 
 # The Jamendo dataset is downloaded.
@@ -245,18 +219,16 @@ The directory @doc/Reproducibility@ contains scripts to reproduce the result fou
 # Results are parsed.
 
 
-h3. Requirements
+To run the evaluation scripts, a UNIX like system with following utilities is required:
 
-To run the scripts, a UNIX like system with following utilities is required:
-
+* ffmpeg: an utility to convert media files
 * wget: an utility to download files
 * "SoX":http://sox.sourceforge.net/, inlcuding support for MP3 and GSM encoding.
 * bash: the bash shell
 * "Ruby":https://www.ruby-lang.org/en/: The ruby programming language runtime environment.
 * Unzip: to unzip the metadata file.
 
-Also the panako software is needed. Please see above to install the Panako.
-The configuration used during the test is also included in the @doc/Reproducibility@ directory.
+Evidently the panako software should also be installed. Please see above to install the Panako.
 
 If all requirements are met, running the test is done using @bash run_experiment.bash@
 
@@ -267,14 +239,15 @@ h2(#changelog). Changelog
 
 <dt>Version 1.6</dt><dd>2017-03-17</dd> This release adds a simplified version of chromaprint and an implementation of "'A Highly Robust Audio Fingerprinting System' by Haitsma and Kalker":http://www.ismir2002.ismir.net/proceedings/02-FP04-2.pdf
 
-<dt>Version 2.0</dt><dd>2021-04-27</dd> A major overhaul of Panako. The main aim of this release is to ensure the longevity of Panako. The featureset has been reduced to focus on core functionality. The version bump is also explained by the use of lambdas and the need for a newer JRE (8+). A list of changes: 
+<dt>Version 2.0</dt><dd>2021-04-27</dd> A major overhaul of Panako. The main aim of this release is to ensure the longevity and maintainability of Panako. The featureset has been reduced to focus on core functionality. The version bump is also explained by the use of lambdas and the need for a newer JRE (8+). A list of changes: 
 * The number of dependencies has been drastically cut by removing support for multiple key-value stores. 
-* The main key-value store has been changed to a faster and simpler system (from MapDB to LMDB). 
+* The key-value store has been changed to a faster and simpler system (from MapDB to LMDB). 
 * The SyncSink functionality has been moved to another project (with Panako as dependency). 
 * The main algorithms have been replaced with simpler and better working versions:
 ** Olaf is a new implementation of the classic Shazam algorithm. 
-** The Gaborator algorithm is a new version of the algoritm described in the Panako paper. It uses the "Gabor transform":https://en.wikipedia.org/wiki/Gabor_transform to go from time domain to the spectral domain. It is implemented by "JGaborator":https://github.com/JorenSix/JGaborator which in turn relies on "The Gaborator":https://gaborator.com/ library. 
+** The algoritm described in the Panako paper was also replaced. The core ideas are still the same. The main change is the use of a "Gabor transform":https://en.wikipedia.org/wiki/Gabor_transform to go from time domain to the spectral domain (previously a constant-q transform was used).  The gabor transform is implemented by "JGaborator":https://github.com/JorenSix/JGaborator which in turn relies on "The Gaborator":https://gaborator.com/ C++ library via JNI. 
 * Folder structure has been simplified.
-* with the addition of a number of helper scripts.
-* Moved default panako location to ~/.panako/panako
+* The UI which was mainly used for debugging has been removed.
+* A new set of helper scripts are added in the @scripts@ directory. They help with evaluation, parsing results, checking results, building panako, creating documentation,...
+* Changed the default panako location to ~/.panako, so users can install and use panako more easily (withouth need for sudo rights)
  

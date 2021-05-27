@@ -407,8 +407,6 @@ public class PanakoDBStorage {
 		      double minPrintsPerSecond = 100000;
 		      String minPrintsPerSecondPath = "";
 		      
-		      
-		      
 		      while(c.seek(SeekOp.MDB_NEXT)) {
 		    	  
 		    	 //long resourceIdentifier =  c.key().getLong();
@@ -459,8 +457,7 @@ public class PanakoDBStorage {
 	    return entries;
 	}
 
-	public void deleteMetadata(long resourceID) {  
-		
+	public void deleteMetadata(long resourceID) {	
 		try (Txn<ByteBuffer> txn = env.txnWrite()) {
 			
 			final ByteBuffer key = ByteBuffer.allocateDirect(8);
@@ -478,7 +475,5 @@ public class PanakoDBStorage {
 	    }catch (Exception e) {
 	    	e.printStackTrace();
 	    }
-		
 	}
-
 }

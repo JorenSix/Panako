@@ -45,9 +45,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.logging.Logger;
+
+import org.reflections.Reflections;
 
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.Strategy;
@@ -119,18 +122,19 @@ public class Panako {
 	 */
 	private void registerApplications() {
 		final List<Application> applicationList = new ArrayList<Application>();
-		applicationList.add(new Query());
-		applicationList.add(new Stats());
-		applicationList.add(new Store());
-		applicationList.add(new Configuration());
-		applicationList.add(new Play());
-		applicationList.add(new Monitor());
-		applicationList.add(new Resolve());
-		applicationList.add(new Deduplication());
-		applicationList.add(new Load());
-		applicationList.add(new Delete());
-		applicationList.add(new Print());
-		applicationList.add(new Same());
+
+		//find all Application classes instantiate and add to list
+		Reflections reflections = new Reflections("be.panako.cli");
+		Set<Class<? extends Application>> modules =   reflections.getSubTypesOf(be.panako.cli.Application.class);
+		for(Class<? extends Application> module : modules) {
+			try {
+				applicationList.add((Application) module.getDeclaredConstructor().newInstance());
+			} catch (Exception e) {
+				//should not happen, instantiation should not be a problem
+				e.printStackTrace();
+			}
+		}
+		
 		for (final Application application : applicationList) {
 			applications.put(application.name(), application);
 			applicationTrie.insert(application.name());
@@ -138,7 +142,7 @@ public class Panako {
 	}
 
 	private void startApplication(String[] arguments) {
-		String application = "syncsink";
+		String application = "config";
 		String[] applicationArguments = {};
 		if (arguments.length > 0) {
 			arguments = filterAndSetConfigurationArguments(arguments);

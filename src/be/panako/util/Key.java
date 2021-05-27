@@ -105,7 +105,7 @@ public enum Key{
 	AVAILABLE_PROCESSORS("0"), 	
 	
 	/**
-	 * The strategy (algorithm) to use, OLAF|GABPRATPR|PCH.
+	 * The strategy (algorithm) to use, OLAF|PANAKO|PCH.
 	 */
 	STRATEGY("OLAF"),	
 	
