@@ -81,7 +81,12 @@ panako stats #db info
 
 h2(#usage). Panako Usage
 
-Panako provides a command line interface, it can be called using **@panako subapplication [argument...]@**. For each task Panako has to perform, there is a subapplication. There are subapplications to store fingerprints, query audio fragments, monitor audio streams, and so on. Each subapplication has its own list of arguments, options, and output format that define the behavior of the subapplication.
+Panako provides a command line interface, it can be called using **@panako subapplication [argument...]@**. For each task Panako has to perform, there is a subapplication. There are subapplications to store fingerprints, query audio fragments, monitor audio streams, and so on. Each subapplication has its own list of arguments, options, and output format that define the behavior of the subapplication. The screen capture below shows a typical interaction with Panako.
+
+<div align="center">
+!./media/panako_interactive_session.svg(A typical interaction with Panako via the command line interface)!
+<small>Fig. A typical interaction with Panako via the command line interface. It shows how to store audio, perform a query and how to print database statistics.</small>
+</div>
 
 To save some keystrokes the name of the subapplication can be shortened using a unique prefix. For example @panako m file.mp3@ is expanded to @panako monitor file.mp3@. Since both @stats@ and @store@ are valid subapplications the @store@ call can be shortened to @panako sto *.mp3@, @panako s *.mp3@ gives an invalid application message. A "trie":https://en.wikipedia.org/wiki/Trie is used to find a unique prefix. 
 
