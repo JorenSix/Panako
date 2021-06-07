@@ -124,4 +124,9 @@ public class OlafStorageMemory implements OlafStorage {
 		}
 		queue.clear();
 	}
+
+	public void clear() {
+		fingerprints.clear();
+		resourceMap.clear();
+	}
 }

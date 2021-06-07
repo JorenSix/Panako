@@ -601,6 +601,8 @@ public class OlafStrategy extends Strategy {
 		}
 		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
 			OlafStorageKV.getInstance().clear();
+		} else if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("MEM")) {
+			OlafStorageMemory.getInstance().clear();
 		}
 		
 	}
