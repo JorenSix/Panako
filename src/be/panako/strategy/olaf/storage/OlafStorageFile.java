@@ -176,8 +176,6 @@ public class OlafStorageFile implements OlafStorage {
 		return dataArray;
 	}
 
-
-
 	@Override
 	public void addToQueryQueue(long queryHash) {
 
@@ -202,7 +200,6 @@ public class OlafStorageFile implements OlafStorage {
 		for(File f : storeDir.listFiles()) {
 			FileUtils.rm(f.getAbsolutePath());
 		}
-		System.out.println("Removed cached files from " + storeDir.getAbsolutePath());
 	}
 }
 

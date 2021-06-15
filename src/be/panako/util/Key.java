@@ -104,7 +104,7 @@ public enum Key{
 	/**
 	 * The strategy (algorithm) to use, OLAF|PANAKO|PCH.
 	 */
-	STRATEGY("PANAKO"),	
+	STRATEGY("OLAF"),	
 	
 	NUMBER_OF_QUERY_RESULTS(1000),
 	

@@ -59,12 +59,13 @@ Panako uses the "Apache Ant":https://ant.apache.org/ build system. Install it on
 
 bc. wget http://panako.be/releases/Panako-latest/Panako-latest-src.zip
 unzip Panako-latest-src.zip
-#sudo apt-get install default-jdk ant libav-tools# Optionally install JDK, ant libav-tools (on Ubuntu).
+#sudo apt-get install default-jdk ant ffmpeg# Optionally install JDK, ant libav-tools (on Ubuntu).
 cd Panako/build
 ant #Builds the core Panako library
 ant install #Installs Panako in the ~/.panako directory
 ant doc #Creates the documentation in doc
 sudo cp panako /usr/local/bin #copies the panako startup script to your path
+#cp config.properties ~/.panako/ #copy the default configuration 
 
 The last command copies the startup script in @build/panako@ to a directory in your path. The script allows for easy access to Panako's functionality. If this does not work for you, you can still call Panako using @java -jar ~/.panako/panako.jar [..args]@.
 

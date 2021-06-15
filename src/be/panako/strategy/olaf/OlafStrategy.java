@@ -595,12 +595,13 @@ public class OlafStrategy extends Strategy {
 
 	@Override
 	public void clear() {
-		
-		if(Config.getBoolean(Key.OLAF_CACHE_TO_FILE)) {
-			OlafStorageFile.getInstance().clear();
-		}
 		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
 			OlafStorageKV.getInstance().clear();
+			
+			if(Config.getBoolean(Key.OLAF_CACHE_TO_FILE)) {
+				OlafStorageFile.getInstance().clear();
+			}
+			
 		} else if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("MEM")) {
 			OlafStorageMemory.getInstance().clear();
 		}

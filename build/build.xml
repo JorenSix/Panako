@@ -18,7 +18,7 @@
 	<!-- Compiles the java files to bytecode and copy required resources -->
 	<target name="compile">
 		<mkdir dir="../bin" />
-		<javac srcdir="../src" destdir="../bin" includeantruntime="false" target="1.8"  source="1.8">
+		<javac srcdir="../src" destdir="../bin" includeantruntime="false" release="9">
 			<classpath>
 				<fileset file="${junit_jar}"/>
 				<fileset dir="../lib" includes="*.jar" excludes="*src*.jar"  />
@@ -82,7 +82,6 @@
 				<attribute name="Built-Date" value="${TODAY}" />
 				<attribute name="Main-Class" value="be.panako.cli.Panako" />
 			</manifest>
-			
 		</jar>
 	</target>
 
@@ -129,7 +128,7 @@
 		 <!--<copy file="panako" tofile="/usr/local/bin/panako"/>-->
 	</target>
 
-	<!-- Installs the panako startup script to a place in PATH -->
+	<!-- Installs the panako startup script to a place in PATH, sudo might be needed -->
 	<target name="sys-install" depends="panako">
 		 <!-- Copy the panako execute script -->
 		 <copy file="panako" tofile="/usr/local/bin/panako"/>

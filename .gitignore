@@ -6,6 +6,7 @@ build/*.jar
 build/Panako-*
 doc/javadoc
 config.properties
+!build/config.properties
 dbs
 
 *_db*
