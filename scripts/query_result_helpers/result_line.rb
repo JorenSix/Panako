@@ -3,6 +3,7 @@ class ResultLine
   attr_reader :query, :query_start, :query_stop
   #ref info
   attr_reader :ref,   :ref_start  , :ref_stop
+  
   #match info
   attr_reader :match_score , :time_factor, :frequency_factor, :empty_seconds
 
@@ -50,6 +51,10 @@ class ResultLine
     @frequency_factor,
     @empty_seconds
     ].join(";")
+  end
+
+  def duration
+    @query_stop - @query_start
   end
 
   def ordered_key

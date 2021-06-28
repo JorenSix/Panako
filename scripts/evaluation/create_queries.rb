@@ -1,8 +1,5 @@
 #A script to create realistic queries of arbitrary length.
 
-require 'fileutils'
-
-query_lengths = ARGV.map(&:to_i)
 
 def file_length(file)
   $1.to_i if `sox "#{file}" -n stat 2>&1` =~ /.*Length .*:\s*(\d*)\..*/
@@ -16,7 +13,6 @@ end
 
 
 def cut_piece(input_file,target_file,start,piece_length)
-  puts input_file
   command = "sox \"#{input_file}\" \"#{target_file}\" trim #{seconds_to_time(start)} #{seconds_to_time(piece_length)}"
   puts command
   system(command)
@@ -24,8 +20,7 @@ def cut_piece(input_file,target_file,start,piece_length)
 end
 
 def cut_random_piece(input_file,target_file,piece_length)
-  puts input_file
-  start =  rand(file_length(input_file) - piece_length) #in seconds
+  start =  RANDOM.rand(file_length(input_file) - piece_length) #in seconds
   command = "sox \"#{input_file}\" \"#{target_file}\" trim #{seconds_to_time(start)} #{seconds_to_time(piece_length)}"
   puts command
   system(command)
@@ -33,37 +28,41 @@ def cut_random_piece(input_file,target_file,piece_length)
 end
 
 def cut_random_piece_to_dir(input_file,target_directory,piece_length)
-  puts input_file
-  start =  rand(file_length(input_file) - piece_length) #in seconds
+  start =  RANDOM.rand(file_length(input_file).floor - piece_length) #in seconds
   basename = File.basename(input_file).gsub(/.(gsm|wav|mp3|ogg|flac)/,"")
   extname = File.extname(input_file)
   target_basename = "#{basename}_#{start}s-#{start+piece_length}s#{extname}"
   target_file = File.join(target_directory,target_basename)
-  command = "sox \"#{input_file}\" \"#{target_file}\" trim #{seconds_to_time(start)} #{seconds_to_time(piece_length)}"
-  puts command
-  system(command)
+  command = "sox -v 0.75 \"#{input_file}\" \"#{target_file}\" trim #{seconds_to_time(start)} #{seconds_to_time(piece_length)}"
+  execute_unless_exists(command,target_file)
   target_basename
 end
 
 #change the pitch of a file without affecting tempo
 def create_pitch_shifted_file(input_file,target_file,cents)
   command = "sox \"#{input_file}\" \"#{target_file}\" pitch #{cents}"
-  puts command
-  system(command)	
+  execute_unless_exists(command,target_file)
+end
+
+def execute_unless_exists(command,target_file)
+  if File.exists? target_file
+    puts "\tSkipping #{target_file}"
+  else
+    puts "\tCreating #{target_file}"
+    system(command)
+  end
 end
 
 #factor gives the ratio of new tempo to the old tempo, so e.g. 1.1 speeds up the tempo by 10%, and 0.9 slows it down by 10%.
 def change_tempo(input_file,target_file,factor)
   command = "sox \"#{input_file}\" \"#{target_file}\" tempo #{factor}"
-  puts command
-  system(command)	
+  execute_unless_exists(command,target_file)
 end
 
 #Apply a flanging effect to the audio
 def create_flanger_file(input_file,target_file)
   command = "sox \"#{input_file}\" \"#{target_file}\" flanger"
-  puts command
-  system(command)	
+  execute_unless_exists(command,target_file)
 end
 
 def create_fm_compressed_file(input_file,target_file)
@@ -75,50 +74,44 @@ def create_fm_compressed_file(input_file,target_file)
                    \"0,0.025 -38,-31,-28,-28,-0,-25\" \
                    gain 15 highpass 22 highpass 22 sinc -n 255 -b 16 -17500 \
                    gain 9 lowpass -1 17801"
-  puts command
-  system(command)
+  execute_unless_exists(command,target_file)
 end
 
 #Adjust the audio speed (pitch and tempo together). factor is either the ratio of 
 # the new speed to the old speed: greater than 1 speeds up, less than 1 slows down
 def create_sped_up_file(input_file,target_file,factor)
   command = "sox \"#{input_file}\" \"#{target_file}\" speed #{factor}"
-  puts command
-  system(command)	
+  execute_unless_exists(command,target_file)	
 end
 
 #Apply a band pass filter
 def band_pass_filter(input_file,target_file,center)
   command = "sox \"#{input_file}\" \"#{target_file}\" band #{center}"
-  puts command
-  system(command)
+  execute_unless_exists(command,target_file)
 end
 
 #Apply a corus effect filter
 def chorus(input_file,target_file)
   command = "sox \"#{input_file}\" \"#{target_file}\" chorus 0.7 0.9 55 0.4 0.25 2 -t"
-  puts command
-  system(command)	
+  execute_unless_exists(command,target_file)
 end
 
 #Apply an echo effect filter
 def echo(input_file,target_file)
   command = "sox \"#{input_file}\" \"#{target_file}\" echo 0.8 0.9 500 0.3"
-  puts command
-  system(command)	
+  execute_unless_exists(command,target_file)
 end
 
 #Apply a tremolo effect filter
 def tremolo(input_file,target_file)
   command = "sox \"#{input_file}\" \"#{target_file}\" tremolo 8"
-  puts command
-  system(command)		
+  execute_unless_exists(command,target_file)	
 end
 
 def create_real_noise_queries(query_length,input_files,noise_files,amount)
   amount.times do
-    input = input_files[rand(input_files.size)]
-    noise = noise_files[rand(noise_files.size)]
+    input = input_files[RANDOM.rand(input_files.size)]
+    noise = noise_files[RANDOM.rand(noise_files.size)]
     
     start = cut_random_piece(input,"tmp_query.mp3",query_length)
     cut_random_piece(noise,"tmp_noise.mp3",query_length)
@@ -133,14 +126,14 @@ def create_real_noise_queries(query_length,input_files,noise_files,amount)
     system("mp3gain -r tmp_noise.mp3")
     system("sox --combine mix-power tmp_query.mp3 tmp_noise.mp3 \"#{output_file}\"")
     FileUtils.rm("tmp_query.mp3")
-  	FileUtils.rm("tmp_noise.mp3")
+    FileUtils.rm("tmp_noise.mp3")
   end
 end
 
 
 def create_clean_queries(query_dir,query_length,input_files,amount)
   amount.times do
-    input = input_files[rand(input_files.size)]
+    input = input_files[RANDOM.rand(input_files.size)]
     start = cut_random_piece(input,"tmp_query.wav",query_length)
     output_file = query_dir +'/'+ File.basename(input).gsub(".wav","") + "_clean_#{start}s-#{start+query_length}s.wav"
     FileUtils.mv("tmp_query.wav",output_file)
@@ -151,7 +144,7 @@ def create_small_dataset(input_files,noise_files,query_length)
   small_dataset_dir = "small_dataset"
   small_queries = "small_queries"
   #copy 30 files in small dataset folder
-  30.times{FileUtils.cp( input_files[rand(input_files.size)],small_dataset_dir)} unless Dir.glob(small_dataset_dir+"/*.wav").size >= 30
+  30.times{FileUtils.cp( input_files[RANDOM.rand(input_files.size)],small_dataset_dir)} unless Dir.glob(small_dataset_dir+"/*.wav").size >= 30
   #generate 10 queries
   input_files = Dir.glob(small_dataset_dir+"/*.wav")
   create_clean_queries(small_queries,query_length,input_files,10)
@@ -162,17 +155,21 @@ def create_panako_next_gen_queries(input_files,target_dir=".",target_extension="
   input_files.each do |input_file|
     basename = File.basename(input_file).gsub(/.(gsm|wav|mp3|ogg|flac)/,"")
     ext = $1 if input_file =~ /.*.(gsm|wav|mp3|ogg|flac)/
-    (-200..200).step(25).each do |shift| 
-    	unless shift==0
-    		create_pitch_shifted_file(input_file,File.join(target_dir,"#{basename}___pitch_shift_#{shift}_cents.#{target_extension}"),shift)
-    	end
+    (84..116).step(2).each do |factor|
+      unless factor == 100
+        factor = factor / 100.0 
+        #convert factor to shift in cents for sox
+        shift = (1200 * Math::log(factor)/Math::log(2)).round
+        create_pitch_shifted_file(input_file,File.join(target_dir,"#{basename}___pitch_shift_#{factor}.#{target_extension}"),shift)
+      end
     end
+
     (84..116).step(2).each do |i|
-  	  unless i ==100
-  	    factor = i/100.to_f
-  	    change_tempo(input_file,File.join(target_dir,"#{basename}___time_stretched_#{factor}.#{target_extension}"),factor)
-          create_sped_up_file(input_file,File.join(target_dir,"#{basename}___speed_up_#{factor}.#{target_extension}"),factor)
-  	  end
+      unless i ==100
+        factor = i/100.to_f
+        change_tempo(input_file,File.join(target_dir,"#{basename}___time_stretched_#{factor}.#{target_extension}"),factor)
+        create_sped_up_file(input_file,File.join(target_dir,"#{basename}___speed_up_#{factor}.#{target_extension}"),factor)
+      end
     end
     create_flanger_file(input_file,File.join(target_dir,"#{basename}___flanger.#{target_extension}"))
     band_pass_filter(input_file,File.join(target_dir,"#{basename}___band_passed_2000Hz.#{target_extension}"),2000)
@@ -181,22 +178,4 @@ def create_panako_next_gen_queries(input_files,target_dir=".",target_extension="
     tremolo(input_file,File.join(target_dir,"#{basename}___tremolo.#{target_extension}"))
   end
 end
-
-
-
-query_lengths.each do |query_length|
-  input_file = File.read("mp3_files.txt").split("\n").shuffle
-  target_dir = "queries_#{query_length}s"
-  FileUtils.mkdir(target_dir) unless File.exists?(target_dir)
-  target_extension = "mp3"
-  #input_file[0..6].threach(3) do |f|
-  input_file[0..6].each do |f|
-    cut_file = cut_random_piece_to_dir(f,target_dir,query_length)
-    cut_file = File.join(target_dir,cut_file)
-    create_panako_next_gen_queries([cut_file],target_dir,target_extension)
-  end
-end
-
-
-
 
