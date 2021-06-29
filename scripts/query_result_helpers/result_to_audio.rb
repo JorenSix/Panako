@@ -11,7 +11,7 @@
 # in the ffmpeg suite. Install ffmpeg and ffplay or change the script to use tools which work
 #  on your system (e.g. afplay on macOS)
 
-require 'result_line'
+require './result_line'
 
 l = ARGV[0]
 

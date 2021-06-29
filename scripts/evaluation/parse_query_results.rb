@@ -7,11 +7,13 @@ require 'threach'
 class Query
   attr_reader :matches
 
-  def initialize(query_file_name,mod,mod_param)
+  def initialize(query_file_name,mod,mod_param,tp_or_tn_expected)
     @matches = Array.new
     @mod = mod
     @mod_param = mod_param.to_f
     @query_file_name = query_file_name
+
+    @tp_or_tn_expected = tp_or_tn_expected
 
     prettify
   end
@@ -61,20 +63,33 @@ class Query
     end
 
     unless modification_hash[@mod].key? @mod_param
-      modification_hash[@mod][@mod_param] = [0,0,0]
+      modification_hash[@mod][@mod_param] = [0,0,0,0]
     end
 
-    #tp
-    modification_hash[@mod][@mod_param][0] = modification_hash[@mod][@mod_param][0] + 1 if first_match_correct
-    #fp
-    modification_hash[@mod][@mod_param][1] = modification_hash[@mod][@mod_param][1] + 1 if (has_matches? and !first_match_correct)
-    #fn
-    modification_hash[@mod][@mod_param][2] = modification_hash[@mod][@mod_param][2] + 1 if (!has_matches?)
+    if @tp_or_tn_expected == "tp"
+      #tp
+      modification_hash[@mod][@mod_param][0] = modification_hash[@mod][@mod_param][0] + 1 if first_match_correct
+      #fp
+      modification_hash[@mod][@mod_param][1] = modification_hash[@mod][@mod_param][1] + 1 if (has_matches? and !first_match_correct)
+      #fn
+      modification_hash[@mod][@mod_param][2] = modification_hash[@mod][@mod_param][2] + 1 if (!has_matches?)
+      #TN
+      modification_hash[@mod][@mod_param][3] = 0
+    else
+      #tp
+      modification_hash[@mod][@mod_param][0] = modification_hash[@mod][@mod_param][0] + 1 if first_match_correct
+      #fp
+      modification_hash[@mod][@mod_param][1] = modification_hash[@mod][@mod_param][1] + 1 if (has_matches? and !first_match_correct)
+      #fn
+      modification_hash[@mod][@mod_param][2] = 0
+      #TN
+      modification_hash[@mod][@mod_param][3] = modification_hash[@mod][@mod_param][3] + 1 if (!has_matches?)
+    end
   end
 
 end
 
-def populate_query_hash(line,query_hash) 
+def populate_query_hash(line,query_hash,tp_or_tn_expected) 
 
   r = ResultLine.new(line)
 
@@ -95,7 +110,7 @@ def populate_query_hash(line,query_hash)
     query_mod,query_mod_factor = $1, $2
   end
 
-  q = Query.new(query_file_name,query_mod,query_mod_factor)
+  q = Query.new(query_file_name,query_mod,query_mod_factor,tp_or_tn_expected)
 
   unless query_hash.has_key? q.key    
     query_hash[q.key] = q
@@ -108,14 +123,14 @@ def populate_query_hash(line,query_hash)
   query_hash[q.key]
 end
 
-def print_results(results_file,file_name_prefix,title_suffix)
+def print_results(results_file,file_name_prefix,title_suffix,query_num,tp_or_tn_expected)
 
   query_hash = Hash.new
 
   tot_reference = 0
   File.read(results_file).split("\n").each do |line|
     next unless ResultLine.valid?(line)
-    populate_query_hash(line,query_hash)
+    populate_query_hash(line,query_hash,tp_or_tn_expected)
   end
 
   modification_hash = Hash.new
@@ -130,42 +145,36 @@ def print_results(results_file,file_name_prefix,title_suffix)
   mods.each do |mod|
     result_file_name = file_name_prefix+mod+".csv"
     File.open(result_file_name,"w") do |f|
+      f.puts "Modification;Factor;TP;FP;FN;TN"
+
       modification_hash[mod].keys.sort.each do |query_mod_factor|
         results = modification_hash[mod][query_mod_factor]
-        f.puts "#{mod};#{query_mod_factor};#{results.join(";")}"
+        f.puts "#{mod};#{query_mod_factor};#{results.map{|r|  r.to_f / query_num.to_f}.join(";")}"
       end
     end
     modification_hash.delete(mod)
     title = mod + " " + title_suffix
     puts "Plotting #{title}: " + result_file_name
     output_file = result_file_name.gsub(".csv",".png")
-    system("gnuplot -p -e \"data_file='#{result_file_name}';t='#{title}';output_file='#{output_file}'\" line_plot.gnuplot")
+    system("gnuplot -p -e \"data_file='#{result_file_name}';t='#{title}';output_file='#{output_file}'\" plot_line.gnuplot")
   end
 
   result_file_name = file_name_prefix+"other_mods.csv"
   File.open(result_file_name,"w") do |f|
+    f.puts "Index;Modification;Factor;TP;FP;FN;TN"
     i = 0
     modification_hash.each do |query_mod,sub_hash|
       modification_hash[query_mod].keys.sort.each_with_index do |query_mod_factor|
         results = modification_hash[query_mod][query_mod_factor]
-        f.puts "#{i+1};#{query_mod};#{query_mod_factor};#{results.join(";")}"
+        f.puts "#{i+1};#{query_mod};#{query_mod_factor};#{results.map{|r|  r.to_f / query_num.to_f}.join(";")}"
         i = i + 1
       end
     end
   end
 
-
   title = "Other mods " + title_suffix
   puts "Plotting #{title}: " + result_file_name
   output_file = result_file_name.gsub(".csv",".png")
-  system("gnuplot -p -e \"data_file='#{result_file_name}';t='#{title}';output_file='#{output_file}'\" bar_plot.gnuplot")
-
-  
+  system("gnuplot -p -e \"data_file='#{result_file_name}';t='#{title}';output_file='#{output_file}'\" plot_bar.gnuplot")
 
 end
-
-
-
-
-
-

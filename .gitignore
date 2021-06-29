@@ -16,3 +16,5 @@ dbs
 *.wav
 
 eval_data
+eval_panako
+
