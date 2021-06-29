@@ -374,7 +374,7 @@ public class OlafStrategy extends Strategy {
 				 if(filteredHits.size() > minimumFilteredHits) {
 					 //System.out.println("Matches " + identifier + " matches filtered hits: " + filteredHits.size());
 					 
-					 float minDuration = 0;
+					 float minDuration = Config.getFloat(Key.OLAF_MIN_MATCH_DURATION);
 					 float queryStart = blocksToSeconds(filteredHits.get(0).queryTime);
 					 float queryStop = blocksToSeconds(filteredHits.get(filteredHits.size()-1).queryTime);
 					 float duration = queryStop - queryStart;
@@ -411,11 +411,13 @@ public class OlafStrategy extends Strategy {
 						 float emptySeconds = numberOfMatchingSeconds - matchesPerSecondHistogram.size();
 						 float percentOfSecondsWithMatches = 1 - (emptySeconds / numberOfMatchingSeconds);
 						 
-						 QueryResult r = new QueryResult(queryPath,queryStart, queryStop, refPath, "" + identifier, refStart, refStop,  score, timeFactor, frequencyFactor,percentOfSecondsWithMatches);
-						 queryResults.add(r);
+						 if(percentOfSecondsWithMatches >= Config.getFloat(Key.OLAF_MIN_SEC_WITH_MATCH)){
+						 	QueryResult r = new QueryResult(queryPath,queryStart, queryStop, refPath, "" + identifier, refStart, refStop,  score, timeFactor, frequencyFactor,percentOfSecondsWithMatches);
+						 	queryResults.add(r);
+						 }
 					 }
 				 }
-			 }			 
+			 }
 		 });
 		 
 		 if (queryResults.isEmpty()) {
