@@ -105,7 +105,7 @@ public class PanakoFingerprint {
 	public int robustHash(){
 		int hash = 0;
 		
-		int f1LargerThanF2 = f2 > f3 ? 1 : 0;
+		int f1LargerThanF2 = f1 > f2 ? 1 : 0;
 		int f2LargerThanF3 = f2 > f3 ? 1 : 0;
 		int f3LargerThanF1 = f3 > f1 ? 1 : 0;
 
