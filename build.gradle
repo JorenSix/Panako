@@ -1,0 +1,78 @@
+import java.nio.file.Paths
+import java.text.SimpleDateFormat
+
+plugins {
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'java'
+}
+
+group 'be.panako'
+version '2.1'
+
+sourceCompatibility = 1.11
+targetCompatibility = 1.11
+
+repositories {
+    mavenCentral()
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+}
+
+dependencies {
+    implementation 'org.reflections:reflections:0.10.2'
+    implementation 'org.slf4j:slf4j-simple:1.7.36'
+    implementation group: 'org.lmdbjava', name: 'lmdbjava', version: '0.8.3-SNAPSHOT'
+
+    ConfigurableFileCollection dependencies =  files("lib/JGaborator-0.6.jar","lib/TarsosDSP-2.4.jar")
+    implementation(dependencies)
+}
+
+jar {
+    manifest {
+        attributes(
+                "Main-Class": "be.panako.cli.Panako",
+                "Build-Version": project.version,
+                "Build-By" : System.properties['user.name'],
+                "Build-Date":  new SimpleDateFormat("yyyy-MM-dd").format(new Date()),
+                'Build-JDK' : "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})",
+                'Build-OS'  : "${System.properties['os.name']} ${System.properties['os.arch']} ${System.properties['os.version']}"
+        )
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+
+
+//Install Panako to home dir
+tasks.register('install') {
+        java.nio.file.Path installDir = Paths.get(System.getProperty('user.home')).resolve('.panako')
+        File logDir = file(installDir.resolve("log"))
+        mkdir logDir
+        println("Installing " + rootProject.name + " to " + installDir)
+
+        File logFile = file(installDir.resolve("logging.properties"))
+        if( !logFile.exists() ) {
+            copy {
+                from layout.projectDirectory.dir("resources").file("logging.properties")
+                into logFile
+            }
+        }
+
+        File configFile = file(installDir.resolve("config.properties"))
+        if( !configFile.exists() ) {
+            copy {
+                from layout.projectDirectory.dir("resources").file("config.properties")
+                into installDir
+            }
+        }
+
+        def shadowJarFileName =  rootProject.name + "-"+ project.version + "-all.jar" as String
+        copy {
+           from layout.buildDirectory.dir("libs").get().file(shadowJarFileName)
+           into installDir
+           rename shadowJarFileName, "panako.jar"
+        }
+}
+

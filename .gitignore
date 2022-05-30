@@ -1,13 +1,23 @@
 .classpath
 .project
 .settings
+
+.gradle
+.idea
+.DS_Store
+build/*
+
 bin/
 build/*.jar
 build/Panako-*
 doc/javadoc
 config.properties
-!build/config.properties
+
+!resources/defaults/config.properties
+
 dbs
+
+!build.gradle
 
 *_db*
 

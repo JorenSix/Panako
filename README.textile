@@ -53,21 +53,18 @@ To download the latest Panako version, @wget@ needs to be installed on your syst
 * @build@ contains an ant build file to compile Panako and the documentation. Use @ant release@ to build the source and compile Panako.
 * @scripts@ contains helper scripts to analyse results
 
-To compile Panako, the JDK 8 or later is required. See the "installation instructions":http://java.com/en/download/help/index_installing.xml on the Java website, for installation on your operating system.
+To compile Panako, the JDK 11 or later is required. See the "installation instructions":http://java.com/en/download/help/index_installing.xml on the Java website, for installation on your operating system.
 
-Panako uses the "Apache Ant":https://ant.apache.org/ build system. Install it on your system. Once ant and the other components are installed correctly the following commands should get you started:
+Panako uses the "Gradle":https://gradle.org/ build system. Install it on your system. Once ant and the other components are installed correctly the following commands should get you started:
 
-bc. wget http://panako.be/releases/Panako-latest/Panako-latest-src.zip
-unzip Panako-latest-src.zip
-#sudo apt-get install default-jdk ant ffmpeg# Optionally install JDK, ant libav-tools (on Ubuntu).
-cd Panako/build
-ant #Builds the core Panako library
-ant install #Installs Panako in the ~/.panako directory
-ant doc #Creates the documentation in doc
-sudo cp panako /usr/local/bin #copies the panako startup script to your path
-#cp config.properties ~/.panako/ #copy the default configuration 
+bc. git clone --depth 1 https://github.com/JorenSix/Panako.git
+cd Panako
+./gradlew shadowJar #Builds the core Panako library
+./gradlew install #Installs Panako in the ~/.panako directory
+./gradlew javadoc #Creates the documentation in doc
+sudo cp resources/defaults/panako /usr/local/bin #copies the panako startup script to your path
 
-The last command copies the startup script in @build/panako@ to a directory in your path. The script allows for easy access to Panako's functionality. If this does not work for you, you can still call Panako using @java -jar ~/.panako/panako.jar [..args]@.
+The last command copies the startup script in @resources/defaults//panako@ to a directory in your path. The script allows for easy access to Panako's functionality. If this does not work for you, you can still call Panako using @java -jar ~/.panako/panako.jar [..args]@.
 
 Panako decodes audio using by calling @ffmpeg@, an utility for decoding audio. If it is not present on your system, Panako automatically tries to download a suitable version. If this attempt fails, however, it needs to be installed manually and should be available on your systems path. On a Debian like system:
 
@@ -79,6 +76,9 @@ Panako calls a sub-process (ffmpeg) and reads decoded PCM audio samples via a pi
 	
 bc. panako -v #prints version
 panako stats #db info
+
+
+h2(#usage). Panako Docker script
 
 h2(#usage). Panako Usage
 
@@ -203,13 +203,20 @@ The Panako software was developed at "IPEM, Ghent University":http://www.ipem.ug
 
 Some parts of Panako were inspired by the "Robust Landmark-Based Audio Fingerprinting Matlab implementation by Dan Ellis":http://www.ee.columbia.edu/~dpwe/resources/matlab/fingerprint/.
 
-If you use Panako for research purposes, please cite the following work:
+If you use Panako for research purposes, please cite the following works:
 
 bc. @inproceedings{six2014panako,
   author      = {Joren Six and Marc Leman},
   title       = {{Panako - A Scalable Acoustic Fingerprinting System Handling Time-Scale and Pitch Modification}},
   booktitle   = {{Proceedings of the 15th ISMIR Conference (ISMIR 2014)}}, 
   year        =  2014
+}
+
+bc. @inproceedings{six2021panako,
+  title={Panako 2.0-Updates for an acoustic fingerprinting system},
+  author={Six, Joren},
+  booktitle={Demo / late-breaking abstracts of 22st International Society for Music Information Retrieval Conference, ISMIR},
+  year={2021}
 }
 
 
@@ -253,7 +260,8 @@ h2(#changelog). Changelog
 ** Olaf is a new implementation of the classic Shazam algorithm. 
 ** The algoritm described in the Panako paper was also replaced. The core ideas are still the same. The main change is the use of a "Gabor transform":https://en.wikipedia.org/wiki/Gabor_transform to go from time domain to the spectral domain (previously a constant-q transform was used).  The gabor transform is implemented by "JGaborator":https://github.com/JorenSix/JGaborator which in turn relies on "The Gaborator":https://gaborator.com/ C++ library via JNI. 
 * Folder structure has been simplified.
-* The UI which was mainly used for debugging has been removed.
+* The UI, which was mainly used for debugging, has been removed.
 * A new set of helper scripts are added in the @scripts@ directory. They help with evaluation, parsing results, checking results, building panako, creating documentation,...
 * Changed the default panako location to ~/.panako, so users can install and use panako more easily (withouth need for sudo rights)
  
+ <dt>Version 2.1</dt><dd>2022-05</dd> Changed the build system to "Gradle":https://gradle.org/, mainly to make upgrading dependencies more straightforward. The folder structure has been changed accordingly. The default JDK target has been changed to Java SE 11 (LTS). Panako now also supports Apple M1 targets.
