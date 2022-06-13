@@ -28,7 +28,7 @@ h2(#why). Why Panako?
 Content based music search algorithms make it possible to identify a small audio fragment in a digital music archive with potentially millions of songs. Current search algorithms are able to respond quickly and reliably on an audio query, even if there is noise or other distortions present. During the last decades they have been used successfully as digital music archive management tools, music identification services for smartphones or for digital rights management. 
 
 <div align="center">
-!./media/general_acoustic_fingerprinting_schema.svg(General content based audio search scheme)!
+!./resources/media/general_acoustic_fingerprinting_schema.svg(General content based audio search scheme)!
 <small>Fig. General content based audio search scheme.</small>
 </div>
 
@@ -64,7 +64,7 @@ cd Panako
 ./gradlew javadoc #Creates the documentation in doc
 sudo cp resources/defaults/panako /usr/local/bin #copies the panako startup script to your path
 
-The last command copies the startup script in @resources/defaults//panako@ to a directory in your path. The script allows for easy access to Panako's functionality. If this does not work for you, you can still call Panako using @java -jar ~/.panako/panako.jar [..args]@.
+The last command copies the startup script in @resources/defaults/panako@ to a directory in your path. The script allows for easy access to Panako's functionality. If this does not work for you, you can still call Panako using @java -jar ~/.panako/panako.jar [..args]@.
 
 Panako decodes audio using by calling @ffmpeg@, an utility for decoding audio. If it is not present on your system, Panako automatically tries to download a suitable version. If this attempt fails, however, it needs to be installed manually and should be available on your systems path. On a Debian like system:
 
@@ -85,7 +85,7 @@ h2(#usage). Panako Usage
 Panako provides a command line interface, it can be called using **@panako subapplication [argument...]@**. For each task Panako has to perform, there is a subapplication. There are subapplications to store fingerprints, query audio fragments, monitor audio streams, and so on. Each subapplication has its own list of arguments, options, and output format that define the behavior of the subapplication. The screen capture below shows a typical interaction with Panako.
 
 <div align="center">
-!./media/panako_interactive_session.svg(A typical interaction with Panako via the command line interface)!
+!./resources/media/panako_interactive_session.svg(A typical interaction with Panako via the command line interface)!
 <small>Fig. A typical interaction with Panako via the command line interface. It shows how to store audio, perform a query and how to print database statistics.</small>
 </div>
 
