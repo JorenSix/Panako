@@ -12,9 +12,11 @@ end
 
 def render
 	template = File.read("docs2html_template.html")
-	docs = rr("../README.textile")
+	docs = rr("../../README.textile")
 	html = template.gsub("__content__",docs)
-	File.open("../build/readme.html", 'w') {|f| f.write(html) }
+	html = html.gsub("resources/media/panako_interactive_session.svg","media/panako_interactive_session.svg")
+	html = html.gsub("resources/media/general_acoustic_fingerprinting_schema.svg","media/general_acoustic_fingerprinting_schema.svg")
+	File.open("readme.html", 'w') {|f| f.write(html) }
 end
 
 render

@@ -1,0 +1,333 @@
+<!DOCTYPE HTML>
+	<html>
+	<head>
+	    <title>Panako - Documentation</title>
+	    <script>
+			/*setTimeout(function () { location.reload(1); }, 2300);*/
+	    </script>
+	    <style>
+	    	body {
+			    font-family: sans-serif;
+			    font-size: 100%;
+			    color: #000;
+			    margin: 0px;
+			    padding: 0px 20px 10px 20px;
+				background-color: #fff;
+			}
+			
+			/* -- hyperlink styles ------------------------------------------------------ */
+			
+			a {
+			    color: green;
+			    text-decoration: none;
+			}
+			
+			a:visited {
+			    color: green;
+			    text-decoration: none;
+			}
+			
+			a:hover {
+			    text-decoration: underline;
+			}
+			
+			
+			
+			/* -- body styles ----------------------------------------------------------- */
+			h1,
+			h2,
+			h3,
+			h4,
+			h5,
+			h6 {
+			    font-family: Georgia;
+			    background-color: #f2f2f2;
+			    font-weight: normal;
+			    color: #20435c;
+			    border-bottom: 1px solid #ccc;
+			    margin: 20px -20px 10px -20px;
+			    padding: 3px 0 3px 10px;
+			}
+			
+			h1 { margin-top: 0; font-size: 200%;font-family: Georgia; }
+			h2 { font-size: 160%;font-family: Georgia; }
+			h3 { font-size: 115%;font-family: Georgia; }
+			h4 { font-size: 100%;font-family: Georgia; }
+			
+			
+			
+			h1 a, h2 a, h3 a, h4 a, h5 a, h6 a{
+			    color: #000000;
+			    font-size: 0.8em;
+			    padding: 0 4px 0 4px;
+			    text-decoration: none;
+			}
+			
+			h1 a:hover, h2 a:hover, h3 a:hover, h4 a:hover, h5 a:hover, h6 a:hover {
+			    background-color: #000000;
+			    color: white;
+			}
+			
+			div.note {
+			    background-color: #eee;
+			    border: 1px solid #ccc;
+			}
+			
+			div.seealso {
+			    background-color: #ffc;
+			    border: 1px solid #ff6;
+			}
+			
+			
+			div.warning {
+			    background-color: #ffe4e4;
+			    border: 1px solid #f66;
+			}
+			
+			pre {
+			    padding: 5px;
+			    background-color: #eeffcc;
+			    color: #333333;
+			    line-height: 120%;
+			    border: 1px solid #ac9;
+			    border-left: none;
+			    border-right: none;
+			}
+			
+			pre code{
+			    background-color: #eeffcc;
+			}
+			code, tt {
+			    background-color: #ecf0f3;
+			    padding: 0 1px 0 1px;
+			    font-size: 0.95em;
+			}
+			
+			
+			
+			th {
+			    background-color: #ede;
+			}
+			
+			.warning tt {
+			    background: #efc2c2;
+			}
+			
+			.note tt {
+			    background: #d6d6d6;
+			}
+			
+			.inlist{
+			   
+			}
+			
+			ol + pre {
+			    margin-left:3.2em;
+			}
+	    </style>
+	</head>
+	<body>
+	
+	<h1>Panako &#8211; Acoustic Fingerprinting</h1>
+<p>Panako is an <a href="https://en.wikipedia.org/wiki/Acoustic_fingerprint">acoustic fingerprinting</a> system. The system is able to extract fingerprints from an audio stream, and either store those fingerprints in a database, or find a match between the extracted fingerprints and stored fingerprints.  Several acoustic fingerprinting algorithms are implemented within Panako. The main algorithm, the Panako algorithm, has the feature that audio queries can be identified reliably and quickly even if they has been sped up, time stretched or pitch shifted with respect to the reference audio. The main focus of Panako is to serve as a demonstration of the Panako algorithm. Other acoustic fingerprinting schemes are implemented to serve as a baseline for comparison. More information can be found in the <a href="http://www.terasoft.com.tw/conf/ismir2014/proceedings/T048_122_Paper.pdf">article about Panako</a>.</p>
+<p>Please be aware of the patents <a href="https://www.google.com/patents/US7627477">US7627477 B2</a> and <a href="https://www.google.com/patents/US6990453">US6990453</a> and <a href="http://www.shazam.com/music/web/productfeatures.html?id=1284">perhaps others</a>. They describe techniques used in some algorithms implemented within Panako. The patents limit the use of some algorithms  under various conditions and for several regions. Please make sure to consult your intellectual property rights specialist if you are in doubt about these restrictions. If these restrictions apply, respect the patent holders rights. The first aim of Panako is to serve as a research platform to experiment with and improve fingerprinting algorithms.</p>
+<p>This document covers installation, usage and configuration of Panako.</p>
+<p>The Panako source code is licensed under the <a href="https://www.gnu.org/licenses/agpl-3.0.html"><span class="caps">GNU</span> Affero General Public License</a>.</p>
+<h2>Overview</h2>
+<ol>
+	<li><a href="#why">Why Panako?</a></li>
+	<li><a href="#getting_started">Getting Started</a></li>
+	<li><a href="#usage">Usage</a>
+	<ol>
+		<li><a href="#store">Store Fingerprints</a></li>
+		<li><a href="#query">Query for Matches</a></li>
+		<li><a href="#monitor">Monitor Stream for Matches</a></li>
+		<li><a href="#stats">Print Storage Statistics</a></li>
+		<li><a href="#configuration">Print Configuration</a></li>
+	</ol></li>
+	<li><a href="#read">Further reading</a></li>
+	<li><a href="#docker">Panako and docker</a></li>
+	<li><a href="#ismir">Reproduce the <span class="caps">ISMIR</span> Paper Results</a></li>
+	<li><a href="#credits">Credits</a></li>
+	<li><a href="#changelog">Changelog</a></li>
+</ol>
+<h2 id="why">Why Panako?</h2>
+<p>Content based music search algorithms make it possible to identify a small audio fragment in a digital music archive with potentially millions of songs. Current search algorithms are able to respond quickly and reliably on an audio query, even if there is noise or other distortions present. During the last decades they have been used successfully as digital music archive management tools, music identification services for smartphones or for digital rights management.</p>
+<div align="center">
+<p><img src="./media/general_acoustic_fingerprinting_schema.svg" title="General content based audio search scheme" alt="General content based audio search scheme" /><br />
+<small>Fig. General content based audio search scheme.</small></p>
+</div>
+<p>Most algorithms, as they are described in the literature, do not allow substantial changes in replay speed. The speed of the audio query needs to be the same as the reference audio for the current algorithms to work. This poses a problem, since changes in replay speed do occur commonly, they are either introduced by accident during an analog to digital conversion or are introduced deliberately.</p>
+<p>Analogue physical media such as wax cylinders, wire recordings, magnetic tapes and grammophone records can be digitized at an incorrect or varying playback speed. Even when calibrated mechanical devices are used in a digitization process, the media could already have been recorded at an undesirable speed. To identify duplicates in a digitized archive, a music search algorithm should compensate for changes in replay speed</p>
+<p>Next to accidental speed changes, deliberate speed manipulations are sometimes introduced during radio broadcasts: occasionally songs are played a bit faster to fit into a timeslot. During a DJ-set speed changes are almost always present. To correctly identify audio in these cases as well, a music search algorithm robust against pitch shifting, time stretching and speed changes is desired.</p>
+<p>The Panako algorithm allows such changes while maintaining other desired features as scalability, robustness and reliability.  Next to the panako algorithm there is also an implementation of the algorithm described in <a href="http://www.ee.columbia.edu/~dpwe/papers/Wang03-shazam.pdf">An Industrial-Strength Audio Search Algorithm</a> (internally identified as Olaf). Also the algorithm in <a href="http://0110.be/files/attachments/415/2012.01.20.fingerprinter.submitted.pdf">A Robust Audio Fingerprinter Based on Pitch Class Histograms &#8211; Applications for Ethnic Music Archives</a> is available. To make comparisons between fingerprinting systems easy, researchers are kindly invited to contribute algorithms to the Panako project.</p>
+<p>Alternative open source music identification systems are <a href="http://www.ee.columbia.edu/~dpwe/resources/matlab/audfprint/">audfprint</a>, <a href="https://github.com/chymaera96/neuralfp">NeuralFP</a> and <a href="http://echoprint.me/">echoprint</a>. Alternative systems with similar features are described in <a href="https://www.google.com/patents/US7627477">US7627477 B2</a> and in  <a href="http://www.dafx14.fau.de/papers/dafx14_reinhard_sonnleitner_quad_based_audio_fingerpr.pdf" title="2014"><i>Quad-based Audio Fingerprinting Robust To Time And Frequency Scaling</i></a> by Reinhard Sonnleitner and Gerhard Widmer.</p>
+<h2 id="getting_started">Getting started</h2>
+<p>Panako is organized as follows:</p>
+<ul>
+	<li><code>src</code> contains the Java source files.</li>
+	<li><code>lib</code> contains the dependencies (<span class="caps">JAR</span>-files).</li>
+	<li><code>build</code> contains an ant build file to compile Panako and the documentation. Use <code>ant release</code> to build the source and compile Panako.</li>
+	<li><code>scripts</code> contains helper scripts for evaluation and to analyse results</li>
+</ul>
+<p>To compile Panako, the <span class="caps">JDK</span> 11 or later is required. See the <a href="http://java.com/en/download/help/index_installing.xml">installation instructions</a> on the Java website, for installation on your operating system.</p>
+<p>Panako uses the <a href="https://gradle.org/">Gradle</a> build system. Install it on your system.<br />
+Once Gradle and the other components are installed correctly the following commands should get you started:</p>
+<pre><code>git clone --depth 1 https://github.com/JorenSix/Panako.git
+cd Panako
+./gradlew shadowJar #Builds the core Panako library
+./gradlew install #Installs Panako in the ~/.panako directory
+./gradlew javadoc #Creates the documentation in doc
+sudo cp resources/defaults/panako /usr/local/bin #copies the panako startup script to your path</code></pre>
+<p>The last command copies the startup script in <code>resources/defaults/panako</code> to a directory in your path. The script allows for easy access to Panako&#8217;s functionality. If this does not work for you, you can still call Panako using <code>java -jar ~/.panako/panako.jar [..args]</code>.</p>
+<p>Panako decodes audio using by calling <code>ffmpeg</code>, an utility for decoding and resampling audio.<br />
+The <code>ffmpeg</code> command needs to on the systems path. On a Debian like system:</p>
+<pre><code>apt-get install ffmpeg</code></pre>
+<p><b>Test Panako</b>. You might need a new shell to use <code>panako</code>. Note that you also need SoX and wget on your system:</p>
+<pre><code>#brew install sox wget
+#apt-get install sox wget
+panako -v #prints version
+panako stats #db info
+cd resources/scripts/create_test_dataset
+ruby create_dataset.rb #make sure sox
+panako store dataset/*
+panako query query/*</code></pre>
+<h2 id="usage">Panako Usage</h2>
+<p>Panako provides a command line interface, it can be called using <b><code>panako subapplication [argument...]</code></b>. For each task Panako has to perform, there is a subapplication. There are subapplications to store fingerprints, query audio fragments, monitor audio streams, and so on. Each subapplication has its own list of arguments, options, and output format that define the behavior of the subapplication. The screen capture below shows a typical interaction with Panako.</p>
+<div align="center">
+<p><img src="./media/panako_interactive_session.svg" title="A typical interaction with Panako via the command line interface" alt="A typical interaction with Panako via the command line interface" /><br />
+<small>Fig. A typical interaction with Panako via the command line interface. It shows how to store audio, perform a query and how to print database statistics.</small></p>
+</div>
+<p>To save some keystrokes the name of the subapplication can be shortened using a unique prefix. For example <code>panako m file.mp3</code> is expanded to <code>panako monitor file.mp3</code>. Since both <code>stats</code> and <code>store</code> are valid subapplications the <code>store</code> call can be shortened to <code>panako sto *.mp3</code>, <code>panako s *.mp3</code> gives an invalid application message. A <a href="https://en.wikipedia.org/wiki/Trie">trie</a> is used to find a unique prefix.</p>
+<p>What follows is a list of those subapplications, their arguments, and respective goal.</p>
+<h3 id="store">Store Fingerprints &#8211; <b><code>panako store</code></b></h3>
+<p>The <code>store</code> instruction extracts fingerprints from audio tracks and stores those in the datastorage. The command expects a list of audio files, video files or a text file with a list of file names.</p>
+<pre><code>#Audio is converted automatically
+panako store audio.mp3 audio.ogg audio.flac audio.wav </code>
+
+<code>#The first audio stream of video containers formats are used.
+panako store audio.mpc audio.mp4 audio.acc audio.avi audio.ogv audio.wma </code>
+
+<code>#Glob characters can be practical
+panako store */*.mp3</code>
+
+<code>#A text file with audio files can be used as well
+#The following searches for all mp3's (recursively) and
+#stores them in a text file
+find . -name '*.mp3' &gt; list.txt
+#Iterate the list
+panako store list.txt</code></pre>
+<h3 id="delete">Remove fingerprints  &#8211; <b><code>panako delete</code></b></h3>
+<p>This application removes fingerprints from the index. It essentially reverses the <code>store</code> operation. The operation can be checked with <code>panako stats</code></p>
+<p><code>panako delete test.mp3</code></p>
+<p>The default key-value-store is backed by some kind of B-tree structure. Removing many elements from such structure might leave the tree in an unbalanced state, which results in worse performance. I am not sure about the performance implications of deletion for <span class="caps">LMDB</span> but it might be of interest to either rebuild the index or avoid deletion as much as possible.</p>
+<h3 id="query">Query for Matches &#8211; <b><code>panako query</code></b></h3>
+<p>The <code>query</code> command extracts fingerprints from an audio frament and tries to match the fingerprints with the database.</p>
+<pre><code>panako query short_audio.mp3</code></pre>
+<h3 id="monitor">Monitor Stream for Matches &#8211; <b><code>panako monitor</code></b></h3>
+<p>The <code>query</code> command extracts fingerprints from a short audio frament and tries to match the fingerprints with the database. The incoming audio is, by default, chopped in parts of 25s with an overlap of 5s. So every <code>25-5=20s</code> the database is queried and a result is printed to the command line.</p>
+<pre><code>panako monitor [short_audio.mp3]</code></pre>
+<p>If no audio file is given, the default microphone is used as input.</p>
+<h3 id="stats">Print Storage Statistics &#8211; <b><code>panako stats</code></b></h3>
+<p>The <code>stats</code> command prints statistics about the stored fingerprints and the number of audio fragments. If an integer argument is given it keeps printing the stats every x seconds.</p>
+<pre><code>panako stats # print stats once
+panako stats 20 # print stats every 20s </code></pre>
+<h3 id="configuration">Print Configuration &#8211; <b><code>panako config</code></b></h3>
+<p>The <code>config</code> subapplication prints the configuration currently in use.</p>
+<pre><code>panako config</code></pre>
+<p>To override configuration values there are two options. The first option is to create a configuration file, by default at the following location: <code>~./panako/config.properties</code>. The configuration file is a properties text file. An commented configuration file should be included in the doc directory at <code>doc/config.properties</code>.</p>
+<p>The second option to override configuration values is by adding them to the arguments of the command line call as follows:</p>
+<pre><code>panako subapplication CONFIG_KEY=value</code></pre>
+<p>For example, if you do not want to check for duplicate files while building a fingerprint database the following can be done:</p>
+<pre><code>panako store file.mp3 CHECK_FOR_DUPLICATES=FALSE</code></pre>
+<p>The configuration values provided as a command line argument have priority over the ones in the configuration file. If there is no value configured a default is used automatically. To find out which configuration options are available and their respective functions, consult the documented example configuration file <code>doc/config.properties</code>..</p>
+<h3 id="resolve">Resolve an identifier for a filename &#8211; <b><code>panako resolve</code></b></h3>
+<p>This application simply returns the identifier that is used internally for a filename. The following call returns for example <code>54657653</code>:</p>
+<p><code>panako resolve test.mp3</code></p>
+<p>The internal identifiers are currently defined using integers.</p>
+<h3 id="same">Prints how similar two audio files are &#8211; <b><code>panako same</code></b></h3>
+<p>This application checks the similarity of two files. The percentage returned indicates the percentage of seconds for which fingerprints match between the first and second file. So 100% that matches are found in every second. A result of 30% still means that much of the audio matches.</p>
+<p><code>panako same first.mp3 second.mp3</code></p>
+<p>Note that this operation is performed in memory. Nothing changes on disk.</p>
+<h2 id="docker">Panako and Docker</h2>
+<p>Panako can also be ran in a containerized environment. A <code>Dockerfile</code> is provided which should both work on <code>x86_64</code> as <code>aarch64</code>. To build the container and run commands the following should get you started. Note that the database with fingerprints is located on the host at <code>~/.panako/docker_dbs</code>:</p>
+<pre><code>cd resources/scripts/
+docker build -t panako:2.1 .
+mkdir -p $HOME/.panako/docker_dbs
+wget "https://filesamples.com/samples/audio/mp3/sample3.mp3"
+docker run -v $HOME/.panako/docker_dbs:/root/.panako/dbs panako:2.1 panako store sample3.mp3
+docker run -v $HOME/.panako/docker_dbs:/root/.panako/dbs panako:2.1 panako stats</code></pre>
+<h2 id="read">Further Reading</h2>
+<p>Some relevant reading material about acoustic fingerprinting. The order gives an idea of relevance to the Panako project.</p>
+<ol>
+	<li>Six, Joren and Leman, Marc <a href="http://www.terasoft.com.tw/conf/ismir2014/proceedings/T048_122_Paper.pdf"><i>Panako &#8211; A Scalable Acoustic Fingerprinting System Handling Time-Scale and Pitch Modification</i></a> (2014)</li>
+	<li>Wang, Avery L. <i>An Industrial-Strength Audio Search Algorithm</i> (2003)</li>
+	<li>Cano, Pedro and Batlle, Eloi and Kalker, Ton and Haitsma, Jaap <i>A Review of Audio Fingerprinting</i> (2005)</li>
+	<li>Six, Joren and Cornelis, Olmo <i>A Robust Audio Fingerprinter Based on Pitch Class Histograms &#8211; Applications for Ethnic Music Archives</i> (2012)</li>
+	<li>Arzt, Andreas and Bock, Sebastian and Widmer, Gerhard <i>Fast Identification of Piece and Score Position via Symbolic Fingerprinting</i> (2012)</li>
+	<li>Fenet, Sebastien and Richard, Gael and Grenier, Yves <i>A Scalable Audio Fingerprint Method with Robustness to Pitch-Shifting</i> (2011)</li>
+	<li>Ellis, Dan and Whitman, Brian and Porter, Alastair <i>Echoprint &#8211; An Open Music Identification Service</i> (2011)</li>
+	<li>Sonnleitner, Reinhard  and Widmer, Gerhard <i>Quad-based Audio Fingerprinting Robust To Time And Frequency Scaling</i> (2014)</li>
+	<li>Sonnleitner, Reinhard  and Widmer, Gerhard <a href="http://dx.doi.org/10.1109/TASLP.2015.2509248"><i>Robust Quad-Based Audio Fingerprinting</i></a> (2015)</li>
+	<li>S. Chang et al., &#8220;<i>Neural Audio Fingerprint for High-Specific Audio Retrieval Based on Contrastive Learning</i>&#8221; (2021) &#8211; <span class="caps">ICASSP</span> 2021.</li>
+</ol>
+<h2 id="credits">Credits</h2>
+<p>The Panako software was developed at <a href="http://www.ipem.ugent.be/"><span class="caps">IPEM</span>, Ghent University</a> by Joren Six.</p>
+<p>Some parts of Panako were inspired by the <a href="http://www.ee.columbia.edu/~dpwe/resources/matlab/fingerprint/">Robust Landmark-Based Audio Fingerprinting Matlab implementation by Dan Ellis</a>.</p>
+<p>If you use Panako for research purposes, please cite the following works:</p>
+<pre><code>@inproceedings{six2014panako,
+  author      = {Joren Six and Marc Leman},
+  title       = {{Panako - A Scalable Acoustic Fingerprinting System Handling Time-Scale and Pitch Modification}},
+  booktitle   = {{Proceedings of the 15th ISMIR Conference (ISMIR 2014)}}, 
+  year        =  2014
+}</code></pre>
+<pre><code>@inproceedings{six2021panako,
+  title={Panako 2.0-Updates for an acoustic fingerprinting system},
+  author={Six, Joren},
+  booktitle={Demo / late-breaking abstracts of 22st International Society for Music Information Retrieval Conference, ISMIR},
+  year={2021}
+}</code></pre>
+<h2 id="ismir">Reproduce the <span class="caps">ISMIR</span> Paper Results</h2>
+<p>The directory <code>scripts/reproducibility</code> contains scripts to reproduce the result found in the <br />
+<a href="http://www.terasoft.com.tw/conf/ismir2014/proceedings/T048_122_Paper.pdf">Panako <span class="caps">ISMIR</span> 2014 paper</a>. The scripts follow this procedure:</p>
+<ol>
+	<li>The Jamendo dataset is downloaded.</li>
+	<li>The fingerprints are extracted and stored for each file in the data set.o download an openly available dataset</li>
+	<li>Query files are created from the Jamendo data set.</li>
+	<li>Panako is queried for each query file, results are logged</li>
+	<li>Results are parsed.</li>
+</ol>
+<p>To run the evaluation scripts, a <span class="caps">UNIX</span> like system with following utilities is required:</p>
+<ul>
+	<li>ffmpeg: an utility to convert media files</li>
+	<li>wget: an utility to download files</li>
+	<li><a href="http://sox.sourceforge.net/">SoX</a>, inlcuding support for MP3 and <span class="caps">GSM</span> encoding.</li>
+	<li>bash: the bash shell</li>
+	<li><a href="https://www.ruby-lang.org/en/">Ruby</a>: The ruby programming language runtime environment.</li>
+	<li>Unzip: to unzip the metadata file.</li>
+</ul>
+<p>Evidently the panako software should also be installed. Please see above to install the Panako.</p>
+<p>If all requirements are met, running the test is done using <code>bash run_experiment.bash</code></p>
+<h2 id="changelog">Changelog</h2>
+<dt>Version 1.5</dt><dd>2016-12-08</dd> <p>Improvements to SyncSink. The cross correlation now behaves well also in edge cases. The Sync code has been simplified to allow maintenance. Included unit tests. Updated to TarsosDSP version 2.4.</p>
+<dt>Version 1.6</dt><dd>2017-03-17</dd> <p>This release adds a simplified version of chromaprint and an implementation of <a href="http://www.ismir2002.ismir.net/proceedings/02-FP04-2.pdf">&#8216;A Highly Robust Audio Fingerprinting System&#8217; by Haitsma and Kalker</a></p>
+<dt>Version 2.0</dt><dd>2021-04-27</dd> <p>A major overhaul of Panako. The main aim of this release is to ensure the longevity and maintainability of Panako. The featureset has been reduced to focus on core functionality. The version bump is also explained by the use of lambdas and the need for a newer <span class="caps">JRE</span> (8+). A list of changes:</p>
+<ul>
+	<li>The number of dependencies has been drastically cut by removing support for multiple key-value stores.</li>
+	<li>The key-value store has been changed to a faster and simpler system (from MapDB to <span class="caps">LMDB</span>).</li>
+	<li>The SyncSink functionality has been moved to another project (with Panako as dependency).</li>
+	<li>The main algorithms have been replaced with simpler and better working versions:
+	<ul>
+		<li>Olaf is a new implementation of the classic Shazam algorithm.</li>
+		<li>The algoritm described in the Panako paper was also replaced. The core ideas are still the same. The main change is the use of a <a href="https://en.wikipedia.org/wiki/Gabor_transform">Gabor transform</a> to go from time domain to the spectral domain (previously a constant-q transform was used).  The gabor transform is implemented by <a href="https://github.com/JorenSix/JGaborator">JGaborator</a> which in turn relies on <a href="https://gaborator.com/">The Gaborator</a> C++ library via <span class="caps">JNI</span>.</li>
+	</ul></li>
+	<li>Folder structure has been simplified.</li>
+	<li>The UI, which was mainly used for debugging, has been removed.</li>
+	<li>A new set of helper scripts are added in the <code>scripts</code> directory. They help with evaluation, parsing results, checking results, building panako, creating documentation,&#8230;</li>
+	<li>Changed the default panako location to ~/.panako, so users can install and use panako more easily (withouth need for sudo rights)</li>
+</ul>
+ <dt>Version 2.1</dt><dd>2022-05</dd> <p>Changed the build system to <a href="https://gradle.org/">Gradle</a>, mainly to make upgrading dependencies more straightforward. The folder structure has been changed accordingly. The default <span class="caps">JDK</span> target has been changed to Java SE 11 (<span class="caps">LTS</span>). Panako now also supports Apple M1 targets.</p>
+
+	</body>
+	
+</html>

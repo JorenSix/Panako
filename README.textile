@@ -19,8 +19,9 @@ h2. Overview
 ## "Print Storage Statistics":#stats
 ## "Print Configuration":#configuration
 # "Further reading":#read
-# "Credits":#credits
+# "Panako and docker":#docker
 # "Reproduce the ISMIR Paper Results":#ismir
+# "Credits":#credits
 # "Changelog":#changelog
 
 h2(#why). Why Panako?
@@ -46,16 +47,17 @@ Alternative open source music identification systems are "audfprint":http://www.
 
 h2(#getting_started). Getting started
 
-To download the latest Panako version, @wget@ needs to be installed on your system. Once downloaded the contents looks like this:  
+Panako is organized as follows:
 
 * @src@ contains the Java source files.
 * @lib@ contains the dependencies (JAR-files).
 * @build@ contains an ant build file to compile Panako and the documentation. Use @ant release@ to build the source and compile Panako.
-* @scripts@ contains helper scripts to analyse results
+* @scripts@ contains helper scripts for evaluation and to analyse results
 
 To compile Panako, the JDK 11 or later is required. See the "installation instructions":http://java.com/en/download/help/index_installing.xml on the Java website, for installation on your operating system.
 
-Panako uses the "Gradle":https://gradle.org/ build system. Install it on your system. Once ant and the other components are installed correctly the following commands should get you started:
+Panako uses the "Gradle":https://gradle.org/ build system. Install it on your system.
+Once Gradle and the other components are installed correctly the following commands should get you started:
 
 bc. git clone --depth 1 https://github.com/JorenSix/Panako.git
 cd Panako
@@ -66,16 +68,22 @@ sudo cp resources/defaults/panako /usr/local/bin #copies the panako startup scri
 
 The last command copies the startup script in @resources/defaults/panako@ to a directory in your path. The script allows for easy access to Panako's functionality. If this does not work for you, you can still call Panako using @java -jar ~/.panako/panako.jar [..args]@.
 
-Panako decodes audio using by calling @ffmpeg@, an utility for decoding audio. If it is not present on your system, Panako automatically tries to download a suitable version. If this attempt fails, however, it needs to be installed manually and should be available on your systems path. On a Debian like system:
+Panako decodes audio using by calling @ffmpeg@, an utility for decoding and resampling audio.
+The @ffmpeg@ command needs to on the systems path. On a Debian like system:
 
 bc. apt-get install ffmpeg
 
-Panako calls a sub-process (ffmpeg) and reads decoded PCM audio samples via a pipe. By default Panako calls @ffmpeg@. Alternatively, Panako can be configured to use any utility (like @avconv@) that can pipe decoded audio streams in the format PCM, one channel, 16bit per sample.
 
-**Test Panako**. You might need a new shell to use @panako@.
+**Test Panako**. You might need a new shell to use @panako@. Note that you also need SoX and wget on your system:
 
-bc. panako -v #prints version
+bc. #brew install sox wget
+#apt-get install sox wget
+panako -v #prints version
 panako stats #db info
+cd resources/scripts/create_test_dataset
+ruby create_dataset.rb #make sure sox
+panako store dataset/*
+panako query query/*
 
 h2(#usage). Panako Usage
 
