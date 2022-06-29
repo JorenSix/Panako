@@ -41,7 +41,7 @@ Next to accidental speed changes, deliberate speed manipulations are sometimes i
 
 The Panako algorithm allows such changes while maintaining other desired features as scalability, robustness and reliability.  Next to the panako algorithm there is also an implementation of the algorithm described in "An Industrial-Strength Audio Search Algorithm":http://www.ee.columbia.edu/~dpwe/papers/Wang03-shazam.pdf (internally identified as Olaf). Also the algorithm in "A Robust Audio Fingerprinter Based on Pitch Class Histograms - Applications for Ethnic Music Archives":http://0110.be/files/attachments/415/2012.01.20.fingerprinter.submitted.pdf is available. To make comparisons between fingerprinting systems easy, researchers are kindly invited to contribute algorithms to the Panako project.
 
-Alternative open source music identification systems are "audfprint":http://www.ee.columbia.edu/~dpwe/resources/matlab/audfprint/ and "echoprint":http://echoprint.me/. Alternative systems with similar features are described in "US7627477 B2":https://www.google.com/patents/US7627477 and in  "__Quad-based Audio Fingerprinting Robust To Time And Frequency Scaling__ (2014)":http://www.dafx14.fau.de/papers/dafx14_reinhard_sonnleitner_quad_based_audio_fingerpr.pdf by Reinhard Sonnleitner and Gerhard Widmer.
+Alternative open source music identification systems are "audfprint":http://www.ee.columbia.edu/~dpwe/resources/matlab/audfprint/, "NeuralFP":https://github.com/chymaera96/neuralfp and "echoprint":http://echoprint.me/. Alternative systems with similar features are described in "US7627477 B2":https://www.google.com/patents/US7627477 and in  "__Quad-based Audio Fingerprinting Robust To Time And Frequency Scaling__ (2014)":http://www.dafx14.fau.de/papers/dafx14_reinhard_sonnleitner_quad_based_audio_fingerpr.pdf by Reinhard Sonnleitner and Gerhard Widmer.
 
 
 h2(#getting_started). Getting started
@@ -73,12 +73,9 @@ bc. apt-get install ffmpeg
 Panako calls a sub-process (ffmpeg) and reads decoded PCM audio samples via a pipe. By default Panako calls @ffmpeg@. Alternatively, Panako can be configured to use any utility (like @avconv@) that can pipe decoded audio streams in the format PCM, one channel, 16bit per sample.
 
 **Test Panako**. You might need a new shell to use @panako@.
-	
+
 bc. panako -v #prints version
 panako stats #db info
-
-
-
 
 h2(#usage). Panako Usage
 
@@ -125,13 +122,13 @@ The default key-value-store is backed by some kind of B-tree structure. Removing
 h3(#query). Query for Matches - **@panako query@**
 
 The @query@ command extracts fingerprints from an audio frament and tries to match the fingerprints with the database. 
-	
+
 bc. panako query short_audio.mp3
 
 h3(#monitor). Monitor Stream for Matches - **@panako monitor@**
 
 The @query@ command extracts fingerprints from a short audio frament and tries to match the fingerprints with the database. The incoming audio is, by default, chopped in parts of 25s with an overlap of 5s. So every @25-5=20s@ the database is queried and a result is printed to the command line.
-	
+
 bc. panako monitor [short_audio.mp3]
 
 If no audio file is given, the default microphone is used as input.
@@ -168,7 +165,7 @@ h3(#resolve). Resolve an identifier for a filename - **@panako resolve@**
 This application simply returns the identifier that is used internally for a filename. The following call returns for example @54657653@: 
 
 @panako resolve test.mp3@
- 
+
 The internal identifiers are currently defined using integers.
 
 
@@ -203,9 +200,8 @@ Some relevant reading material about acoustic fingerprinting. The order gives an
 # Fenet, Sebastien and Richard, Gael and Grenier, Yves __A Scalable Audio Fingerprint Method with Robustness to Pitch-Shifting__ (2011)
 # Ellis, Dan and Whitman, Brian and Porter, Alastair __Echoprint - An Open Music Identification Service__ (2011)
 # Sonnleitner, Reinhard  and Widmer, Gerhard __Quad-based Audio Fingerprinting Robust To Time And Frequency Scaling__ (2014)
-# Sonnleitner, Reinhard  and Widmer, Gerhard "__
-Robust Quad-Based Audio Fingerprinting__":http://dx.doi.org/10.1109/TASLP.2015.2509248 (2015)
-
+# Sonnleitner, Reinhard  and Widmer, Gerhard "__Robust Quad-Based Audio Fingerprinting__":http://dx.doi.org/10.1109/TASLP.2015.2509248 (2015)
+# S. Chang et al., "__Neural Audio Fingerprint for High-Specific Audio Retrieval Based on Contrastive Learning__" (2021) - ICASSP 2021.
 
 h2(#credits). Credits
 
@@ -273,5 +269,5 @@ h2(#changelog). Changelog
 * The UI, which was mainly used for debugging, has been removed.
 * A new set of helper scripts are added in the @scripts@ directory. They help with evaluation, parsing results, checking results, building panako, creating documentation,...
 * Changed the default panako location to ~/.panako, so users can install and use panako more easily (withouth need for sudo rights)
- 
+
  <dt>Version 2.1</dt><dd>2022-05</dd> Changed the build system to "Gradle":https://gradle.org/, mainly to make upgrading dependencies more straightforward. The folder structure has been changed accordingly. The default JDK target has been changed to Java SE 11 (LTS). Panako now also supports Apple M1 targets.

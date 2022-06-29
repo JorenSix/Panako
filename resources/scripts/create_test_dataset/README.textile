@@ -1,0 +1,23 @@
+h1. Panako - Create dataset script
+
+
+This directory contains a script to create a basic dataset with audio from Jamendo.
+
+The script downloads a number of audio files, transcodes them to wav and creates a random fragment to be used a a query.
+
+h3. Dependencies
+The script needs Ruby, ffmpeg, wget and sox installed on your system.
+
+* Ruby is an scripting language which is often already installed. See "Installing Ruby":https://www.ruby-lang.org/en/documentation/installation/ if this is not already the case.
+* ffmpeg is also required for Panako itself. Install with @brew install ffmpeg@,  @apt-get install ffmpeg@ or consult the documentation for your system.
+* "SoX":http://sox.sourceforge.net/ is an easily scriptable audio manipulation tool. Similarly as ffmpeg, install it with @brew install sox@ or comparable package managers.
+* wget is an utility to download over http. Again: install this via your package manager: @brew install wget@.
+
+h3. Use
+
+By default the script downloads (only) 5 tracks from Jamendo
+
+@ruby create_dataset.rb@
+@panako store dataset/*@
+@panako query query/*@
+

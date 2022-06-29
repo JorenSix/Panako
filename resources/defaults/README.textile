@@ -5,4 +5,3 @@ This directory contains the default configuration for panako.
 * @config.properties@ contains default algorithm configuration
 * @logging.properties@ contains default logging configuration
 * @panako@ is the default startup bash script
- 
