@@ -4,12 +4,12 @@ require 'fileutils'
 require './create_queries'
 require './parse_query_results'
 
-
 QUERY_LENGTHS = [10,20]
 STORE_SPLIT = 80
 RANDOM_SEED=0
-AUDIO_EXT = "mp3"
-NUM_QUERIES = 100
+AUDIO_EXT = "mp3" #
+NUM_QUERIES = 50
+MAX_NUM_REF = 100
 RANDOM = Random.new(RANDOM_SEED)
 DATA_FOLDER = "eval_panako"
 PARAMS_FILE = "panako_eval.properties"
@@ -25,6 +25,9 @@ audio_archive_folder = ARGV[0]
 
 # Make a list of all audio files
 all_audio_files = Dir.glob(File.join(audio_archive_folder,"**/*#{AUDIO_EXT}")).sort.shuffle(random: RANDOM)
+
+#limits the number of audio files indexed (practical for debugging the evaluation script)
+all_audio_files = all_audio_files[0..MAX_NUM_REF] if(all_audio_files.size > MAX_NUM_REF)
 
 # Divide the list of all audio files in a list to store and a list to hold back
 # Store in index to check true positives

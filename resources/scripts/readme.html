@@ -274,6 +274,13 @@ docker run -v $HOME/.panako/docker_dbs:/root/.panako/dbs panako:2.1 panako stats
 <h2 id="credits">Credits</h2>
 <p>The Panako software was developed at <a href="http://www.ipem.ugent.be/"><span class="caps">IPEM</span>, Ghent University</a> by Joren Six.</p>
 <p>Some parts of Panako were inspired by the <a href="http://www.ee.columbia.edu/~dpwe/resources/matlab/fingerprint/">Robust Landmark-Based Audio Fingerprinting Matlab implementation by Dan Ellis</a>.</p>
+<p>Panako includes parts or depends on the following projects:</p>
+<ul>
+	<li><a href="https://github.com/vivekn/autocomplete/blob/master/java/src/main/java/com/marcusmccurdy/trie/Trie.java">A trie by Marcus McCurdy</a> &#8211;  <span class="caps">BSD</span> licensed. For autocompletion.</li>
+	<li><a href="https://gaborator.com/">The Gaborator</a>, <i>&#8216;a C++ library that generates constant-Q spectrograms for visualization and analysis of audio signals&#8217;</i> &#8211; AGPLv3 licensed but with commercial licenses available!</li>
+	<li><a href="https://github.com/JorenSix/JGaborator">JGaborator</a> a <span class="caps">JNI</span> bridge to The Gaborator by Joren Six &#8211; <span class="caps">AGPL</span> licensed.</li>
+	<li><a href="https://www.symas.com/lmdb"><span class="caps">LMDB</span></a> (The OpenLDAP Public License) and <a href="https://github.com/lmdbjava/lmdbjava">lmdbjava</a> (Apache License, Version 2.0). <span class="caps">LMDB</span> is used as key-value-store.</li>
+</ul>
 <p>If you use Panako for research purposes, please cite the following works:</p>
 <pre><code>@inproceedings{six2014panako,
   author      = {Joren Six and Marc Leman},

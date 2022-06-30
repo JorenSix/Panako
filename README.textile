@@ -217,6 +217,13 @@ The Panako software was developed at "IPEM, Ghent University":http://www.ipem.ug
 
 Some parts of Panako were inspired by the "Robust Landmark-Based Audio Fingerprinting Matlab implementation by Dan Ellis":http://www.ee.columbia.edu/~dpwe/resources/matlab/fingerprint/.
 
+Panako includes parts or depends on the following projects:
+
+* "A trie by Marcus McCurdy":https://github.com/vivekn/autocomplete/blob/master/java/src/main/java/com/marcusmccurdy/trie/Trie.java -  BSD licensed. For autocompletion.
+* "The Gaborator":https://gaborator.com/, __'a C++ library that generates constant-Q spectrograms for visualization and analysis of audio signals'__ - AGPLv3 licensed but with commercial licenses available!
+* "JGaborator":https://github.com/JorenSix/JGaborator a JNI bridge to The Gaborator by Joren Six - AGPL licensed.
+* "LMDB":https://www.symas.com/lmdb (The OpenLDAP Public License) and "lmdbjava":https://github.com/lmdbjava/lmdbjava (Apache License, Version 2.0). LMDB is used as key-value-store.
+
 If you use Panako for research purposes, please cite the following works:
 
 bc. @inproceedings{six2014panako,
@@ -234,30 +241,24 @@ bc. @inproceedings{six2021panako,
 }
 
 
+h2(#eval). Evaluate Panako
 
-h2(#ismir). Reproduce the ISMIR Paper Results
+The directory @resources/scripts/evaluation@ contains scripts to reproduce the result found in the
+"Panako ISMIR 2021 abstract":https://archives.ismir.net/ismir2021/latebreaking/000039.pdf. The script follows this procedure:
 
-The directory @scripts/reproducibility@ contains scripts to reproduce the result found in the 
-"Panako ISMIR 2014 paper":http://www.terasoft.com.tw/conf/ismir2014/proceedings/T048_122_Paper.pdf. The scripts follow this procedure:
-
-# The Jamendo dataset is downloaded.
 # The fingerprints are extracted and stored for each file in the data set.o download an openly available dataset
 # Query files are created from the Jamendo data set.
 # Panako is queried for each query file, results are logged
 # Results are parsed.
 
-To run the evaluation scripts, a UNIX like system with following utilities is required:
+To run the evaluation scripts, a UNIX like system with following additional utilities is required.
+Evidently the Panako software should also be installed. Please see above to install Panako. Download "Free Music Archive":https://www.kaggle.com/datasets/imsparsh/fma-free-music-archive-small-medium
 
-* ffmpeg: an utility to convert media files
-* wget: an utility to download files
-* "SoX":http://sox.sourceforge.net/, inlcuding support for MP3 and GSM encoding.
-* bash: the bash shell
 * "Ruby":https://www.ruby-lang.org/en/: The ruby programming language runtime environment.
-* Unzip: to unzip the metadata file.
+* "SoX":http://sox.sourceforge.net/, inlcuding support for MP3 and GSM encoding.
+* GNUPlot: for plotting the results
 
-Evidently the panako software should also be installed. Please see above to install the Panako.
-
-If all requirements are met, running the test is done using @bash run_experiment.bash@
+If all requirements are met, running the evaluation is done using @ruby evaluation.rb fma_small@
 
 
 h2(#changelog). Changelog
