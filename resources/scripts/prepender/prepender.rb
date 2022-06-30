@@ -1,9 +1,8 @@
 require 'rubygems'
 
-source_files = Dir.glob(File.join("../../**", "*.java"))
+source_files = Dir.glob(File.join("../../../**", "*.java"))
 new_prefix = File.open("new_prefix.txt", "r").read
 old_prefix = File.open("old_prefix.txt", "r").read
-
 
 def starts_with?(string, prefix)
   prefix = prefix.to_s
