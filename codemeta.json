@@ -1,0 +1,17 @@
+{
+  "@context": "https://raw.githubusercontent.com/codemeta/codemeta/master/codemeta.jsonld",
+  "@type": "Code",
+  "author": [
+
+  ],
+  "identifier": "",
+  "codeRepository": "https://github.com/JorenSix/Panako",
+  "datePublished": "2022-06-30",
+  "dateModified": "2022-06-30",
+  "dateCreated": "2022-06-30",
+  "description": "Panako: a scalable audio search system",
+  "keywords": "Acoustic fingerprinting, content based audio search, audio duplicate detection, music information retreival",
+  "license": "AGPL",
+  "title": "Panako",
+  "version": "2.1"
+}
