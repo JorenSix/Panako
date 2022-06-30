@@ -4,7 +4,6 @@
 #
 # 2022.05.25 - Panako startup bash script.
 # It assumes that a working JVM is present on the system.
-#	Please consult the manual for more info. 
 #
 ############################################################
 
@@ -15,7 +14,7 @@ PANAKO_COMPATIBILITY_OPTIONS="--add-opens=java.base/java.nio=ALL-UNNAMED --add-o
 
 #Some parameters for the JVM to improve performance
 #Thanks to @julianterzyk for the bug report
-PANAKO_JVM_OPTS="-server -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -Xms256m -Xmx256m"
+PANAKO_JVM_OPTS="-server -Xms256m -Xmx256m"
 
 #The configuration file to configure logging
 LOG_CONFIGURATION="$PANAKO_DIR/logging.properties"

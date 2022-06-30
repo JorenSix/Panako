@@ -100,7 +100,7 @@ public enum Key{
 	 * The number of processors available to Panako. If zero (or less) all
 	 * available processors are used.
 	 */
-	AVAILABLE_PROCESSORS("0"), 	
+	AVAILABLE_PROCESSORS("1"),
 	
 	/**
 	 * The strategy (algorithm) to use, OLAF|PANAKO|PCH.
