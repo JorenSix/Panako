@@ -1,5 +1,5 @@
 ---
-title: 'Panako: a scalable audio search system'
+title: 'Panako: a scalable audio search system '
 tags:
 - Acoustic fingerprinting
 - Music Information Retreival
@@ -11,14 +11,14 @@ authors:
 affiliations:
 - name: IPEM, Ghent University, Belgium
   index: 1
-date: "13 June 2021"
+date: "1 July 2021"
 bibliography: paper.bib
 ---
 
 
 # Summary
 
-`Panako` solves the problem of finding short audio fragments in large digital audio archives. The content based audio search algorithm implemented in Panako is able to identify a short audio query in large database of thousands of hours of audio using an acoustic fingerprinting technique. 
+Panako solves the problem of finding short audio fragments in large digital audio archives. The content based audio search algorithm implemented in Panako is able to identify a short audio query in large database of thousands of hours of audio using an acoustic fingerprinting technique. 
 
 ![A general acoustic fingerprinting system. Features are extracted from audio and combined into fingerprints. The fingerprints are matched with fingerprints in a reference database. Finally a match is reported.\label{fig:general}](resources/media/general_acoustic_fingerprinting_schema.png){width=90%}
 
@@ -41,12 +41,26 @@ In DJ-set analysis the aim is to automatically identify music in sets and how th
 
 A less straightforward application of Panako is audio-to-audio alignment and synchronization [@six2015synchronizing;@six2017framework]. In that case the matching fingerprints are used to align e.g. multiple video recordings of the same event by aligning the audio attached to each video.
 
-Alternative systems with available implementations are by @neuralfp and @ellis20142014. Both systems however lack robustness against speed changes. The details on the ideas implemented in Panako and  [@six2014panako;@six2021panakovtwo]
+Alternative systems with available implementations are by @neuralfp and @ellis20142014. Both systems however lack robustness against speed changes. The details on the ideas implemented in Panako are described in two papers [@six2014panako;@six2021panakovtwo]
 
+# Design
+
+Simplicity and maintainabilty are two keywords in the design of Panako. The code aims to be as readable and simple as possible. The second version of Panako was a complete rewrite to ensure this simplicity while still keeping query and computational performance in check.
+
+Relying on conservative platforms with a long history of backwards compatibility should allow Panako to stand the test of time. Panako is developed in Java and targets the long term support release Java SE 11. Panako also relies on software in C and C++. Java, C and C++ have been around for decades and it is reasonable to assume that these platforms will be supported for decades to come. Boring technoloy enables longlevity. 
+
+Next to Java 11, Panako depends on three libraries: a DSP library, a key-value store and a spectral transform library. The first is a pure Java DSP library called TarsosDSP[^1] [@six2014tarsosdsp]. LMDB [^2] is used as a high performance key-value store. It is a C library and accessible through lmdbjava. The third and final dependency is JGaborator[^3]: a wrapper around the Gaborator[^4] library which implements a constant-Q non-stationary Gabor transform in C++11 [@velasco2011constructing]. The last two have native compiled parts and need to be ported to new or exotic platforms if the need arrises. The transition to aarch64 (Apple M1), for example consited of a straightforward compilation step and repackaging of this native library. Panako can be containerized and the Docker file supports both ARM and x86 platforms and always compiles these native dependencies.
+
+The code of Panako is hosted in a publicly available Github repository. Internal documentation follows the JavaDoc standards. The academic papers give the rationale behind the algorithms [@six2014panako;@six2021panakovtwo]. Panako can be installed using a Gradle wrapper script which automatically downloads the Gradle build-system if it is not present on the system, compiles and installs Panako.
+
+[^1]:<https://github.com/JorenSix/TarsosDSP>
+[^2]:<https://www.symas.com/lmdb>
+[^3]:<https://github.com/JorenSix/JGaborator>
+[^4]:<https://gaborator.com>
 
 # Acknowledgements
 
-Ghent University BOF Project Papillom 
+Development of Panako is partially funded by the Ghent University BOF Project PaPiOM.
 
 # References
 
