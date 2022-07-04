@@ -1,5 +1,5 @@
 ---
-title: 'Panako: a scalable audio search system '
+title: 'Panako: a scalable audio search system'
 tags:
 - Acoustic fingerprinting
 - Music Information Retreival
@@ -49,9 +49,9 @@ Simplicity and maintainabilty are two keywords in the design of Panako. The code
 
 Relying on conservative platforms with a long history of backwards compatibility should allow Panako to stand the test of time. Panako is developed in Java and targets the long term support release Java SE 11. Panako also relies on software in C and C++. Java, C and C++ have been around for decades and it is reasonable to assume that these platforms will be supported for decades to come. Boring technoloy enables longlevity. 
 
-Next to Java 11, Panako depends on three libraries: a DSP library, a key-value store and a spectral transform library. The first is a pure Java DSP library called TarsosDSP[^1] [@six2014tarsosdsp]. LMDB [^2] is used as a high performance key-value store. It is a C library and accessible through lmdbjava. The third and final dependency is JGaborator[^3]: a wrapper around the Gaborator[^4] library which implements a constant-Q non-stationary Gabor transform in C++11 [@velasco2011constructing]. The last two have native compiled parts and need to be ported to new or exotic platforms if the need arrises. The transition to aarch64 (Apple M1), for example consited of a straightforward compilation step and repackaging of this native library. Panako can be containerized and the Docker file supports both ARM and x86 platforms and always compiles these native dependencies.
+Next to Java 11, Panako depends on three libraries: a DSP library, a key-value store and a spectral transform library. The first is a pure Java DSP library called TarsosDSP[^1] [@six2014tarsosdsp]. LMDB[^2] is used as a high performance key-value store. It is a C library and accessible through lmdbjava. The third and final dependency is JGaborator[^3]: a wrapper around the Gaborator[^4] library which implements a constant-Q non-stationary Gabor transform in C++11 [@velasco2011constructing]. The last two have native compiled parts and need to be ported to new or exotic platforms if the need arrises. The transition to aarch64 (Apple M1), for example consited of a straightforward compilation step and repackaging of this native library. Panako can be containerized and the Docker file supports both ARM and x86 platforms and always compiles these native dependencies.
 
-The code of Panako is hosted in a publicly available Github repository. Internal documentation follows the JavaDoc standards. The academic papers give the rationale behind the algorithms [@six2014panako;@six2021panakovtwo]. Panako can be installed using a Gradle wrapper script which automatically downloads the Gradle build-system if it is not present on the system, compiles and installs Panako.
+The code of Panako is hosted in a publicly available Github repository. Internal documentation follows the JavaDoc standards. Two papers give the rationale behind the algorithms [@six2014panako;@six2021panakovtwo]. Panako can be installed using a Gradle wrapper script which automatically downloads the Gradle build-system if it is not present on the system, compiles and installs Panako.
 
 [^1]:<https://github.com/JorenSix/TarsosDSP>
 [^2]:<https://www.symas.com/lmdb>
