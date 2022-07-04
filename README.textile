@@ -73,6 +73,7 @@ The @ffmpeg@ command needs to on the systems path. On a Debian like system:
 
 bc. apt-get install ffmpeg
 
+The current release does not support Apple M1 out of the box. Additional steps  are needed to provide the Java lmdb bidge. This blogpost details "how to get java lmdb working on Apple M1":https://0110.be/posts/Using_Java_LMDB_on_Apple_Sillicon_or_other_unsupported_platforms.
 
 **Test Panako**. You might need a new shell to use @panako@. Note that you also need SoX and wget on your system:
 
