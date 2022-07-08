@@ -9,7 +9,7 @@ RUN apt-get install -y --no-install-recommends git default-jdk ffmpeg
 #dependent native code in the container
 #On x86_64 this could be skipped
 #install compilers
-RUN apt-get install -y --no-install-recommends  build-essential
+RUN apt-get install -y --no-install-recommends make gcc g++ libc-dev
 
 #install lmdb library to a path java searches for libs (/lib)
 WORKDIR /
@@ -35,7 +35,15 @@ RUN ./gradlew shadowJar
 RUN ./gradlew install
 RUN cp resources/defaults/panako /usr/local/bin/
 
-#Test Panako
-RUN apt-get install -y --no-install-recommends wget
-RUN wget 'https://filesamples.com/samples/audio/mp3/sample3.mp3'
-#CMD panako AVAILABLE_PROCESSORS=1  STRATEGY=PANAKO store sample3.mp3
+#Cleanup: we do not need the temporary source files
+# any more
+RUN rm -rf /Panako
+RUN rm -rf /JGaborator
+RUN rm -rf /openldap
+RUN apt-get clean
+
+#Make and switch to the audio directory
+# This directory will be mounted and used as passthrough
+# from host to container
+RUN mkdir -p /root/audio
+WORKDIR /root/audio

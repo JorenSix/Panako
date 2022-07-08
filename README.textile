@@ -188,14 +188,19 @@ Note that this operation is performed in memory. Nothing changes on disk.
 
 h2(#docker). Panako and Docker 
 
-Panako can also be ran in a containerized environment. A @Dockerfile@ is provided which should both work on @x86_64@ as @aarch64@. To build the container and run commands the following should get you started. Note that the database with fingerprints is located on the host at @~/.panako/docker_dbs@:
+Panako can also be ran in a containerized environment. A @Dockerfile@ is provided which should both work on @x86_64@ as @aarch64@. To build the container and run commands the following should get you started. Note that the database with fingerprints is located on the host at @~/.panako/docker@:
 
-bc. cd resources/scripts/
-docker build -t panako:2.1 .
-mkdir -p $HOME/.panako/docker_dbs
+To access audio files relative paths are given with respect to the current directory on the host. Watch out with absolute (host) paths, these will not work correctly.
+
+bc. docker build -t panako:2.1 resources/scripts/
+mkdir -p $HOME/.panako/docker
 wget "https://filesamples.com/samples/audio/mp3/sample3.mp3"
-docker run -v $HOME/.panako/docker_dbs:/root/.panako/dbs panako:2.1 panako store sample3.mp3
-docker run -v $HOME/.panako/docker_dbs:/root/.panako/dbs panako:2.1 panako stats
+#Store and test if it is added to the database
+docker run -v $HOME/.panako/docker:/root/.panako/dbs -v $PWD:/root/audio panako:2.1 panako store sample3.mp3
+docker run -v $HOME/.panako/docker:/root/.panako/dbs panako:2.1 panako stats
+#change the algorithm to panako
+docker run -v $HOME/.panako/docker:/root/.panako/dbs -v $PWD:/root/audio panako:2.1 panako store STRATEGY=panako sample3.mp3
+docker run -v $HOME/.panako/docker:/root/.panako/dbs -v $PWD:/root/audio panako:2.1 panako query STRATEGY=panako sample3.mp3
 
 h2(#read). Further Reading
 
