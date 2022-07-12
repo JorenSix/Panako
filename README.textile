@@ -205,9 +205,19 @@ bc. Index;Audiofile;Audio duration;Processing time;Audio duration/processing tim
 4/5;566726.wav;00:03:17;2.43 s;81.10
 5/5;946523.wav;00:04:39;3.55 s;78.5
 
-After running the query command the following should appear. The following might help to interpret the results:
+After running the query command the following should appear.
 
-* *Index* The index in the list of queries, note that the results might be out of order due to the multi-threaded nature of Panako. 
+bc. Index; Total ; Query path;Query start (s);Query stop (s); Match path;Match id; Match start (s); Match stop (s); Match score; Time factor (%); Frequency factor(%); Seconds with match (%)
+1 ; 5 ; queries/1009601_17_100.wav ; 1.269 ; 12.925 ; reference_items/1009601.wav ; 1009601 ; 18.269 ; 29.925 ; 193 ; 1.001 % ; 1.000 %; 1.00
+4 ; 5 ; queries/566726_129_101.wav ; 0.885 ; 8.381 ; reference_items/566726.wav ; 566726 ; 129.893 ; 137.437 ; 127 ; 1.006 % ; 1.016 %; 1.00
+5 ; 5 ; queries/946523_208_103.wav ; 0.941 ; 11.909 ; reference_items/946523.wav ; 946523 ; 208.949 ; 220.245 ; 70 ; 1.031 % ; 1.016 %; 0.83
+3 ; 5 ; queries/557132_97_104.wav ; 0.925 ; 12.405 ; reference_items/557132.wav ; 557132 ; 97.933 ; 109.869 ; 173 ; 1.040 % ; 1.042 %; 1.00
+2 ; 5 ; queries/406015_182_97.wav ; 0.917 ; 9.109 ; reference_items/406015.wav ; 406015 ; 182.917 ; 190.853 ; 101 ; 0.972 % ; 0.976 %; 1.00
+
+
+To interpret the results, it helps to explain the output:
+
+* *Index* The index in the list of queries, note that the results might be out of order due to the multi-threaded nature of Panako.
 * *Total* The total number of queries being handled.
 * *Query path* The path of the query file
 * *Query start (s)* The matching part of the query with the reference starts at this point in the query. It is expressed in seconds.
@@ -223,15 +233,7 @@ After running the query command the following should appear. The following might
 
 For the test queries the start of the match is encoded into the filename. Likewise for the speed-up factor and matching identifier. For example @queries/557132_97_104.wav@ expects to match the file with identifier @557132@ starting from second 97 at a speed up of 104%. When looking at the result this closely matches what is reported.
 
-bc. Index; Total ; Query path;Query start (s);Query stop (s); Match path;Match id; Match start (s); Match stop (s); Match score; Time factor (%); Frequency factor(%); Seconds with match (%)
-1 ; 5 ; queries/1009601_17_100.wav ; 1.269 ; 12.925 ; reference_items/1009601.wav ; 1009601 ; 18.269 ; 29.925 ; 193 ; 1.001 % ; 1.000 %; 1.00
-4 ; 5 ; queries/566726_129_101.wav ; 0.885 ; 8.381 ; reference_items/566726.wav ; 566726 ; 129.893 ; 137.437 ; 127 ; 1.006 % ; 1.016 %; 1.00
-5 ; 5 ; queries/946523_208_103.wav ; 0.941 ; 11.909 ; reference_items/946523.wav ; 946523 ; 208.949 ; 220.245 ; 70 ; 1.031 % ; 1.016 %; 0.83
-3 ; 5 ; queries/557132_97_104.wav ; 0.925 ; 12.405 ; reference_items/557132.wav ; 557132 ; 97.933 ; 109.869 ; 173 ; 1.040 % ; 1.042 %; 1.00
-2 ; 5 ; queries/406015_182_97.wav ; 0.917 ; 9.109 ; reference_items/406015.wav ; 406015 ; 182.917 ; 190.853 ; 101 ; 0.972 % ; 0.976 %; 1.00
-
-See below for a "full evaluation of Panako":#eval.
-
+See below for a "full evaluation of Panako":#eval. The evaluation tests retrieval rates for various factors of pitch-shifting, time-stretching, speed-up and some audio effects.
 
 h2(#docker). Panako and Docker 
 
