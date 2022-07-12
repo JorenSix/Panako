@@ -18,6 +18,8 @@ h2. Overview
 ## "Monitor Stream for Matches":#monitor
 ## "Print Storage Statistics":#stats
 ## "Print Configuration":#configuration
+
+# "Panako test run and output":#test
 # "Further reading":#read
 # "Panako and docker":#docker
 # "Evaluate Panako":#eval
@@ -133,7 +135,7 @@ The @query@ command extracts fingerprints from a short audio frament and tries t
 
 bc. panako monitor [short_audio.mp3]
 
-If no audio file is given, the default microphone is used as input.
+If no audio file is given, *the default microphone* is used as input.
 
 
 h3(#stats). Print Storage Statistics - **@panako stats@**
@@ -179,7 +181,7 @@ This application checks the similarity of two files. The percentage returned ind
 
 Note that this operation is performed in memory. Nothing changes on disk.
 
-h2(#test). Panako test run
+h2(#test). Panako test run and output
 
 There is a script provided to quickly test Panako with a small dataset. Note that you might need a new shell environment to use @panako@. To download the dataset you also need SoX and wget on your system.
 
@@ -226,7 +228,7 @@ bc. Index; Total ; Query path;Query start (s);Query stop (s); Match path;Match i
 3 ; 5 ; queries/557132_97_104.wav ; 0.925 ; 12.405 ; reference_items/557132.wav ; 557132 ; 97.933 ; 109.869 ; 173 ; 1.040 % ; 1.042 %; 1.00
 2 ; 5 ; queries/406015_182_97.wav ; 0.917 ; 9.109 ; reference_items/406015.wav ; 406015 ; 182.917 ; 190.853 ; 101 ; 0.972 % ; 0.976 %; 1.00
 
-See below for a "full evaluation of Panako"#eval.
+See below for a "full evaluation of Panako":#eval.
 
 
 h2(#docker). Panako and Docker 
