@@ -65,11 +65,11 @@ public class PanakoMatch {
 	 */
 	public int queryF1;
 	
-	public int Δt() {
+	public int deltaT() {
 		return matchTime - queryTime;
 	}
 	
 	public String toString() {
-		return String.format("%d %d %d %d", identifier, matchTime, queryTime, Δt());
+		return String.format("%d %d %d %d", identifier, matchTime, queryTime, deltaT());
 	}
 }

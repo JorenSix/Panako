@@ -209,7 +209,7 @@ public class OlafStrategy extends Strategy {
 	private int mostCommonDeltaTforHitList(List<OlafMatch> hitList) {
 		Map<Integer,Integer> countPerDiff = new HashMap<>();
 		hitList.forEach((hit)->{
-			int deltaT = hit.Δt();
+			int deltaT = hit.deltaT();
 			if(!countPerDiff.containsKey(deltaT))
 				countPerDiff.put(deltaT, 0);
 			countPerDiff.put(deltaT, countPerDiff.get(deltaT)+1);
@@ -323,7 +323,7 @@ public class OlafStrategy extends Strategy {
 			 float x1 = 0;
 			 for(int i = 0 ; i < firstHits.size() ; i++) {
 				 OlafMatch hit = firstHits.get(i);
-				 int diff = hit.Δt();
+				 int diff = hit.deltaT();
 				 if(diff == y1) {
 					 x1 = hit.queryTime;
 					 break;
@@ -335,7 +335,7 @@ public class OlafStrategy extends Strategy {
 			 float x2 = 0;
 			 for(int i = lastHits.size() - 1 ; i >= 0 ; i--) {
 				 OlafMatch hit = lastHits.get(i);
-				 int diff = hit.Δt();
+				 int diff = hit.deltaT();
 				 if(diff == y2) {
 					 x2 = hit.queryTime;
 					 break;
@@ -356,7 +356,7 @@ public class OlafStrategy extends Strategy {
 				 List<OlafMatch> filteredHits = new ArrayList<>();
 				 
 				 hitlist.forEach( hit ->{				 
-					 float yActual = hit.Δt();
+					 float yActual = hit.deltaT();
 					 float x = hit.queryTime;
 					 float yPredicted = slope * x + offset;
 					 
