@@ -48,44 +48,46 @@ Alternative open source music identification systems are "audfprint Matlab":http
 
 h2(#getting_started). Getting started
 
-Panako is organized as follows:
+The Panako repository is organized as follows:
 
 * @src@ contains the Java source files.
-* @lib@ contains the dependencies (JAR-files).
-* @build@ contains an ant build file to compile Panako and the documentation. Use @ant release@ to build the source and compile Panako.
-* @scripts@ contains helper scripts for evaluation and to analyse results
+* @lib@ contains some dependencies (JAR-files).
+* @resources@ default configuration settings, script for evaluation and to analyze results and schemas to document Panako. 
 
-To compile Panako, the JDK 11 or later is required. See the "installation instructions":http://java.com/en/download/help/index_installing.xml on the Java website, for installation on your operating system.
 
-Panako uses the "Gradle":https://gradle.org/ build system. Install it on your system.
-Once Gradle and the other components are installed correctly the following commands should get you started:
+To compile Panako, a Java JDK 11 or later is required. See, for example the "OpenJDK website":https://openjdk.org/install/", for installation instructions for your operating system. 
+
+Panako uses the "Gradle":https://gradle.org/ build system. If Gradle is not present on your system it is automatically installed by the @gradlew@ script. To build and install Panako, the following should get you started:
 
 bc. git clone --depth 1 https://github.com/JorenSix/Panako.git
 cd Panako
 ./gradlew shadowJar #Builds the core Panako library
 ./gradlew install #Installs Panako in the ~/.panako directory
 ./gradlew javadoc #Creates the documentation in doc
-sudo cp resources/defaults/panako /usr/local/bin #copies the panako startup script to your path
+#copy the panako startup script to your path:
+sudo cp resources/defaults/panako /usr/local/bin 
 
 The last command copies the startup script in @resources/defaults/panako@ to a directory in your path. The script allows for easy access to Panako's functionality. If this does not work for you, you can still call Panako using @java -jar ~/.panako/panako.jar [..args]@.
 
 Panako decodes audio using by calling @ffmpeg@, an utility for decoding and resampling audio.
-The @ffmpeg@ command needs to on the systems path. On a Debian like system:
+The @ffmpeg@ command needs to be on the systems path. On a Debian like system:
 
 bc. apt-get install ffmpeg
 
 The current release does not support Apple M1 out of the box. Additional steps  are needed to provide the Java lmdb bidge. This blogpost details "how to get java lmdb working on Apple M1":https://0110.be/posts/Using_Java_LMDB_on_Apple_Sillicon_or_other_unsupported_platforms.
 
-**Test Panako**. You might need a new shell to use @panako@. Note that you also need SoX and wget on your system:
+
+**Test Panako**. You might need a new shell to use @panako@. Note that you also need SoX and wget on your system to test Panako:
 
 bc. #brew install sox wget
 #apt-get install sox wget
 panako -v #prints version
 panako stats #db info
 cd resources/scripts/create_test_dataset
-ruby create_dataset.rb #make sure sox
-panako store dataset/*
-panako query query/*
+ruby create_dataset.rb #make sure SoX is installed
+panako store dataset
+panako query query
+
 
 h2(#usage). Panako Usage
 
