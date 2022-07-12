@@ -306,7 +306,7 @@ public class Panako {
 	
 	public static void printQueryResultHeader(){
 		String header;
-		header = "Index; total ; Query path;Query start (s);Query stop (s); Match path;Match id; Match start (s); Match stop (s); Match score; Time factor (%); Frequency factor(%), Seconds without match (%)"; 
+		header = "Index; Total ; Query path;Query start (s);Query stop (s); Match path;Match id; Match start (s); Match stop (s); Match score; Time factor (%); Frequency factor(%); Seconds with match (%)";
 		System.out.println(header);
 	}
 

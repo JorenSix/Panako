@@ -64,7 +64,7 @@ public class Delete extends Application {
 		final ExecutorService executor = Executors.newFixedThreadPool(processors);
 		final List<File> files = this.getFilesFromArguments(args);
 		
-		System.out.println("Audiofile;Audio duration;Fingerprinting duration;ratio");
+		System.out.println("Index;Audiofile;Audio duration;Processing time;Audio duration/processing time");
 		for(File file: files){
 			counter++;
 			

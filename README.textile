@@ -20,7 +20,7 @@ h2. Overview
 ## "Print Configuration":#configuration
 # "Further reading":#read
 # "Panako and docker":#docker
-# "Reproduce the ISMIR Paper Results":#ismir
+# "Evaluate Panako":#eval
 # "Contribute to Panako":#contribute
 # "Credits":#credits
 # "Changelog":#changelog
@@ -74,19 +74,9 @@ The @ffmpeg@ command needs to be on the systems path. On a Debian like system:
 
 bc. apt-get install ffmpeg
 
+At this point it might be of interest to "run the test":#test to see if Panako is working correctly.
+
 The current release does not support Apple M1 out of the box. Additional steps  are needed to provide the Java lmdb bidge. This blogpost details "how to get java lmdb working on Apple M1":https://0110.be/posts/Using_Java_LMDB_on_Apple_Sillicon_or_other_unsupported_platforms.
-
-
-**Test Panako**. You might need a new shell to use @panako@. Note that you also need SoX and wget on your system to test Panako:
-
-bc. #brew install sox wget
-#apt-get install sox wget
-panako -v #prints version
-panako stats #db info
-cd resources/scripts/create_test_dataset
-ruby create_dataset.rb #make sure SoX is installed
-panako store dataset
-panako query query
 
 
 h2(#usage). Panako Usage
@@ -188,6 +178,56 @@ This application checks the similarity of two files. The percentage returned ind
 @panako same first.mp3 second.mp3@
 
 Note that this operation is performed in memory. Nothing changes on disk.
+
+h2(#test). Panako test run
+
+There is a script provided to quickly test Panako with a small dataset. Note that you might need a new shell environment to use @panako@. To download the dataset you also need SoX and wget on your system.
+
+The test first downloads a set of songs from "Jamendo":https://www.jamendo.com/, a website with creative commons licensed music. Then it selects a random part of each downloaded song to use as a query. The query is modified by running an audio compressor followed by a random speed-up between 93% and 107%. Then Panako tries to match each query to the reference items.
+
+bc. #brew install sox wget
+#apt-get install sox wget
+panako -v #prints version
+panako stats #db info
+cd resources/scripts/create_test_dataset
+ruby create_dataset.rb #make sure SoX is installed
+panako store STRATEGY=panako dataset/reference_items/*
+panako query STRATEGY=panako dataset/queries/*
+
+The output after running the store command should be similar to the following. The last column represents how many seconds of audio can be processed in a single second. 
+
+bc. Index;Audiofile;Audio duration;Processing time;Audio duration/processing time
+1/5;1009601.wav;00:00:32;674.00 ms;47.12
+2/5;406015.wav;00:03:21;2.53 s;79.50
+3/5;557132.wav;00:04:24;3.25 s;81.18
+4/5;566726.wav;00:03:17;2.43 s;81.10
+5/5;946523.wav;00:04:39;3.55 s;78.5
+
+After running the query command the following should appear. The following might help to interpret the results:
+
+* *Index* The index in the list of queries, note that the results might be out of order due to the multi-threaded nature of Panako. 
+* *Total* The total number of queries being handled.
+* *Query path* The path of the query file
+* *Query start (s)* The matching part of the query with the reference starts at this point in the query. It is expressed in seconds.
+* *Query stop (s)* The matching part of the query with the reference stops at this point in the query. It is expressed in seconds.
+* *Match path* The path of the matching file.
+* *Match id* The internal identifier of the matching file. If the filename contains only digits then it equals the file name (as is the case here). Otherwise it is a hash of the filename.
+* *Match start (s)* The matching part of the query with the reference starts at this point in the reference. It is expressed in seconds.
+* *Match stop (s)* The matching part of the query with the reference stops at this point in the reference. It is expressed in seconds.
+* *Match score* The number of matching fingerprints between query and reference. The number of fingerprints per second can be calculated by dividing by the match duration.
+* *Time factor (%)* How much faster the query is with respect to the reference.
+* *Frequency factor(%)* How much higher in pitch the query is with respect to the reference. If the query is sped up the time factor is expected to be nearly equal to the frequency factor.
+* *Seconds with match (%)*  The number of seconds for which matches are found. If in each matching second a match is found then this number is 1. A low ratio might indicate a false positive. 
+
+bc. Index; Total ; Query path;Query start (s);Query stop (s); Match path;Match id; Match start (s); Match stop (s); Match score; Time factor (%); Frequency factor(%); Seconds with match (%)
+1 ; 5 ; queries/1009601_17_100.wav ; 1.269 ; 12.925 ; reference_items/1009601.wav ; 1009601 ; 18.269 ; 29.925 ; 193 ; 1.001 % ; 1.000 %; 1.00
+4 ; 5 ; queries/566726_129_101.wav ; 0.885 ; 8.381 ; reference_items/566726.wav ; 566726 ; 129.893 ; 137.437 ; 127 ; 1.006 % ; 1.016 %; 1.00
+5 ; 5 ; queries/946523_208_103.wav ; 0.941 ; 11.909 ; reference_items/946523.wav ; 946523 ; 208.949 ; 220.245 ; 70 ; 1.031 % ; 1.016 %; 0.83
+3 ; 5 ; queries/557132_97_104.wav ; 0.925 ; 12.405 ; reference_items/557132.wav ; 557132 ; 97.933 ; 109.869 ; 173 ; 1.040 % ; 1.042 %; 1.00
+2 ; 5 ; queries/406015_182_97.wav ; 0.917 ; 9.109 ; reference_items/406015.wav ; 406015 ; 182.917 ; 190.853 ; 101 ; 0.972 % ; 0.976 %; 1.00
+
+See below for a "full evaluation of Panako"#eval.
+
 
 h2(#docker). Panako and Docker 
 
