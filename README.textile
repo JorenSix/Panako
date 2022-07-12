@@ -196,7 +196,7 @@ ruby create_dataset.rb #make sure SoX is installed
 panako store STRATEGY=panako dataset/reference_items/*
 panako query STRATEGY=panako dataset/queries/*
 
-The output after running the store command should be similar to the following. The last column represents how many seconds of audio can be processed in a single second. 
+The output after running the store command should be similar to the following. The last column represents how many seconds of audio can be processed in a single second. On the device that ran the command about 80 seconds are processed in a single second.
 
 bc. Index;Audiofile;Audio duration;Processing time;Audio duration/processing time
 1/5;1009601.wav;00:00:32;674.00 ms;47.12
@@ -220,6 +220,8 @@ After running the query command the following should appear. The following might
 * *Time factor (%)* How much faster the query is with respect to the reference.
 * *Frequency factor(%)* How much higher in pitch the query is with respect to the reference. If the query is sped up the time factor is expected to be nearly equal to the frequency factor.
 * *Seconds with match (%)*  The number of seconds for which matches are found. If in each matching second a match is found then this number is 1. A low ratio might indicate a false positive. 
+
+For the test queries the start of the match is encoded into the filename. Likewise for the speed-up factor and matching identifier. For example @queries/557132_97_104.wav@ expects to match the file with identifier @557132@ starting from second 97 at a speed up of 104%. When looking at the result this closely matches what is reported.
 
 bc. Index; Total ; Query path;Query start (s);Query stop (s); Match path;Match id; Match start (s); Match stop (s); Match score; Time factor (%); Frequency factor(%); Seconds with match (%)
 1 ; 5 ; queries/1009601_17_100.wav ; 1.269 ; 12.925 ; reference_items/1009601.wav ; 1009601 ; 18.269 ; 29.925 ; 193 ; 1.001 % ; 1.000 %; 1.00
