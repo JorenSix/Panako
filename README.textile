@@ -21,6 +21,7 @@ h2. Overview
 # "Further reading":#read
 # "Panako and docker":#docker
 # "Reproduce the ISMIR Paper Results":#ismir
+# "Contribute to Panako":#contribute
 # "Credits":#credits
 # "Changelog":#changelog
 
@@ -42,7 +43,7 @@ Next to accidental speed changes, deliberate speed manipulations are sometimes i
 
 The Panako algorithm allows such changes while maintaining other desired features as scalability, robustness and reliability.  Next to the panako algorithm there is also an implementation of the algorithm described in "An Industrial-Strength Audio Search Algorithm":http://www.ee.columbia.edu/~dpwe/papers/Wang03-shazam.pdf (internally identified as Olaf). Also the algorithm in "A Robust Audio Fingerprinter Based on Pitch Class Histograms - Applications for Ethnic Music Archives":http://0110.be/files/attachments/415/2012.01.20.fingerprinter.submitted.pdf is available. To make comparisons between fingerprinting systems easy, researchers are kindly invited to contribute algorithms to the Panako project.
 
-Alternative open source music identification systems are "audfprint":http://www.ee.columbia.edu/~dpwe/resources/matlab/audfprint/, "NeuralFP":https://github.com/chymaera96/neuralfp and "echoprint":http://echoprint.me/. Alternative systems with similar features are described in "US7627477 B2":https://www.google.com/patents/US7627477 and in  "__Quad-based Audio Fingerprinting Robust To Time And Frequency Scaling__ (2014)":http://www.dafx14.fau.de/papers/dafx14_reinhard_sonnleitner_quad_based_audio_fingerpr.pdf by Reinhard Sonnleitner and Gerhard Widmer.
+Alternative open source music identification systems are "audfprint Matlab":http://www.ee.columbia.edu/~dpwe/resources/matlab/audfprint/, "audfprint Python":https://github.com/dpwe/audfprint, "NeuralFP":https://github.com/chymaera96/neuralfp and "echoprint":http://echoprint.me/. Alternative systems with similar features are described in "US7627477 B2":https://www.google.com/patents/US7627477 and in  "__Quad-based Audio Fingerprinting Robust To Time And Frequency Scaling__ (2014)":http://www.dafx14.fau.de/papers/dafx14_reinhard_sonnleitner_quad_based_audio_fingerpr.pdf by Reinhard Sonnleitner and Gerhard Widmer.
 
 
 h2(#getting_started). Getting started
@@ -204,6 +205,7 @@ docker run -v $HOME/.panako/docker:/root/.panako/dbs -v $PWD:/root/audio panako:
 
 h2(#read). Further Reading
 
+
 Some relevant reading material about acoustic fingerprinting. The order gives an idea of relevance to the Panako project. 
 
 # Six, Joren and Leman, Marc "__Panako - A Scalable Acoustic Fingerprinting System Handling Time-Scale and Pitch Modification__":http://www.terasoft.com.tw/conf/ismir2014/proceedings/T048_122_Paper.pdf (2014)
@@ -216,6 +218,16 @@ Some relevant reading material about acoustic fingerprinting. The order gives an
 # Sonnleitner, Reinhard  and Widmer, Gerhard __Quad-based Audio Fingerprinting Robust To Time And Frequency Scaling__ (2014)
 # Sonnleitner, Reinhard  and Widmer, Gerhard "__Robust Quad-Based Audio Fingerprinting__":http://dx.doi.org/10.1109/TASLP.2015.2509248 (2015)
 # S. Chang et al., "__Neural Audio Fingerprint for High-Specific Audio Retrieval Based on Contrastive Learning__" (2021) - ICASSP 2021.
+
+
+h2(#contribute). Contribute to Panako
+
+There are several ways to contribute to Panako. The first is to use Panako and report issues or feature requests using the "Github Issue tracker":https://github.com/JorenSix/Panako/issues. Bug reports are greatly appreciated, but keep in mind the note below on responsiveness.
+
+Another way to contribute is to dive into the code, fork and improve Panako yourself. Merge requests with additional documentation, bug fixes or new features will be handled and end up in the main branch if correctness, maintainability and simplicity are kept in check. However, keep in mind the note below:  
+
+My time to spend on Panako is limited and goes in __activity bursts__. If an issue is raised it might take a couple of months before I am able to spend time on it during the next burst of activity. A period of relative silence does not mean your feedback is not greatly valued!
+
 
 h2(#credits). Credits
 
