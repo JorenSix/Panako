@@ -321,10 +321,18 @@ To run the evaluation scripts, a UNIX like system with following additional util
 Evidently the Panako software should also be installed. Please see above to install Panako. Download "Free Music Archive":https://www.kaggle.com/datasets/imsparsh/fma-free-music-archive-small-medium
 
 * "Ruby":https://www.ruby-lang.org/en/: The ruby programming language runtime environment.
-* "SoX":http://sox.sourceforge.net/, inlcuding support for MP3 and GSM encoding.
+* "SoX":http://sox.sourceforge.net/, including support for MP3 and GSM encoding.
 * GNUPlot: for plotting the results
 
 If all requirements are met, running the evaluation is done using @ruby evaluation.rb fma_small@
+
+
+h2(#limitations). Limitations
+
+Panako has a couple of limitations:
+
+* *Multiple writes* the key-value store does not allow writes from multiple threads. These are effectively done on a single thread. To build a reference database quickly it is advised to use the cache feature of Panako.
+* *Windows support* Currently Panako does not support Windows. The key-value store used has spotty Windows support. The way in which audio is decoded using ffmpeg is also problematic on Windows. However, "WSL":https://docs.microsoft.com/en-us/windows/wsl/install offers a way in which to run Panako on Windows. __'WSL enables you to use Linux tools, like Bash or Grep [...], with no need to dual-boot.'__  With this option in mind, pure Windows support is not a priority. Another option to run Panako on windows is to use "Docker on Windows":https://docs.docker.com/desktop/windows/install/
 
 
 h2(#changelog). Changelog
@@ -346,3 +354,5 @@ h2(#changelog). Changelog
 * Changed the default panako location to ~/.panako, so users can install and use panako more easily (withouth need for sudo rights)
 
  <dt>Version 2.1</dt><dd>2022-05</dd> Changed the build system to "Gradle":https://gradle.org/, mainly to make upgrading dependencies more straightforward. The folder structure has been changed accordingly. The default JDK target has been changed to Java SE 11 (LTS). Panako now also supports Apple M1 targets.
+
+
