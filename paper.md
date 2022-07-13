@@ -41,7 +41,7 @@ In DJ-set analysis the aim is to automatically identify music in sets and how th
 
 A less straightforward application of Panako is audio-to-audio alignment and synchronization [@six2015synchronizing;@six2017framework]. In that case the matching fingerprints are used to align e.g. multiple video recordings of the same event by aligning the audio attached to each video.
 
-Alternative systems with available implementations are by @neuralfp and @ellis20142014. Both systems however lack robustness against speed changes. The details on the ideas implemented in Panako are described in two papers [@six2014panako;@six2021panakovtwo]
+Alternative systems with available implementations are by @neuralfp and audfprint by @ellis20142014. Both systems however lack robustness against significant speed changes of more than 5%. Note that there are two implementations of the audfprint system: there is a MatLab[^0] and Python[^9] version. The matlab version has support for small time scaling. The details on how Panako handles time-scaling are described in two papers [@six2014panako;@six2021panakovtwo].
 
 # Design
 
@@ -51,8 +51,10 @@ Relying on conservative platforms with a long history of backwards compatibility
 
 Next to Java 11, Panako depends on three libraries: a DSP library, a key-value store and a spectral transform library. The first is a pure Java DSP library called TarsosDSP[^1] [@six2014tarsosdsp]. LMDB[^2] is used as a high performance key-value store. It is a C library and accessible through lmdbjava. The third and final dependency is JGaborator[^3]: a wrapper around the Gaborator[^4] library which implements a constant-Q non-stationary Gabor transform in C++11 [@velasco2011constructing]. The last two have native compiled parts and need to be ported to new or exotic platforms if the need arrises. The transition to aarch64 (Apple M1), for example consited of a straightforward compilation step and repackaging of this native library. Panako can be containerized and the Docker file supports both ARM and x86 platforms and always compiles these native dependencies.
 
-The code of Panako is hosted in a publicly available Github repository. Internal documentation follows the JavaDoc standards. Two papers give the rationale behind the algorithms [@six2014panako;@six2021panakovtwo]. Panako can be installed using a Gradle wrapper script which automatically downloads the Gradle build-system if it is not present on the system, compiles and installs Panako.
+The code of Panako is hosted in a publicly available Github repository. Internal documentation follows the JavaDoc standards. Two papers give the rationale behind the algorithms [@six2014panako;@six2021panakovtwo]. Panako can be installed using a Gradle wrapper script which automatically downloads the Gradle build-system if it is not present on the system. The Gradle wrapper compiles and installs Panako.
 
+[^0]: <https://www.ee.columbia.edu/~dpwe/resources/matlab/audfprint/>  
+[^9]: <https://github.com/dpwe/audfprint>
 [^1]:<https://github.com/JorenSix/TarsosDSP>
 [^2]:<https://www.symas.com/lmdb>
 [^3]:<https://github.com/JorenSix/JGaborator>
