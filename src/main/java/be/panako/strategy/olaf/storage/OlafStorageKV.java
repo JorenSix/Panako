@@ -466,7 +466,8 @@ public class OlafStorageKV implements OlafStorage {
 	    return entries;
 	}
 
-	public void deleteMetadata(long resourceID) {  
+	@Override
+	public void deleteMetadata(long resourceID) {
 		
 		try (Txn<ByteBuffer> txn = env.txnWrite()) {
 			

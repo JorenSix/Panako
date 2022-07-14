@@ -48,11 +48,17 @@ public interface OlafStorage {
 	void processStoreQueue();
 
 	OlafResourceMetadata getMetadata(long identifier);
-	
+
 	void addToQueryQueue(long queryHash);
 	
 	void processQueryQueue(Map<Long,List<OlafHit>> matchAccumulator,int range);
 	
 	void processQueryQueue(Map<Long,List<OlafHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid);
+
+	void addToDeleteQueue(long fingerprintHash, int resourceIdentifier, int t1);
+
+	void processDeleteQueue();
+
+	void deleteMetadata(long resourceID);
 
 }

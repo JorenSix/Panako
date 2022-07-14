@@ -159,6 +159,21 @@ public class OlafStorageMemory implements OlafStorage {
 		queue.clear();
 	}
 
+	@Override
+	public void addToDeleteQueue(long fingerprintHash, int resourceIdentifier, int t1) {
+		System.err.println("Delete not implemented for Memory storage");
+	}
+
+	@Override
+	public void processDeleteQueue() {
+		System.err.println("Delete not implemented for Memory storage");
+	}
+
+	@Override
+	public void deleteMetadata(long resourceID) {
+
+	}
+
 	public void clear() {
 		fingerprints.clear();
 		resourceMap.clear();

@@ -52,12 +52,7 @@ import java.util.logging.Logger;
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
-import be.panako.strategy.olaf.storage.OlafHit;
-import be.panako.strategy.olaf.storage.OlafResourceMetadata;
-import be.panako.strategy.olaf.storage.OlafStorage;
-import be.panako.strategy.olaf.storage.OlafStorageFile;
-import be.panako.strategy.olaf.storage.OlafStorageKV;
-import be.panako.strategy.olaf.storage.OlafStorageMemory;
+import be.panako.strategy.olaf.storage.*;
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
@@ -69,18 +64,24 @@ public class OlafStrategy extends Strategy {
 	private static final int MAX_TIME = 5_000_000;
 	
 	private final static Logger LOG = Logger.getLogger(OlafStrategy.class.getName());
-	
+
+	private OlafStorage getDbInstance(){
+		final OlafStorage db;
+
+		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
+			db = OlafStorageKV.getInstance();
+		}else if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("MEM")) {
+			db = OlafStorageMemory.getInstance();
+		}else {
+			db = OlafStorageBtree.getInstance();
+		}
+		return db;
+	}
 	
 	@Override
 	public double store(String resource, String description) {
 
-		OlafStorage db;
-		
-		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
-			db = OlafStorageKV.getInstance();
-		}else {
-			db = OlafStorageMemory.getInstance();
-		}
+		OlafStorage db = getDbInstance();
 		
 		OlafStorage fileCache = null;
 		if(Config.getBoolean(Key.OLAF_CACHE_TO_FILE)) {
@@ -127,7 +128,7 @@ public class OlafStrategy extends Strategy {
 	
 	public double delete(String resource, String description) {
 
-		OlafStorageKV db = OlafStorageKV.getInstance();
+		OlafStorage db = getDbInstance();
 		
 		List<OlafFingerprint> prints = toFingerprints(resource);
 		

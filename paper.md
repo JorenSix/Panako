@@ -41,7 +41,7 @@ In DJ-set analysis the aim is to automatically identify music in sets and how th
 
 A less straightforward application of Panako is audio-to-audio alignment and synchronization [@six2015synchronizing;@six2017framework]. In that case the matching fingerprints are used to align e.g. multiple video recordings of the same event by aligning the audio attached to each video.
 
-Alternative systems with available implementations are by @neuralfp and audfprint by @ellis20142014. Both systems however lack robustness against significant speed changes of more than 5%. Note that there are two implementations of the audfprint system: there is a MatLab[^0] and Python[^9] version. The matlab version has support for small time scaling. The details on how Panako handles time-scaling are described in two papers [@six2014panako;@six2021panakovtwo].
+Alternative systems with available implementations are by @neuralfp and audfprint by @ellis20142014. Both systems however lack robustness to significant speed changes of more than 5%. Note that there are two implementations of the audfprint system: there is a MatLab[^0] and Python[^9] version. The matlab version has support for small time scaling. The details on how Panako handles time-scaling are described in two papers [@six2014panako;@six2021panakovtwo].
 
 # Design
 

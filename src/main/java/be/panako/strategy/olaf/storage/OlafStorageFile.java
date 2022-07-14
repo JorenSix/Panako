@@ -182,8 +182,6 @@ public class OlafStorageFile implements OlafStorage {
 
 	}
 
-
-
 	@Override
 	public void processQueryQueue(Map<Long, List<OlafHit>> matchAccumulator, int range) {
 	}
@@ -191,6 +189,21 @@ public class OlafStorageFile implements OlafStorage {
 	@Override
 	public void processQueryQueue(Map<Long, List<OlafHit>> matchAccumulator, int range,
 			Set<Integer> resourcesToAvoid) {
+
+	}
+
+	@Override
+	public void addToDeleteQueue(long fingerprintHash, int resourceIdentifier, int t1) {
+
+	}
+
+	@Override
+	public void processDeleteQueue() {
+
+	}
+
+	@Override
+	public void deleteMetadata(long resourceID) {
 
 	}
 
