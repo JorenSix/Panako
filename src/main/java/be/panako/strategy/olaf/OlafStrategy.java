@@ -68,12 +68,11 @@ public class OlafStrategy extends Strategy {
 	private OlafStorage getDbInstance(){
 		final OlafStorage db;
 
-		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
-			db = OlafStorageKV.getInstance();
-		}else if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("MEM")) {
+		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("MEM")) {
 			db = OlafStorageMemory.getInstance();
-		}else {
-			db = OlafStorageBtree.getInstance();
+		} else {
+			//By default use the LMDB storage 
+			db = OlafStorageKV.getInstance();
 		}
 		return db;
 	}
