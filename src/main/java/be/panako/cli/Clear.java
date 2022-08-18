@@ -37,7 +37,11 @@ package be.panako.cli;
 
 import be.panako.strategy.Strategy;
 
-public class Clear extends Application {
+
+/**
+ * A command line application to clear all items from the index.
+ */
+class Clear extends Application {
 
 	@Override
 	public void run(String... args) {

@@ -45,7 +45,11 @@ import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
 
- class Deduplication  extends Application implements QueryResultHandler  {	
+
+/**
+ * A command line application to deduplicate an archive of music files.
+ */
+class Deduplication extends Application implements QueryResultHandler  {
 	@Override
 	public void run(String... args) {
 		String[] storeArgs = new String[args.length+1];

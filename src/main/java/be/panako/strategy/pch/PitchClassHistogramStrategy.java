@@ -58,6 +58,7 @@ import be.tarsos.dsp.pitch.PitchDetectionResult;
 import be.tarsos.dsp.pitch.PitchProcessor;
 import be.tarsos.dsp.pitch.PitchProcessor.PitchEstimationAlgorithm;
 import be.tarsos.dsp.util.PitchConverter;
+import jdk.jshell.spi.ExecutionControl;
 
 /**
  * Implementation of the strategy described in 
@@ -78,7 +79,12 @@ public class PitchClassHistogramStrategy extends Strategy {
 		storePch(identifier,description,pch);
 		return duration;
 	}
-	
+
+	@Override
+	public double delete(String resource) {
+		throw new RuntimeException("Delete is currently not implemented for the PCH strategy");
+	}
+
 	private double extractPch(String resource, int[] pch){
 		final List<Float> pitchTrack = new ArrayList<Float>();
 		
@@ -240,7 +246,12 @@ public class PitchClassHistogramStrategy extends Strategy {
 	public String resolve(String filename) {
 		return "" + FileUtils.getIdentifier(filename);
 	}
-	
+
+	@Override
+	public void print(String path, boolean sonicVisualizerOutput) {
+		throw new RuntimeException("Print is currently not implemented for the PCH strategy");
+	}
+
 	public String name() {
 		return "PCH";
 	}

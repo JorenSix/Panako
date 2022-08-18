@@ -44,10 +44,10 @@ import be.panako.strategy.Strategy;
 
 
 /**
- * Query the storage for audio fragments.
+ * Print the fingerprints extracted from an audio file: mainly for debugging.
  * @author Joren Six
  */
-public class Print extends Application{
+class Print extends Application{
 
 	@Override
 	public void run(String... args) {

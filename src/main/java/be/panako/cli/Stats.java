@@ -41,7 +41,7 @@ import be.panako.strategy.Strategy;
  * Shows some statistics about the storage.
  * @author Joren Six
  */
-public class Stats extends Application {
+class Stats extends Application {
 
 	@Override
 	public void run(String... args) {

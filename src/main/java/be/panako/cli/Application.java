@@ -32,13 +32,6 @@
 *                                                                          *
 ****************************************************************************/
 
-
-
-
-
-
-
-
 package be.panako.cli;
 
 import java.io.File;
@@ -56,8 +49,9 @@ import be.panako.util.Key;
  */
 public abstract class Application {	
 	private final static Logger LOG = Logger.getLogger(Application.class.getName());
-	
+
 	 /**
+	  * Run a command line application with a set of arguments
      * @param args
      *            The arguments to start the program.
      */
@@ -79,6 +73,7 @@ public abstract class Application {
     }
     
     /**
+	 * Return the description of the command line application
      * @return The description of the application. What does it do?
      */
     public abstract String description();
@@ -91,7 +86,8 @@ public abstract class Application {
     
     
     /**
-     * @return True if this application needs the storage, false otherwise.
+	 * Does this command line application need storage?
+     * @return True if this application needs the (key/value) storage, false otherwise.
      */
     public abstract boolean needsStorage();
     
@@ -184,7 +180,9 @@ public abstract class Application {
 	}
 	
 	/**
+	 * Get the value of an integer option
 	 * @param option The argument e.g. "-n".
+	 * @param defaultValue The default value if the option is not provided.
 	 * @param arguments The list of arguments to search in.
 	 * @return The integer found or the default value.
 	 */
@@ -212,10 +210,14 @@ public abstract class Application {
 	}
 
 	/**
+	 * Does this application need write access to the storage system?
 	 * @return true if this application writes to storage.
 	 */
 	public abstract boolean writesToStorage() ;
 
+	/**
+	 * Print a help statement for the command line application.
+	 */
 	public void printHelp() {
 		System.out.println("Name");
 		System.out.println("\t" + name());

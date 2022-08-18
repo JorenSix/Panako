@@ -47,6 +47,9 @@ import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
 import be.tarsos.dsp.util.AudioResourceUtils;
 
+/**
+ * A command line application to monitor long audio files.
+ */
 public class Monitor extends Application implements QueryResultHandler {
 
 	

@@ -126,9 +126,14 @@ public enum Key{
 	/**
 	 * File cache directory for bulk import
 	 */
-	OLAF_CACHE_FOLDER("~/.panako/dbs/olaf_cache"), 
-	
-	OLAF_CACHE_TO_FILE("TRUE"), 
+	OLAF_CACHE_FOLDER("~/.panako/dbs/olaf_cache"),
+	/**
+	 * Cache the fingerprint extraction process by storing them in a file.
+	 */
+	OLAF_CACHE_TO_FILE("TRUE"),
+	/**
+	 * Check if there are cached fingerprints and use them.
+	 */
 	OLAF_USE_CACHED_PRINTS("TRUE"),
 	
 	OLAF_SAMPLE_RATE(16000),
@@ -197,13 +202,15 @@ public enum Key{
 	
 	
 	String defaultValue;
-	private Key(String defaultValue){
+
+	Key(String defaultValue){
 		this.defaultValue = defaultValue;
 	}
-	private Key(int defaultValue){
+
+	Key(int defaultValue){
 		this(String.valueOf(defaultValue));
 	}
-	private Key(double defaultValue){
+	Key(double defaultValue){
 		this(String.valueOf(defaultValue));
 	}
 	public String getDefaultValue() {

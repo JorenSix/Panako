@@ -51,7 +51,7 @@ import be.panako.util.StopWatch;
 import be.panako.util.TimeUnit;
 
 /**
- * Store audio fingerptings in the storage. 
+ * Delete fingerptings from the index.
  * @author Joren Six
  */
 public class Delete extends Application {
@@ -117,9 +117,8 @@ public class Delete extends Application {
 			
 			StopWatch w = new StopWatch();
 			if(checkFile(file)){
-				
-				//Currently OlafStrategy is the only with delete support
-				OlafStrategy strategy = (OlafStrategy) Strategy.getInstance();
+
+				Strategy strategy =  Strategy.getInstance();
 				
 				boolean hasResource = false;
 				hasResource =  strategy.hasResource(file.getAbsolutePath());
@@ -128,7 +127,7 @@ public class Delete extends Application {
 				if(hasResource){
 					message = String.format("%d/%d;%s;%s;%s",taskID,totalTasks,file.getName(),StopWatch.toTime("", 0),"Deletion skipped: resource not in the key value store;");
 				}else{
-					double durationInSeconds = strategy.delete(file.getAbsolutePath(), file.getName());
+					double durationInSeconds = strategy.delete(file.getAbsolutePath());
 					
 					double cpuSecondsPassed = w.timePassed(TimeUnit.SECONDS);
 					String audioDuration = StopWatch.toTime("", (int) Math.round(durationInSeconds));

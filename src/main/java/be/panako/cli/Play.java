@@ -47,8 +47,10 @@ import be.tarsos.dsp.io.jvm.AudioPlayer;
 import be.tarsos.dsp.io.jvm.JVMAudioInputStream;
 import be.tarsos.dsp.util.AudioResourceUtils;
 
-
-public class Play extends Application {
+/**
+ * A command line application to play audio: mainly to check the configuration.
+ */
+class Play extends Application {
 	
 	
 	private static final int TARGET_SAMPLE_RATE = 15649;

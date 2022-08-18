@@ -69,7 +69,7 @@ public class Config {
 	private final Preferences preferenceStore;
 	
 	/**
-	 * Hidden default constructor. Reads the configured values, or stores the defaults. 
+	 * Default constructor. Reads the configured values, or stores the defaults.
 	 */
 	public Config(){
 		String path = Config.class.getProtectionDomain().getCodeSource().getLocation().getPath();
@@ -141,26 +141,39 @@ public class Config {
 	    }
 	}
 	 */
-	
-	
+
+
+	/**
+	 * Write a value to the configuration storage
+	 * @param preferenceKey the configuration key
+	 * @param value the configuration value.
+	 */
 	public void writePreference(String preferenceKey,String value){
 		preferenceStore.put(preferenceKey, value);
 	}
-	
+
+	/**
+	 * Read a preference for a certain key
+	 * @param preferenceKey the configuration key
+	 * @return The value associated to the configuration key or an empty string"".
+	 */
 	public String readPreference(String preferenceKey){
 		return preferenceStore.get(preferenceKey,"");
 	}
 	
-	
-	
 	private static Config instance;
 	public static Config getInstance(){
 		if(instance == null){
-			instance =new Config();
+			instance = new Config();
 		}
 		return instance;
 	}
-	
+
+	/**
+	 * Read a configured value for a certain key
+	 * @param key the configuration key
+	 * @return The value associated to the configuration key or the default value associated to the key.
+	 */
 	public static String get(Key key){
 		//re read configuration
 		//getInstance().readConfigration();
@@ -173,15 +186,30 @@ public class Config {
 		}
 		return value;
 	}
-	
+
+	/**
+	 * Read a configured integer for a certain key
+	 * @param key the configuration key
+	 * @return The value associated to the configuration key or the default value associated to the key.
+	 */
 	public static int getInt(Key key){
 		return Integer.parseInt(get(key));
 	}
-	
+
+	/**
+	 * Read a configured float for a certain key
+	 * @param key the configuration key
+	 * @return The value associated to the configuration key or the default value associated to the key.
+	 */
 	public static float getFloat(Key key){
 		return Float.parseFloat(get(key));
 	}
-	
+
+	/**
+	 * Read a configured boolean for a certain key
+	 * @param key the configuration key
+	 * @return The value associated to the configuration key or the default value associated to the key.
+	 */
 	public static boolean getBoolean(Key key){
 		return get(key).equalsIgnoreCase("true");
 	}

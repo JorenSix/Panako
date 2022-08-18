@@ -124,7 +124,12 @@ public class OlafStrategy extends Strategy {
 		
 		return duration;
 	}
-	
+
+	@Override
+	public double delete(String resource) {
+		throw new RuntimeException("Delete is currently not implemented for the OLAF strategy");
+	}
+
 	public double delete(String resource, String description) {
 
 		OlafStorage db = getDbInstance();
@@ -576,7 +581,7 @@ public class OlafStrategy extends Strategy {
 				}
 				sb.append("\n");
 			}
-			System.out.println(sb.toString());
+			System.out.println(sb);
 			
 		}else {
 			OlafStorageFile db = OlafStorageFile.getInstance();

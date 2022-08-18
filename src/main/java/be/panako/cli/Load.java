@@ -38,7 +38,10 @@ package be.panako.cli;
 
 import be.panako.strategy.olaf.OlafStrategy;
 
-public class Load extends Application {
+/**
+ * A command line application to bulk load cached fingerprints.
+ */
+class Load extends Application {
 
 	@Override
 	public void run(String... args) {

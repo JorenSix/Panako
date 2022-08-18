@@ -51,7 +51,7 @@ import be.panako.util.TimeUnit;
  * Store audio fingerptings in the storage. 
  * @author Joren Six
  */
-public class Store extends Application {
+class Store extends Application {
 	private final static Logger LOG = Logger.getLogger(Store.class.getName());
 	
 	@Override

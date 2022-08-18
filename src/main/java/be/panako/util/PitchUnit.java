@@ -85,7 +85,7 @@ public enum PitchUnit {
 	 * @param name
 	 *            The human name.
 	 */
-	private PitchUnit(final String name) {
+	PitchUnit(final String name) {
 		humanName = name;
 	}
 
@@ -98,19 +98,7 @@ public enum PitchUnit {
 	}
 	
 	
-	/**
-	 * Converts a pitch in Hertz to the current unit.
-	 * 
-	 * 
-	 * <code>
-	 * //440Hz is MIDI key 69
-	 * PitchUnit.MIDI_KEY.convert(440) == 69;
-	 * </code> 
-	 * 
-	 * @param hertzValue
-	 *            The pitch in Hertz.
-	 * @return A converted pitch value;
-	 */
+
 	
 	
 	/**
@@ -141,7 +129,21 @@ public enum PitchUnit {
 		final double convertedPitch = convertHertz(hertzValue);// In valueUnit
 		return convertedPitch;
 	}
-	
+
+	/**
+	 * Converts a pitch in Hertz to the current unit.
+	 *
+	 *
+	 * <code>
+	 * //440Hz is MIDI key 69
+	 * PitchUnit.MIDI_KEY.convert(440) == 69;
+	 * </code>
+	 *
+	 * @param value
+	 *            The pitch in Hertz.
+	 * @param valueUnit The unit to convert to.
+	 * @return A converted pitch value;
+	 */
 	private double convertToHertz(final double value, final PitchUnit valueUnit){
 		final double hertzValue;
 		switch (valueUnit) {
@@ -211,7 +213,7 @@ public enum PitchUnit {
 	 * The reference frequency used to calculate absolute cent values. By default it uses the same reference frequency as 
 	 * MIDI: C-1 = 16.35/2 Hz = 8.175.
 	 */
-	private static final double REF_FREQ = 8.175;
+	public static final double REF_FREQ = 8.175;
 	/**
 	 * Cache LOG 2 calculation.
 	 */

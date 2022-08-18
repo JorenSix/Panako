@@ -49,6 +49,9 @@ import be.tarsos.dsp.AudioProcessor;
 import be.tarsos.dsp.util.fft.FFT;
 import be.tarsos.dsp.util.fft.HammingWindow;
 
+/**
+ * A TarsosDSP AudioProcessor which steps through
+ */
 public class OlafEventPointProcessor implements AudioProcessor {
 
 	private final FFT fft;

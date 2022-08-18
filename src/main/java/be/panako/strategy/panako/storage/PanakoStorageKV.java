@@ -69,7 +69,7 @@ public class PanakoStorageKV implements PanakoStorage{
 	/**
 	 * A mutex for synchronization purposes
 	 */
-	private static Object mutex = new Object();
+	private static final Object mutex = new Object();
 
 	/**
 	 * @return Returns or creates a storage instance. This should be a thread

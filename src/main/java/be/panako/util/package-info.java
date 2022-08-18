@@ -39,6 +39,6 @@
 
 
 /**
- * Utility classes for Panako
+ * Reusable utility classes for Panako: configuration, file handeling, ...
  */
 package be.panako.util;

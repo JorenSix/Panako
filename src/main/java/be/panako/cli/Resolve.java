@@ -40,7 +40,10 @@ import java.util.List;
 
 import be.panako.strategy.Strategy;
 
-public class Resolve extends Application {
+/**
+ * A command line application to resolve a path to an integer identifier.
+ */
+class Resolve extends Application {
 
 	@Override
 	public void run(String... args) {

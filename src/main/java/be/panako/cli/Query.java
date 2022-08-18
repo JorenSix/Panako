@@ -54,7 +54,7 @@ import be.panako.util.Key;
  * Query the storage for audio fragments.
  * @author Joren Six
  */
-public class Query extends Application{
+class Query extends Application{
 	private final static Logger LOG = Logger.getLogger(Query.class.getName());
 
 	@Override

@@ -42,7 +42,10 @@ import be.panako.strategy.olaf.OlafStrategy;
 import be.panako.util.Config;
 import be.panako.util.Key;
 
-public class Same extends Application{
+/**
+ * A command line application to check whether two audio files contain duplicate material.
+ */
+class Same extends Application{
 
 	@Override
 	public void run(String... args) {

@@ -38,8 +38,10 @@ package be.panako.cli;
 import be.panako.util.Config;
 import be.panako.util.Key;
 
-
-public class Configuration extends Application {
+/**
+ * A command line application to print the currently used configuration settings
+ */
+class Configuration extends Application {
 
 	@Override
 	public void run(String... args) {

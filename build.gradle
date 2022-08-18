@@ -10,9 +10,6 @@ plugins {
 group 'be.panako'
 version '2.1'
 
-sourceCompatibility = 1.11
-targetCompatibility = 1.11
-
 repositories {
     mavenCentral()
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
@@ -22,7 +19,6 @@ dependencies {
     implementation 'org.reflections:reflections:0.10.2'
     implementation 'org.slf4j:slf4j-simple:1.7.36'
     implementation group: 'org.lmdbjava', name: 'lmdbjava', version: '0.8.3-SNAPSHOT'
-    implementation 'io.github.myui:btree4j:0.9.1'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
 
     ConfigurableFileCollection dependencies =  files("lib/JGaborator-0.6.jar","lib/TarsosDSP-2.4.jar")
@@ -59,8 +55,6 @@ publishing {
 test {
     useJUnitPlatform()
 }
-
-
 
 //Install Panako to home dir
 tasks.register('install') {

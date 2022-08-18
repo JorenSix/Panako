@@ -43,6 +43,9 @@ import org.reflections.Reflections;
 import be.panako.util.Config;
 import be.panako.util.Key;
 
+/**
+ * The main interface to an acoustic fingerprinting strategy or algorithm. The main tasks are to store, query, delete audio files.
+ */
 public abstract class Strategy {
 	
 	
@@ -54,10 +57,36 @@ public abstract class Strategy {
 	 * @return The number of seconds of processed audio.
 	 */
 	public abstract double store(String resource, String description);
-	
+
+	/**
+	 * Remove an audio file from the data store. The name of the resource is used to extract a
+	 * numerical identifier.
+	 * @param resource The path name of the audio resource.
+	 */
+	public abstract double delete(String resource);
+
+	/**
+	 * Query the index for matches.
+	 * @param query The path name of the query audio file
+	 * @param maxNumberOfResults The maximum results to return.
+	 *                              E.g. 1, to only return the best result, 10 to return the best 10.
+	 * @param avoid A set of identifiers to ignore in the result set.
+	 *                 E.g. for deduplication it might be of interest to ignore the query itself
+	 * @param handler A handler to process the results.
+	 */
 	public abstract void query(String query, int maxNumberOfResults,Set<Integer> avoid, QueryResultHandler handler);
-	
-	public abstract void monitor(String query,int maxNumberOfReqults,Set<Integer> avoid,QueryResultHandler handler);
+
+	/**
+	 * The query is chopped up in parts of a configurable length (e.g. 20 seconds). Each part is matched with the
+	 * index.
+	 * @param query The path name of the query audio file
+	 * @param maxNumberOfResults The maximum results to return.
+	 *                              E.g. 1, to only return the best result, 10 to return the best 10.
+	 * @param avoid A set of identifiers to ignore in the result set.
+	 *                 E.g. for deduplication it might be of interest to ignore the query itself
+	 * @param handler A handler to process the results.
+	 */
+	public abstract void monitor(String query,int maxNumberOfResults,Set<Integer> avoid,QueryResultHandler handler);
 	
 	/**
 	 * Are there fingerprints for this resource already stored in the database?
@@ -67,7 +96,8 @@ public abstract class Strategy {
 	public abstract boolean hasResource(String resource);
 	
 	/**
-	 * 
+	 * Check if the storage system is available.
+	 *
 	 * @return True if the storage is available, false otherwise.
 	 */
 	public abstract boolean isStorageAvailable();
@@ -77,11 +107,16 @@ public abstract class Strategy {
 	 */
 	public abstract void printStorageStatistics();
 	
-	/**
-	 * Checks the configuration and returns a strategy.
-	 * @return An instance of the strategy.
-	 */	
+
 	private static Strategy strategy;
+
+	/**
+	 * Returns an instance of the configured strategy. Using reflection it creates a list of 'Strategy' implementers
+	 * and checks if the configured strategy can be found. <br>
+	 * E.g. for the configured value "Panako" there needs to be a "PanakoStrategy" class implementing Strategy.
+	 *
+	 * @return An instance of the strategy.
+	 */
 	public static Strategy getInstance(){
 		if(strategy == null){
 			Reflections reflections = new Reflections("be.panako.strategy");
@@ -103,7 +138,7 @@ public abstract class Strategy {
 		return strategy;
 	}
 	
-	public static String classToName(Class<? extends Strategy> c){
+	private static String classToName(Class<? extends Strategy> c){
 		//fully qualified name
 		String name = c.getCanonicalName();
 		//unqualified name
@@ -121,12 +156,17 @@ public abstract class Strategy {
 	 */
 	public abstract String resolve(String filename);
 
-	
-	public void print(String path, boolean sonicVisualizerOutput) {		
-	}
 
 	/**
-	 * Clear al information from the key value store
+	 * Print the fingerprints to a human readable format or to an output compatible with
+	 * Sonic Visualizer. Mainly used for caching or debugging.
+	 * @param path the name of the file to resolve.
+	 * @param sonicVisualizerOutput True if the output needs to be compatible with sonic visualizer
+	 */
+	public abstract void print(String path, boolean sonicVisualizerOutput);
+
+	/**
+	 * Clear <b>all</b> information from the key value store
 	 */
 	public abstract void clear();
 }

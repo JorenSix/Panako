@@ -122,8 +122,9 @@ public class PanakoStrategy extends Strategy {
 		
 		return duration;
 	}
-	
-	public double delete(String resource, String description) {
+
+	@Override
+	public double delete(String resource) {
 
 		PanakoStorageKV db = PanakoStorageKV.getInstance();
 		
@@ -144,8 +145,7 @@ public class PanakoStrategy extends Strategy {
 		}else {
 			LOG.warning("Warning: no prints extracted for " + resource);
 		}
-	
-		
+
 		db.deleteMetadata((long) resourceID);
 		
 		//storage is done: 
@@ -155,7 +155,7 @@ public class PanakoStrategy extends Strategy {
 		return duration;
 	}
 	
-	public List<PanakoFingerprint> toFingerprints(String resource){
+	private List<PanakoFingerprint> toFingerprints(String resource){
 		if(Config.getBoolean(Key.PANAKO_USE_CACHED_PRINTS)) {
 			String folder = Config.get(Key.PANAKO_CACHE_FOLDER);
 			folder = FileUtils.expandHomeDir(folder);
@@ -179,7 +179,7 @@ public class PanakoStrategy extends Strategy {
 		return toFingerprints(resource,0,MAX_TIME);
 	}
 	
-	public List<PanakoFingerprint> toFingerprints(String resource,double startTimeOffset,double numberOfSeconds){
+	private List<PanakoFingerprint> toFingerprints(String resource,double startTimeOffset,double numberOfSeconds){
 		int samplerate, size, overlap;
 		samplerate = Config.getInt(Key.PANAKO_SAMPLE_RATE);
 		size = Config.getInt(Key.PANAKO_AUDIO_BLOCK_SIZE);
@@ -245,8 +245,9 @@ public class PanakoStrategy extends Strategy {
 	public void query(String query, int maxNumberOfResults, Set<Integer> avoid, QueryResultHandler handler) {
 		query(query,maxNumberOfResults,avoid,handler,0,MAX_TIME);
 	}
-	
-	public void query(String query, int maxNumberOfResults, Set<Integer> avoid, QueryResultHandler handler, double startTimeOffset,double numberOfSeconds ) {
+
+
+	private void query(String query, int maxNumberOfResults, Set<Integer> avoid, QueryResultHandler handler, double startTimeOffset,double numberOfSeconds ) {
 		
 		final String queryPath ;
 		List<PanakoFingerprint> prints;
@@ -524,6 +525,7 @@ public class PanakoStrategy extends Strategy {
 		map.get(t)[f]=m;
 	}
 
+	@Override
 	public void print(String path, boolean sonicVisualizerOutput) {
 		List<PanakoFingerprint> prints = toFingerprints(path);
 
@@ -546,7 +548,7 @@ public class PanakoStrategy extends Strategy {
 			}
 			sb.append("\n");
 		}
-		System.out.println(sb.toString());		
+		System.out.println(sb);
 	}
 	
 	public String name() {
