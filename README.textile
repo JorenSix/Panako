@@ -229,7 +229,7 @@ To interpret the results, it helps to explain the output:
 * *Match score* The number of matching fingerprints between query and reference. The number of fingerprints per second can be calculated by dividing by the match duration.
 * *Time factor (%)* How much faster the query is with respect to the reference.
 * *Frequency factor(%)* How much higher in pitch the query is with respect to the reference. If the query is sped up the time factor is expected to be nearly equal to the frequency factor.
-* *Seconds with match (%)*  The number of seconds for which matches are found. If in each matching second a match is found then this number is 1. A low ratio might indicate a false positive. 
+* *Seconds with match (%)*  The number of seconds for which matches are found. If in each matching second a match is found, then this number is 1. A low ratio might indicate a false positive. 
 
 For the test queries the start of the match is encoded into the filename. Likewise for the speed-up factor and matching identifier. For example @queries/557132_97_104.wav@ expects to match the file with identifier @557132@ starting from second 97 at a speed up of 104%. When looking at the result this closely matches what is reported.
 
