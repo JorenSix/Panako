@@ -39,7 +39,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * The interface to the storage system for the Panako algorithm
+ */
 public interface PanakoStorage {
+
 
 	void storeMetadata(long resourceID, String resourcePath, float duration, int fingerprints);
 

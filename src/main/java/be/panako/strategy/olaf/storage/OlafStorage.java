@@ -44,7 +44,8 @@ import java.util.Set;
  */
 public interface OlafStorage {
 
-	void storeMetadata(long resourceID, String resourcePath, float duration, int fingerprints);
+
+	void storeMetadata(long resourceID, String resourcePath, float duration, int numberOfFingerprints);
 
 	void addToStoreQueue(long fingerprintHash, int resourceIdentifier, int t1);
 
