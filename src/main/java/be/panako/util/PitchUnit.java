@@ -32,18 +32,13 @@
 *                                                                          *
 ****************************************************************************/
 
-
-
-
-
-
-
 package be.panako.util;
 
 import java.util.logging.Logger;
 
 /**
- * Defines the unit of the pitch value.
+ * Defines the unit of a pitch value and convert between pitch units.
+ *
  */
 public enum PitchUnit {	
 	/**

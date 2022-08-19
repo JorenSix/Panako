@@ -67,6 +67,10 @@ import java.util.regex.Pattern;
 public final class FileUtils {
 	static final Logger LOG = Logger.getLogger(FileUtils.class.getName());
 
+	/**
+	 * Get the systems directory for temporary files
+	 * @return the temp dir of the system.
+	 */
 	public static String temporaryDirectory() {
 		final String tempDir = System.getProperty("java.io.tmpdir");
 		if (tempDir.contains(" ")) {
@@ -78,35 +82,19 @@ public final class FileUtils {
 	// Disable the default constructor.
 	private FileUtils() {
 	}
-	
+
+	/**
+	 * Expand the tilde to the home directory of the user. It is expected to be found in the
+	 * environment variable user.home
+	 * @param dir The path name to expand
+	 * @return a path name with the tilde replaced by the full path of the directory.
+	 */
 	public static String expandHomeDir(String dir) {
 		if(dir.startsWith("~/")){
 			String homeDir = System.getProperty("user.home");
 			dir = dir.replace("~/", homeDir + "/");
 		}
 		return dir;
-	}
-	
-	public static boolean isFileLocked(String fileName){
-		return FileUtils.exists(getLockFileName(fileName));
-	}
-	
-	public static boolean createLock(String fileName){
-		File lockFile = new File(getLockFileName(fileName));
-		try {
-			//Fix this this is not the way java advises
-			//to lock files
-			lockFile.createNewFile();
-			lockFile.deleteOnExit();
-			return true;
-		} catch (IOException e) {
-			return false;
-			
-		}
-	}
-	
-	public static String getLockFileName(String fileName){
-		return fileName + ".lck";
 	}
 
 	/**
@@ -280,28 +268,6 @@ public final class FileUtils {
 		}
 	}
 
-	public interface RowFilter {
-		boolean acceptRow(String[] row);
-	}
-
-	public static final RowFilter ACCEPT_ALL_ROWFILTER = new RowFilter() {
-		public boolean acceptRow(final String[] row) {
-			return true;
-		}
-	};
-
-	public static List<String> readColumnFromCSVData(final List<String[]> data, final int columnIndex,
-			final RowFilter filter) {
-		final RowFilter actualFilter = filter == null ? ACCEPT_ALL_ROWFILTER : filter;
-		final List<String> columnData = new ArrayList<String>();
-		for (final String[] row : data) {
-			if (actualFilter.acceptRow(row)) {
-				columnData.add(row[columnIndex]);
-			}
-		}
-		return columnData;
-	}
-
 	/**
 	 * <p>
 	 * Return a list of files in directory that satisfy pattern. Pattern should
@@ -349,7 +315,7 @@ public final class FileUtils {
 		for (final String file : directory.list()) {
 			File filePath = new File(FileUtils.combine(directory.getAbsolutePath(), file));
 			if (recursive && filePath.isDirectory()) {
-				glob(filePath, pattern, recursive, matchingFiles);
+				glob(filePath, pattern, true, matchingFiles);
 			} else {
 				if (pattern.matcher(file).matches() && file != null) {
 					matchingFiles.add(filePath.getAbsolutePath());

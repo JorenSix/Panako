@@ -32,20 +32,22 @@
 *                                                                          *
 ****************************************************************************/
 
-
-
-
-
-
 package be.panako.strategy;
 
+/**
+ * An interface to return result to a caller.
+ */
 public interface QueryResultHandler {
 	
 	/**
 	 * Handle the result of a query.
 	 * @param result The result to handle
 	 */
-	public void handleQueryResult(QueryResult result);
-	
-	public void handleEmptyResult(QueryResult result);
+	void handleQueryResult(QueryResult result);
+
+	/**
+	 * This indicates that no result has been found.
+	 * @param result The empty result
+	 */
+	void handleEmptyResult(QueryResult result);
 }

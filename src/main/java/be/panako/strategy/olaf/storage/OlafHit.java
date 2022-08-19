@@ -34,13 +34,38 @@
 
 package be.panako.strategy.olaf.storage;
 
+/**
+ * A data class containing a store hit of a hash with a near hash in the key value store.
+ */
 public class OlafHit{
+	/**
+	 * The hash of the extracted fingerprint
+	 */
 	public final long originalHash;
+
+	/**
+	 * The hash of the matched fingerprint in the store
+	 */
 	public final long matchedNearHash;
-	
+
+	/**
+	 * The time when the fingerprint was present in the indexed audio
+	 */
 	public final int t;
+
+	/**
+	 * The internal identifier of the indexed audio
+	 */
 	public final int resourceID;
-	
+
+	/**
+	 * Creates a new hit of an extracted fingerprint with a fingerprint in the key-value store.
+	 *
+	 * @param originalHash The hash of the extracted fingerprint
+	 * @param matchedNearHash The hash of the matched fingerprint in the store
+	 * @param t The time when the fingerprint was present in the indexed audio
+	 * @param resourceID The internal identifier of the indexed audio
+	 */
 	public OlafHit(long originalHash, long matchedNearHash,long t, long resourceID) {
 		this.originalHash = originalHash;
 		this.matchedNearHash = matchedNearHash;

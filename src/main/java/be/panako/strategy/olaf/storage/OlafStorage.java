@@ -39,6 +39,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * The interface to a storage system.
+ */
 public interface OlafStorage {
 
 	void storeMetadata(long resourceID, String resourcePath, float duration, int fingerprints);
@@ -51,8 +54,6 @@ public interface OlafStorage {
 
 	void addToQueryQueue(long queryHash);
 	
-	void processQueryQueue(Map<Long,List<OlafHit>> matchAccumulator,int range);
-	
 	void processQueryQueue(Map<Long,List<OlafHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid);
 
 	void addToDeleteQueue(long fingerprintHash, int resourceIdentifier, int t1);
@@ -61,4 +62,5 @@ public interface OlafStorage {
 
 	void deleteMetadata(long resourceID);
 
+	void clear();
 }

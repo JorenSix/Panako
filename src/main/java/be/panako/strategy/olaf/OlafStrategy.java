@@ -60,6 +60,14 @@ import be.panako.util.StopWatch;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 
+/**
+ * The algorithm implemented here is inspired by the 'shazam' algorithm but does differ in a few crucial elements.
+ *
+ * A fingerprint consists of three spectral peaks
+ * The matching step allows for moderate time stretching amounts
+ *
+ *
+ */
 public class OlafStrategy extends Strategy {
 	private static final int MAX_TIME = 5_000_000;
 	
@@ -231,11 +239,13 @@ public class OlafStrategy extends Strategy {
 		}
 		return mostCommonDeltaT;
 	}
+
 	@Override
 	public void query(String query, int maxNumberOfResults, Set<Integer> avoid, QueryResultHandler handler) {
 		query(query,maxNumberOfResults,avoid,handler,0,MAX_TIME);
 	}
-	
+
+
 	public void query(String query, int maxNumberOfResults, Set<Integer> avoid, QueryResultHandler handler, double startTimeOffset,double numberOfSeconds ) {
 		
 		final String queryPath ;

@@ -88,11 +88,19 @@ public class LemireMinMaxFilter {
 			this.dataToFilter=null;
 		}
 	}
-	
+
+	/**
+	 * The minimum filtered values
+	 * @return The min-filtered values
+	 */
 	public float[] getMinVal(){
 		return minVal.clone();
 	}
-	
+
+	/**
+	 * The maximum filtered values
+	 * @return The max-filtered values
+	 */
 	public float[] getMaxVal(){
 		return maxVal.clone();
 	}
@@ -232,7 +240,9 @@ public class LemireMinMaxFilter {
 		maxVal[array.length-windowSize] = array[maxFifo.peekFirst()];
 		minVal[array.length-windowSize] = array[minFifo.peekFirst()];
 	}
-	
+
+	/**
+	 Should be moved to a unit test:
 	public static void main(String... args){
 		float[] data = {1,2,3,7,8,-7,12,13,7};
 		int windowSize = 3;
@@ -257,6 +267,6 @@ public class LemireMinMaxFilter {
 		for(float value : filter.minVal){
 			System.out.println(value);
 		}	
-	}
+	}**/
 
 }

@@ -39,23 +39,63 @@
 
 package be.panako.strategy;
 
+/**
+ * A data class representing a query result
+ */
 public class QueryResult {
 	
 	//query info
-	public final String queryPath;	
+	/**
+	 * The path of the query
+	 */
+	public final String queryPath;
+	/**
+	 * The start of the match in the query, in seconds.
+	 */
 	public final double queryStart;
+	/**
+	 * The end of the match in the query, in seconds.
+	 */
 	public final double queryStop;
 	
 	//ref info
+	/**
+	 * The internal identifier of the matching audio
+	 */
 	public final String refIdentifier;
+	/**
+	 * The path of the matching audio
+	 */
 	public final String refPath;
+	/**
+	 * The start of the match in the reference audio, in seconds.
+	 */
 	public final double refStart;
+	/**
+	 * The end of the match in the reference audio, in seconds.
+	 */
 	public final double refStop;
 	
 	//match info
+	/**
+	 * The start of the match in the reference audio, in seconds.
+	 */
 	public final double score;
+	/**
+	 * The amount of time stretching that needs to be applied to the query to match the reference audio.
+	 *
+	 */
 	public final double timeFactor;
+	/**
+	 * The amount of pitch shifting that needs to be applied to the query to match the reference audio.
+	 * A percentage which is expected to be between 0.8 and 1.2
+	 */
 	public final double frequencyFactor;
+	/**
+	 * If the match has a duration of 10 seconds but only the first and last second contain all the matches,
+	 * this indicates an unreliable match. 2/10 = 0.2 would be the percentage.
+	 * If all seconds also have matches then it is 1.0.
+	 */
 	public final double percentOfSecondsWithMatches;
 	
 	/**
@@ -78,6 +118,10 @@ public class QueryResult {
 	 *            The factor (percentage) of change in frequency. 110 means 10%
 	 *            higher frequency compared to the reference. 90 means a 10%
 	 *            lower frequency.
+	 * @param percentOfSecondsWithMatches
+	 *      	  If the match has a duration of 10 seconds but only the first and last second contain all the matches,
+	 * 			  this indicates an unreliable match. 2/10 = 0.2 would be the percentage.
+	 * 			  If all seconds also have matches then it is 1.0.
 	 */
 	public QueryResult(String queryPath,
 					   double queryStart,
@@ -114,11 +158,11 @@ public class QueryResult {
 	}
 
 
-
+/*
 	public QueryResult(String queryPath,double queryStart,double queryStop, String refPath, String refIdentifier, double refStart, double refStop, double score,double timeFactor, double frequencyFactor){
 		this( queryPath, queryStart, queryStop,  refPath,  refIdentifier,  refStart,  refStop,  score, timeFactor,  frequencyFactor,0);
 	}
-		
+*/
 
 
 

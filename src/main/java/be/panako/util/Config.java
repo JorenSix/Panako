@@ -162,6 +162,11 @@ public class Config {
 	}
 	
 	private static Config instance;
+
+	/**
+	 * Configuration is meant to be used as a Singleton.
+	 * @return Return the only instance of the configuration class.
+	 */
 	public static Config getInstance(){
 		if(instance == null){
 			instance = new Config();

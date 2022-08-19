@@ -59,6 +59,10 @@ import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
 
+/**
+ * A key value store which is persisted to disk.
+ * It is basically a B-Tree like structure.
+ */
 public class OlafStorageKV implements OlafStorage {
 	
 	/**
@@ -93,7 +97,12 @@ public class OlafStorageKV implements OlafStorage {
 	final Map<Long,List<long[]>> storeQueue;
 	final Map<Long,List<long[]>> deleteQueue;
 	final Map<Long,List<Long>> queryQueue;
-	
+
+	/**
+	 * Create a new instance of the key value store.
+	 * It uses the default configuration for paths and file locations.
+	 * If a store is not present it is created.
+	 */
 	public OlafStorageKV() {
 		String folder = Config.get(Key.OLAF_LMDB_FOLDER);
 		folder = FileUtils.expandHomeDir(folder);
@@ -107,7 +116,7 @@ public class OlafStorageKV implements OlafStorage {
 
 		
 		env =  org.lmdbjava.Env.create()
-        .setMapSize(1024l * 1024l * 1024l * 1024l)//1 TB max!
+        .setMapSize(1024L * 1024L * 1024L * 1024L)//1 TB max!
         .setMaxDbs(2)
         .setMaxReaders(Application.availableProcessors())
         .open(new File(folder));
@@ -118,9 +127,9 @@ public class OlafStorageKV implements OlafStorage {
 		final String resourceName = "olaf_resource_map";		
 		resourceMap = env.openDbi(resourceName,DbiFlags.MDB_CREATE, DbiFlags.MDB_INTEGERKEY);
 		
-		storeQueue = new HashMap<Long,List<long[]>>();
-		deleteQueue = new HashMap<Long,List<long[]>>();
-		queryQueue = new HashMap<Long,List<Long>>();
+		storeQueue = new HashMap<>();
+		deleteQueue = new HashMap<>();
+		queryQueue = new HashMap<>();
 	}
 	
 	public void close() {
@@ -180,7 +189,7 @@ public class OlafStorageKV implements OlafStorage {
 		long[] data = {fingerprintHash,resourceIdentifier,t1};
 		long threadID = Thread.currentThread().getId();
 		if(!storeQueue.containsKey(threadID))
-			storeQueue.put(threadID, new ArrayList<long[]>());
+			storeQueue.put(threadID, new ArrayList<>());
 		storeQueue.get(threadID).add(data);
 	}
 	
@@ -328,7 +337,7 @@ public class OlafStorageKV implements OlafStorage {
 				      if(fingerprintHash <= stopKey) {
 				    	  if(!resourcesToAvoid.contains((int) resourceID)) {
 				    		  if(!matchAccumulator.containsKey(originalKey))
-				    			  matchAccumulator.put(originalKey,new ArrayList<OlafHit>());
+				    			  matchAccumulator.put(originalKey,new ArrayList<>());
 				    		  matchAccumulator.get(originalKey).add(new OlafHit(originalKey, fingerprintHash, t, resourceID));
 				    	  }
 				   
@@ -341,7 +350,7 @@ public class OlafStorageKV implements OlafStorage {
 							      
 							      if(!resourcesToAvoid.contains((int) resourceID)) {
 						    		  if(!matchAccumulator.containsKey(originalKey))
-						    			  matchAccumulator.put(originalKey,new ArrayList<OlafHit>());
+						    			  matchAccumulator.put(originalKey,new ArrayList<>());
 						    		  matchAccumulator.get(originalKey).add(new OlafHit(originalKey, fingerprintHash, t, resourceID));
 						    	  }
 						      }
@@ -358,7 +367,7 @@ public class OlafStorageKV implements OlafStorage {
 							      
 							      if(!resourcesToAvoid.contains((int) resourceID)) {
 						    		  if(!matchAccumulator.containsKey(originalKey))
-						    			  matchAccumulator.put(originalKey,new ArrayList<OlafHit>());
+						    			  matchAccumulator.put(originalKey,new ArrayList<>());
 						    		  matchAccumulator.get(originalKey).add(new OlafHit(originalKey, fingerprintHash, t, resourceID));
 						    	  }
 						      } else {
@@ -377,7 +386,7 @@ public class OlafStorageKV implements OlafStorage {
 	}
 	
 	public long entries(boolean printStats){
-		long entries = 0;
+		long entries;
 		final Stat stats;
 	    try (Txn<ByteBuffer> txn = env.txnRead()) {
 	      stats = fingerprints.stat(txn);
@@ -405,7 +414,7 @@ public class OlafStorageKV implements OlafStorage {
 		      final Cursor<ByteBuffer> c = resourceMap.openCursor(txn);
 		      
 		      final ByteBuffer keyBuffer = ByteBuffer.allocateDirect(8);
-		      keyBuffer.putLong(0l).flip();
+		      keyBuffer.putLong(0L).flip();
 		      
 		      double totalDuration = 0;
 		      long totalPrints = 0;
@@ -477,9 +486,9 @@ public class OlafStorageKV implements OlafStorage {
 			final ByteBuffer found = resourceMap.get(txn, key);
 			if(found !=null) {
 				resourceMap.delete(txn, key);
-			}else {
+			}//else {
 				//not found, not deleted
-			}
+			//}
 			
 		    txn.commit();
 		 
@@ -489,6 +498,7 @@ public class OlafStorageKV implements OlafStorage {
 		
 	}
 
+	@Override
 	public void clear() {
 		fingerprints.close();
 		resourceMap.close();

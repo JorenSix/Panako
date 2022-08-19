@@ -42,6 +42,8 @@ package be.panako.util;
  */
 public class Morton2D {
 
+    private Morton2D(){}
+
     private static final int MortonTable256[]
             = {
                 0x0000, 0x0001, 0x0004, 0x0005, 0x0010, 0x0011, 0x0014, 0x0015,

@@ -38,8 +38,19 @@ package be.panako.util;
 
 import java.util.BitSet;
 
+/**
+ * Calculate hamming distances between several types.
+ */
 public class Hamming {
 
+	private Hamming(){}
+
+	/**
+	 * Calculate and return the Hamming distance between the two  integers.
+	 * @param x The first integer
+	 * @param y The second integer
+	 * @return The Hamming distance between the two integers.
+	 */
 	 public static int d(int x, int y) {
 	        int dist = 0;
 	        int val = x ^ y;
@@ -53,23 +64,33 @@ public class Hamming {
 	        return dist;
 	    }
 	    
-	    /**
-	     * Returns Hamming distance between the two long integers.
-	     */
-	    public static int d(long x, long y) {
-	        int dist = 0;
-	        long val = x ^ y;
 
-	        // Count the number of set bits (Knuth's algorithm)
-	        while (val != 0) {
-	            ++dist;
-	            val &= val - 1;
-	        }
+	/**
+	 * Calculate and return the Hamming distance between the two long integers.
+	 * @param x The first integer
+	 * @param y The second integer
+	 * @return The Hamming distance between the two long integers.
+	 */
+	public static int d(long x, long y) {
+		int dist = 0;
+		long val = x ^ y;
 
-	        return dist;
-	    }
-	    
-	    public static int d(BitSet x, BitSet y){
+		// Count the number of set bits (Knuth's algorithm)
+		while (val != 0) {
+			++dist;
+			val &= val - 1;
+		}
+
+		return dist;
+	}
+
+	/**
+	 * Calculate and return the hamming distance between two bit sets.
+	 * @param x The first bit set
+	 * @param y The other bit set
+	 * @return The hamming distance between bit set x and y
+	 */
+	public static int d(BitSet x, BitSet y){
 	    	
 	    	long[] xLong = x.toLongArray();
 	    	long[] yLong = y.toLongArray();

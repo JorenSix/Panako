@@ -42,6 +42,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+/**
+ * An in memory storage system: mainly used for debugging.
+ */
 public class OlafStorageMemory implements OlafStorage {
 
 	/**
@@ -78,7 +81,7 @@ public class OlafStorageMemory implements OlafStorage {
 	public OlafStorageMemory() {
 		fingerprints = new TreeMap<>();
 		resourceMap = new HashMap<>();
-		queryQueue = new HashMap<Long,List<Long>>();
+		queryQueue = new HashMap<>();
 	}
 	
 	@Override
@@ -102,7 +105,7 @@ public class OlafStorageMemory implements OlafStorage {
 	public void addToStoreQueue(long fingerprintHash, int resourceIdentifier, int t1) {
 		int[] val = {resourceIdentifier,t1};
 		if(!fingerprints.containsKey(fingerprintHash)) {
-			List<int[]> list = new ArrayList<int[]>();
+			List<int[]> list = new ArrayList<>();
 			fingerprints.put(fingerprintHash,list);
 		}
 		fingerprints.get(fingerprintHash).add(val);
@@ -116,14 +119,11 @@ public class OlafStorageMemory implements OlafStorage {
 	public void addToQueryQueue(long queryHash) {
 		long threadID = Thread.currentThread().getId();
 		if(!queryQueue.containsKey(threadID))
-			queryQueue.put(threadID, new ArrayList<Long>());
+			queryQueue.put(threadID, new ArrayList<>());
 		queryQueue.get(threadID).add(queryHash);
 	}
 
-	public void processQueryQueue(Map<Long,List<OlafHit>> matchAccumulator,int range) {
-		processQueryQueue(matchAccumulator, range, new HashSet<Integer>());
-	}
-	
+	@Override
 	public void processQueryQueue(Map<Long,List<OlafHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid) {
 		if (queryQueue.isEmpty())
 			return;
@@ -174,6 +174,7 @@ public class OlafStorageMemory implements OlafStorage {
 
 	}
 
+	@Override
 	public void clear() {
 		fingerprints.clear();
 		resourceMap.clear();

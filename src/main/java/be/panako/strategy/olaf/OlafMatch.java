@@ -34,8 +34,12 @@
 
 package be.panako.strategy.olaf;
 
+/**
+ * A data class representing  matching fingerprints
+ */
 public class OlafMatch {
-	
+
+
 	public long matchedNearHash;
 
 	public long originalHash;
@@ -54,8 +58,11 @@ public class OlafMatch {
 	 * Time in blocks in the query.
 	 */
 	public int queryTime;
-	
-	
+
+	/**
+	 * The time difference between the indexed and query times
+	 * @return The time difference between the indexed and query times
+	 */
 	public int deltaT() {
 		return matchTime - queryTime;
 	}

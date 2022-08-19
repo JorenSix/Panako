@@ -10,6 +10,9 @@ plugins {
 group 'be.panako'
 version '2.1'
 
+sourceCompatibility = 1.11
+targetCompatibility = 1.11
+
 repositories {
     mavenCentral()
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }

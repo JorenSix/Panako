@@ -105,15 +105,39 @@ public enum Key{
 	/**
 	 * The strategy (algorithm) to use, OLAF|PANAKO|PCH.
 	 */
-	STRATEGY("OLAF"),	
-	
+	STRATEGY("OLAF"),
+
+	/**
+	 * Maximum number of items returned for a query
+	 * Normally only a handful of matches are expected
+	 * So use a large number (> 50) to return all results
+	 * Use 1 if you only want the best ranked result
+	 */
 	NUMBER_OF_QUERY_RESULTS(1000),
-	
+
+
+	///////////////////PCH config
+
+	/**
+	 * Where to store the pitch class histograms
+	 */
 	PCH_FILES("~/.panako/dbs/pch"),
+	/**
+	 * The sample rate to use for the PCH algorithm
+	 */
 	PCH_SAMPLE_RATE(22050),
+	/**
+	 * Take audio buffers with a 1024 sample overlap
+	 */
 	PCH_OVERLAP(1024),
-	PCH_SIZE(2048), 
-	
+	/**
+	 * Take audio buffers with a 2048 sample size
+	 */
+	PCH_SIZE(2048),
+
+
+	///////////////////OLAF config
+
 	/**
 	 * The storage to use: MEM|LMDB
 	 * Stands for Memory, files on disk or the LMDB key-value store
@@ -135,26 +159,86 @@ public enum Key{
 	 * Check if there are cached fingerprints and use them.
 	 */
 	OLAF_USE_CACHED_PRINTS("TRUE"),
-	
+	/**
+	 * The sample rate to use for the Olaf algorithm.
+	 * If audio with lower sample rate is used it is upsampled!
+	 */
 	OLAF_SAMPLE_RATE(16000),
-	OLAF_SIZE(1024), 
-	OLAF_STEP_SIZE(128), 
-	
-	OLAF_MIN_HITS_UNFILTERED(10), 
-	OLAF_MIN_HITS_FILTERED(5), 
-	OLAF_MIN_TIME_FACTOR(0.9), 
+	/**
+	 * The size of an audio buffer
+	 */
+	OLAF_SIZE(1024),
+	/**
+	 * The amount of samples to step forward
+	 */
+	OLAF_STEP_SIZE(128),
+
+	/**
+	 * Matching step configuration: a limit to the unfiltered hits
+	 */
+	OLAF_MIN_HITS_UNFILTERED(10),
+	/**
+	 * Matching step configuration: a limit to the filtered hits
+	 */
+	OLAF_MIN_HITS_FILTERED(5),
+	/**
+	 * Matching step configuration: allow max 10% time stretching
+	 */
+	OLAF_MIN_TIME_FACTOR(0.9),
+	/**
+	 * Matching step configuration: allow max 10% time stretching
+	 */
 	OLAF_MAX_TIME_FACTOR(1.1),
+	/**
+	 * Matching step configuration: a match needs to
+	 * have corresponding fingerprints between reference and
+	 * index for 20% of the seconds.
+	 */
 	OLAF_MIN_SEC_WITH_MATCH(0.2),
+	/**
+	 * Matching step configuration: a match needs to have a duration of 5 seconds
+	 */
 	OLAF_MIN_MATCH_DURATION(5),
 
-	OLAF_FREQ_MAX_FILTER_SIZE(103), 
-	OLAF_TIME_MAX_FILTER_SIZE(25), 
-	OLAF_FP_MIN_FREQ_DIST(1), 
-	OLAF_FP_MAX_FREQ_DIST(128), 
-	OLAF_FP_MIN_TIME_DIST(2), 
+	/**
+	 * Event point extraction configuration: a max filter of x is used vertically (frequency)
+	 */
+	OLAF_FREQ_MAX_FILTER_SIZE(103),
+	/**
+	 * Event point extraction configuration: a max filter of x is used horizontally (time)
+	 */
+	OLAF_TIME_MAX_FILTER_SIZE(25),
+	/**
+	 * Fingerprint construction: frequency bins of coupled event points
+	 * need to be at least x apart
+	 */
+	OLAF_FP_MIN_FREQ_DIST(1),
+	/**
+	 * Fingerprint construction: frequency bins of coupled event points
+	 * need to be at most x apart
+	 */
+	OLAF_FP_MAX_FREQ_DIST(128),
+	/**
+	 * Fingerprint construction: time indexes of coupled event points
+	 * need to be at least x apart
+	 */
+	OLAF_FP_MIN_TIME_DIST(2),
+	/**
+	 * Fingerprint construction: time indexes of coupled event points
+	 * need to be at most x apart
+	 */
 	OLAF_FP_MAX_TIME_DIST(33),
-	
+
+	/**
+	 * Matching: allow hashes which are slightly off (+-2)
+	 */
 	OLAF_QUERY_RANGE(2),
+
+
+
+	///////////////////PANAKO config
+
+
 	
 	//Event point filter settings
 	PANAKO_FREQ_MAX_FILTER_SIZE(103),
@@ -171,13 +255,31 @@ public enum Key{
 	PANAKO_SAMPLE_RATE(16000),
 	
 	//Spectral tranform configuration
-	PANAKO_TRANSF_MIN_FREQ(110),//min frequency (Hz)
-	PANAKO_TRANSF_MAX_FREQ(7040),//max frequency (Hz), 6 octaves above 110Hz
+	/**
+	 * The minimum frequency (Hz)
+	 */
+	PANAKO_TRANSF_MIN_FREQ(110),
+	/**
+	 * The maximum frequency (Hz). By default it is chosen to be 6
+	 * octaves above 110Hz. Below the nyquist frequency of 16000Hz/2.
+	 */
+	PANAKO_TRANSF_MAX_FREQ(7040),//max frequency (Hz),
+	/**
+	 * The frequency to align the center of a frequency bin to (Hz).
+	 */
 	PANAKO_TRANSF_REF_FREQ(440),//reference frequency (Hz), determines bin bin centers
+	/**
+	 * The number of frequency bands to use for each octave.
+	 * 6 octaves * 85 is 510 bands in total which is close to 512.
+	 */
 	PANAKO_TRANSF_BANDS_PER_OCTAVE(85),//bins for each octave
+	/**
+	 * The number of frequency bands to use for each octave
+	 */
 	PANAKO_TRANSF_TIME_RESOLUTION(128),//audio samples at 16kHz
 	
 	//query config
+
 	PANAKO_QUERY_RANGE(2),
 	
 	PANAKO_MIN_HITS_UNFILTERED(10), 
@@ -193,14 +295,15 @@ public enum Key{
 	 * The storage to use: MEM|LMDB
 	 * Stands for Memory, files on disk or the LMDB key-value store
 	 */
-	PANAKO_STORAGE("LMDB"), 
+	PANAKO_STORAGE("LMDB"),
+
+
 	PANAKO_LMDB_FOLDER("~/.panako/dbs/panako_db"), 
 	PANAKO_CACHE_FOLDER("~/.panako/dbs/panako_cache"),
 	PANAKO_CACHE_TO_FILE("TRUE"), 
 	PANAKO_USE_CACHED_PRINTS("TRUE"),
 	;
-	
-	
+
 	String defaultValue;
 
 	Key(String defaultValue){

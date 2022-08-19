@@ -43,21 +43,62 @@ package be.panako.strategy.olaf;
  * @author Joren Six
  */
 public class OlafFingerprint {
-	
+
+	/**
+	 * time component of the event point 1
+	 */
 	public final int t1;
+	/**
+	 * frequency component of the event point 1
+	 */
 	public final int f1;
+	/**
+	 * magnitude component of the event point 1
+	 */
 	public final float m1;
-	
+
+
+	/**
+	 * time component of the event point 2
+	 */
 	public final int t2;
+	/**
+	 * frequency component of the event point 2
+	 */
 	public final int f2;
+	/**
+	 * magnitude component of the event point 2
+	 */
 	public final float m2;
-	
+
+
+	/**
+	 * time component of the event point 3
+	 */
 	public final int t3;
+	/**
+	 * frequency component of the event point 3
+	 */
 	public final int f3;
+	/**
+	 * magnitude component of the event point 3
+	 */
 	public final float m3;
 	
 	private long hash;
-	
+
+	/**
+	 * Creates a new fingerprint based on three event points with each three components
+	 * @param t1 time component of the event point 1
+	 * @param f1 frequency component of the event point 1
+	 * @param m1 time component of the event point 1
+	 * @param t2 magnitude component of the event point 2
+	 * @param f2 frequency component of the event point 2
+	 * @param m2 magnitude component of the event point 2
+	 * @param t3 time component of the event point 3
+	 * @param f3 frequency component of the event point 3
+	 * @param m3 magnitude component of the event point 3
+	 */
 	public OlafFingerprint(int t1,int f1,float m1,int t2,int f2,float m2,int t3,int f3,float m3){
 		this.t1 = t1;
 		this.f1 = f1;
@@ -89,8 +130,14 @@ public class OlafFingerprint {
 		this.t3 = -1;
 		this.f3 = -1;
 		this.m3 = -1;
-	}	
-	
+	}
+
+	/**
+	 * Creates a new fingerprint based on three event points
+	 * @param e1 Event point 1
+	 * @param e2 Event point 2
+	 * @param e3 Event point 3
+	 */
 	public OlafFingerprint(OlafEventPoint e1, OlafEventPoint e2, OlafEventPoint e3){
 		this(e1.t,e1.f,e1.m,  e2.t,e2.f,e2.m,  e3.t,e3.f,e3.m);
 	}
@@ -139,7 +186,7 @@ public class OlafFingerprint {
 		return hash;
 	}
 	
-	
+	@Override
 	public String toString(){
 		return String.format("(%d,%d),(%d,%d),(%d,%d),%d",t1,f1,t2,f2,t3,f3,hash());
 	}
@@ -164,14 +211,14 @@ public class OlafFingerprint {
 	
 	/*
 	 * This is not completely consistent with the expected hash code / equals
-	 * behavior: It is very well possible that that two hashes collide, while
+	 * behavior: It is very well possible that two hashes collide, while
 	 * the fingerprints are not equal to each other. Implementing hash code makes
 	 * sure no identical fingerprints are added, but also that no collisions are
 	 * allowed. Take care when using sets.
 	 */
 	public int hashCode(){
 		//This is not completely consistent with the expected hash code / equals behavior:
-		//It is very well possible that that two hashes collide, while the fingerprints are not equal to each other.
+		//It is very well possible that two hashes collide, while the fingerprints are not equal to each other.
 		//Implementing hash code makes sure no identical fingerprints are added, but also that no collisions are
 		//allowed. Take care when using sets. 
 		return (int) hash();

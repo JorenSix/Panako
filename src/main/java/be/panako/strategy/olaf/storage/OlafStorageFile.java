@@ -46,6 +46,9 @@ import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
 
+/**
+ * Stores fingerprints to a file. It is mainly used to cache fingerprint extraction results.
+ */
 public class OlafStorageFile implements OlafStorage {
 	
 	/**
@@ -77,7 +80,9 @@ public class OlafStorageFile implements OlafStorage {
 	final Map<Long,List<long[]>> storeQueue;
 	final File storeDir;
 
-	
+	/**
+	 * Checks whether the folder used to
+	 */
 	public OlafStorageFile() {
 		String folder = Config.get(Key.OLAF_CACHE_FOLDER);
 		folder = FileUtils.expandHomeDir(folder);
@@ -92,9 +97,9 @@ public class OlafStorageFile implements OlafStorage {
 		
 		storeQueue = new HashMap<Long,List<long[]>>();
 	}
-	
-	
-	
+
+
+	@Override
 	public void storeMetadata(long resourceID,String resourcePath,float duration, int fingerprints) {
 		String path = FileUtils.combine(storeDir.getAbsolutePath(),resourceID + "_meta_data.txt");		
 		StringBuilder sb = new StringBuilder();		
@@ -118,7 +123,7 @@ public class OlafStorageFile implements OlafStorage {
 		return metaData;
 	}
 	
-	
+	@Override
 	public void addToStoreQueue(long fingerprintHash, int resourceIdentifier, int t1) {
 		long[] data = {fingerprintHash,resourceIdentifier,t1};
 		long threadID = Thread.currentThread().getId();
@@ -153,7 +158,7 @@ public class OlafStorageFile implements OlafStorage {
 		return storeQueueToString(queue);
 	}
 
-	
+	@Override
 	public void processStoreQueue() {
 		if(storeQueue.isEmpty()) return;
 		long threadID = Thread.currentThread().getId();
@@ -183,10 +188,6 @@ public class OlafStorageFile implements OlafStorage {
 	}
 
 	@Override
-	public void processQueryQueue(Map<Long, List<OlafHit>> matchAccumulator, int range) {
-	}
-
-	@Override
 	public void processQueryQueue(Map<Long, List<OlafHit>> matchAccumulator, int range,
 			Set<Integer> resourcesToAvoid) {
 
@@ -207,6 +208,7 @@ public class OlafStorageFile implements OlafStorage {
 
 	}
 
+	@Override
 	public void clear() {
 		if(!FileUtils.exists(storeDir.getAbsolutePath()))
 			return;

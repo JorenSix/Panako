@@ -57,7 +57,7 @@ The Panako repository is organized as follows:
 * @resources@ default configuration settings, script for evaluation and to analyze results and schemas to document Panako. 
 
 
-To compile Panako, a Java JDK 11 or later is required. See, for example the "OpenJDK website":https://openjdk.org/install/", for installation instructions for your operating system. 
+To compile Panako, a Java JDK 11 or later is required. See, for example the "OpenJDK website":https://openjdk.org/install/", for installation instructions for your operating system.
 
 Panako uses the "Gradle":https://gradle.org/ build system. If Gradle is not present on your system it is automatically installed by the @gradlew@ script. To build and install Panako, the following should get you started:
 
@@ -353,6 +353,6 @@ h2(#changelog). Changelog
 * A new set of helper scripts are added in the @scripts@ directory. They help with evaluation, parsing results, checking results, building panako, creating documentation,...
 * Changed the default panako location to ~/.panako, so users can install and use panako more easily (withouth need for sudo rights)
 
- <dt>Version 2.1</dt><dd>2022-05</dd> Changed the build system to "Gradle":https://gradle.org/, mainly to make upgrading dependencies more straightforward. The folder structure has been changed accordingly. The default JDK target has been changed to Java SE 11 (LTS). Panako now also supports Apple M1 targets.
+ <dt>Version 2.1</dt><dd>2022-05</dd> Changed the build system to "Gradle":https://gradle.org/, mainly to make upgrading dependencies more straightforward. The folder structure has been changed accordingly. The default JDK target has been changed to Java SE 17 (LTS). Panako now also supports Apple M1 targets.
 
 

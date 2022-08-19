@@ -35,12 +35,35 @@
 
 package be.panako.strategy.olaf.storage;
 
+/**
+ * A data class for meta-data stored for an indexed audio file
+ */
 public class OlafResourceMetadata {
+
+	/**
+	 * The number of fingerprints extracted for the audio
+	 */
 	public int numFingerprints;
+
+	/**
+	 * The audio duration
+	 */
 	public double duration;
+
+	/**
+	 * The original path of the indexed audio
+	 */
 	public String path;
-	int identifier;
-	
+
+	/**
+	 * The internal identifier
+	 */
+	public int identifier;
+
+	/**
+	 * Calculates the average number of fingerprints extracted for each second of audio.
+	 * @return The average number of fingerprints extracted for each second of audio.
+	 */
 	public double printsPerSecond() {
 		return numFingerprints / duration;
 	}

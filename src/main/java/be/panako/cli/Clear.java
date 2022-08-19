@@ -34,9 +34,7 @@
 
 package be.panako.cli;
 
-
 import be.panako.strategy.Strategy;
-
 
 /**
  * A command line application to clear all items from the index.

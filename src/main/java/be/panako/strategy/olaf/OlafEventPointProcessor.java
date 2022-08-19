@@ -50,7 +50,7 @@ import be.tarsos.dsp.util.fft.FFT;
 import be.tarsos.dsp.util.fft.HammingWindow;
 
 /**
- * A TarsosDSP AudioProcessor which steps through
+ * A TarsosDSP AudioProcessor which steps through the audio and returns peaks in the spectrogram.
  */
 public class OlafEventPointProcessor implements AudioProcessor {
 

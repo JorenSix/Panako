@@ -65,7 +65,8 @@ public class OlafEventPoint {
 	/**
 	 * Create a new event point with a time, frequency and energy and contrast..
 	 * @param t The time expressed using an analysis frame index.
-	 * @param f The frequency expressed using the bin number in the constant Q transform.
+	 * @param f The frequency expressed using the bin number in the FFT transform.
+	 * @param m The magnitude of the FFT-bin.
 	 */
 	public OlafEventPoint(final int t, final int f, final float m){
 		this.t = t;
