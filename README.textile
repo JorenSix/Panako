@@ -1,3 +1,5 @@
+!/JorenSix/Panako/actions/workflows/gradle.yml/badge.svg(Panako build status)!
+
 h1. Panako - Acoustic Fingerprinting
 
 Panako is an "acoustic fingerprinting":https://en.wikipedia.org/wiki/Acoustic_fingerprint system. The system is able to extract fingerprints from an audio stream, and either store those fingerprints in a database, or find a match between the extracted fingerprints and stored fingerprints.  Several acoustic fingerprinting algorithms are implemented within Panako. The main algorithm, the Panako algorithm, has the feature that audio queries can be identified reliably and quickly even if they has been sped up, time stretched or pitch shifted with respect to the reference audio. The main focus of Panako is to serve as a demonstration of the Panako algorithm. Other acoustic fingerprinting schemes are implemented to serve as a baseline for comparison. More information can be found in the "article about Panako":http://www.terasoft.com.tw/conf/ismir2014/proceedings/T048_122_Paper.pdf.
