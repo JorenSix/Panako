@@ -1,4 +1,4 @@
-!/JorenSix/Panako/actions/workflows/gradle.yml/badge.svg(Panako build status)!
+!https://github.com/JorenSix/Panako/actions/workflows/gradle.yml/badge.svg(Panako build status)!
 
 h1. Panako - Acoustic Fingerprinting
 
