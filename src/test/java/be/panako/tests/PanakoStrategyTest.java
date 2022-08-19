@@ -23,6 +23,6 @@ class PanakoStrategyTest {
     @Test
     void testPanakoStrategy(){
         Strategy s = new PanakoStrategy();
-        s.store();
+        //s.store();
     }
 }
