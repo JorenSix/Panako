@@ -65,7 +65,7 @@ bc. git clone --depth 1 https://github.com/JorenSix/Panako.git
 cd Panako
 ./gradlew shadowJar #Builds the core Panako library
 ./gradlew install #Installs Panako in the ~/.panako directory
-./gradlew javadoc #Creates the documentation in doc
+./gradlew javadoc #Creates the documentation in build/doc
 #copy the panako startup script to your path:
 sudo cp resources/defaults/panako /usr/local/bin 
 

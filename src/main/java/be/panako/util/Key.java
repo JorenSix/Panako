@@ -239,14 +239,30 @@ public enum Key{
 	///////////////////PANAKO config
 
 
-	
-	//Event point filter settings
+	/**
+	 * Event point extraction: the size of the max filter vertically (freq)
+	 */
 	PANAKO_FREQ_MAX_FILTER_SIZE(103),
+	/**
+	 * Event point extraction: the size of the max filter horizontally (time)
+	 */
 	PANAKO_TIME_MAX_FILTER_SIZE(25),
-	
-	PANAKO_FP_MIN_FREQ_DIST(1), 
-	PANAKO_FP_MAX_FREQ_DIST(128), 
+
+	/**
+	 * Fingerprint construction: min diff for frequency bins
+	 */
+	PANAKO_FP_MIN_FREQ_DIST(1),
+	/**
+	 * Fingerprint construction: max diff for frequency bins
+	 */
+	PANAKO_FP_MAX_FREQ_DIST(128),
+	/**
+	 * Fingerprint construction: min diff for time bins
+	 */
 	PANAKO_FP_MIN_TIME_DIST(2),
+	/**
+	 * Fingerprint construction: ax diff for time bins
+	 */
 	PANAKO_FP_MAX_TIME_DIST(33),
 	
 	//audio dispatcher config
@@ -279,16 +295,42 @@ public enum Key{
 	PANAKO_TRANSF_TIME_RESOLUTION(128),//audio samples at 16kHz
 	
 	//query config
-
+	/**
+	 * Allow a small deviation of fingerprint hash hits of +-2
+	 */
 	PANAKO_QUERY_RANGE(2),
-	
+
+
 	PANAKO_MIN_HITS_UNFILTERED(10), 
-	PANAKO_MIN_HITS_FILTERED(5), 
-	PANAKO_MIN_TIME_FACTOR(0.8), 
+	PANAKO_MIN_HITS_FILTERED(5),
+	/**
+	 * Matching config: This limits the
+	 * time/frequency differences between query/reference audio to +-20%
+	 */
+	PANAKO_MIN_TIME_FACTOR(0.8),
+	/**
+	 * Matching config: This limits the
+	 * time/frequency differences between query/reference audio to +-20%
+	 */
 	PANAKO_MAX_TIME_FACTOR(1.2),
-	PANAKO_MIN_FREQ_FACTOR(0.8), 
+	/**
+	 * Matching config: This limits the
+	 * time/frequency differences between query/reference audio to +-20%
+	 */
+	PANAKO_MIN_FREQ_FACTOR(0.8),
+	/**
+	 * Matching config: This limits the
+	 * time/frequency differences between query/reference audio to +-20%
+	 */
 	PANAKO_MAX_FREQ_FACTOR(1.2),
+	/**
+	 * Matching config: This limits the
+	 * time/frequency differences between query/reference audio to +-20%
+	 */
 	PANAKO_MIN_SEC_WITH_MATCH(0.2),
+	/**
+	 * Matching config: A match is only reported if it has a duration of more than 5 seconds.
+	 */
 	PANAKO_MIN_MATCH_DURATION(5),
 	
 	/**
@@ -297,10 +339,21 @@ public enum Key{
 	 */
 	PANAKO_STORAGE("LMDB"),
 
-
-	PANAKO_LMDB_FOLDER("~/.panako/dbs/panako_db"), 
+	/**
+	 * Folder to store the lmdb databese
+	 */
+	PANAKO_LMDB_FOLDER("~/.panako/dbs/panako_db"),
+	/**
+	 * Folder to store the cached fingerprints
+	 */
 	PANAKO_CACHE_FOLDER("~/.panako/dbs/panako_cache"),
-	PANAKO_CACHE_TO_FILE("TRUE"), 
+	/**
+	 * Cache fingerprints to a file
+	 */
+	PANAKO_CACHE_TO_FILE("TRUE"),
+	/**
+	 * Use the cached fingerprints to skip fingerprint extraction if possible
+	 */
 	PANAKO_USE_CACHED_PRINTS("TRUE"),
 	;
 
