@@ -36,14 +36,11 @@ CONFIGS_TO_BENCHMARK.each do |config|
 
   ITERATIONS.times do |i|
 
-    #puts "Store audio files #{start_index} to #{stop_index}"
     array_to_text_file(all_audio_files[start_index..(stop_index-1)])
 
     store_start = Time.now
     system "panako store #{config} list_file.txt > store_#{start_index}.csv"
     store_time = Time.now  - store_start
-
-    #puts "Query #{NUM_RANDOM_QUERIES} random files"
 
     array_to_text_file(all_audio_files.shuffle[0..(NUM_RANDOM_QUERIES-1)])
 
