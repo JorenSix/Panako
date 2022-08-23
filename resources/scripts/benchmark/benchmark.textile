@@ -15,12 +15,12 @@ The following results are measured on an Apple M1 Pro with 8 cores. The speeds a
 The absolute values are not that relevant. These might differ significantly from one machine to another. However, the fact that store speed and query speed stay in the same range when the index grows is relevant. This limited effect of index size is expected to be similar on all machines.
 
 <div align="center">
-!./olaf_results.svg(Benchmark results for Olaf)!
+!./olaf_benchmark_results.svg(Benchmark results for Olaf)!
 <small>Fig. Benchmark results for Olaf.</small>
 </div>
 
 
 <div align="center">
-!./panako_results.svg(Benchmark results for Panako)!
+!./panako_benchmark_results.svg(Benchmark results for Panako)!
 <small>Fig. Benchmark results for Panako.</small>
 </div>
