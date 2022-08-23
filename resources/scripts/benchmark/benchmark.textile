@@ -1,0 +1,60 @@
+h1. Panako - Benchmark
+
+To verify the computational efficiency of Panako there is a benchmark script available.
+The script measures runtimes to store audio and to query the index. The main aim is to see how performance
+is affected when the index gets larger.
+
+Note that correctnes is not checked with this script. Please have a look at the
+evaluation script for correctness.
+
+The script needs access to the "FMA-Medium dataset":https://github.com/mdeff/fma/.
+The FMA medium set contains 25, tracks of 30s spread over 16 unbalanced genres (22 GiB)
+
+The evaluation script does the following: starting from an empty database first 2 audio files are stored. Next, the database size is
+doubled a couple of times until 16k files are stored (or about 130 hours of audio). The time it takes to double the database size (indexing audio)
+is measured and after a doubling in size the database is queried with a number of 30s fragments. The time it takes to query the database is also reported.
+
+h2. Benchmark results
+
+The following results are measured on an Apple M1 Pro with 8 cores. The speeds are reported in number seconds of audio that can be processed
+per wall clock second (s/s). For example, if a store speed of 750 is reported then 750 seconds of audio are indexed in a single second.
+
+The absolute values are not that relevant. These might differ significanltly from one machine to another. However,
+the fact that store speed and query speed stay in the same range when the index grows is relevant. This limited effect of
+index size is expected to be similar on all machines.
+
+bc.. STRATEGY=OLAF AVAILABLE_PROCESSORS=0
+Files (#), Audio (s), Fingerprints (#), Query speed (s/s) , Store speed (s/s)
+2, 60, 2853, 366.460, 110.469
+4, 120, 4695, 379.670, 117.024
+8, 240, 8889, 364.474, 212.417
+16, 480, 12924, 333.647, 325.763
+32, 960, 23750, 382.465, 489.279
+64, 1920, 45164, 392.710, 642.946
+128, 3840, 112431, 374.187, 764.787
+256, 7680, 242696, 371.977, 850.012
+512, 15360, 489326, 408.079, 875.387
+1024, 30720, 961709, 345.758, 868.420
+2048, 61440, 1935374, 371.891, 835.083
+4096, 122880, 2607811201, 314.822, 778.683
+8192, 245760, 5215622402, 362.700, 751.969
+16384, 491520, 6592561734, 353.603, 689.576
+
+
+
+bc.. STRATEGY=PANAKO  AVAILABLE_PROCESSORS=0
+Files (#), Audio (s), Fingerprints (#), Query speed (s/s) , Store speed (s/s)
+2, 60, 1918, 198.516, 73.783
+4, 120, 4035, 205.491, 74.582
+8, 240, 8872, 206.614, 137.183
+16, 480, 13083, 211.714, 219.118
+32, 960, 23823, 206.294, 270.605
+64, 1920, 43725, 228.707, 313.702
+128, 3840, 94587, 196.874, 330.817
+256, 7680, 194430, 197.205, 341.184
+512, 15360, 403515, 192.905, 345.084
+1024, 30720, 809645, 280.539, 323.016
+2048, 61440, 1584804, 194.692, 339.731
+4096, 122880, 3254791, 196.703, 332.210
+8192, 245760, 6523309, 239.862, 316.920
+
