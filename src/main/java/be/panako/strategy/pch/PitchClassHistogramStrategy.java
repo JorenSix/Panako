@@ -33,10 +33,6 @@
 ****************************************************************************/
 
 
-
-
-
-
 package be.panako.strategy.pch;
 
 import java.util.ArrayList;
@@ -70,6 +66,13 @@ import jdk.jshell.spi.ExecutionControl;
  *
  */
 public class PitchClassHistogramStrategy extends Strategy {
+
+	/**
+	 * Create a new instance
+	 */
+	public PitchClassHistogramStrategy(){
+
+	}
 
 	@Override
 	public double store(String resource, String description) {
@@ -207,12 +210,11 @@ public class PitchClassHistogramStrategy extends Strategy {
 				int identifier = scores.get(key);
 				String description = descriptions.get(key);
 				double frequencyRatio = shifts.get(key);
-				QueryResult qr = new QueryResult(query,-1, -1, String.valueOf(identifier), description, (int) (key*100) , 0, -1, frequencyRatio);
+				QueryResult qr = new QueryResult(query,-1, -1, String.valueOf(identifier), description, (int) (key*100) , 0, -1, frequencyRatio,0,0);
 				handler.handleQueryResult(qr);
 				handled++;
 			}
 		}
-		
 	}
 
 	@Override
@@ -252,9 +254,10 @@ public class PitchClassHistogramStrategy extends Strategy {
 		throw new RuntimeException("Print is currently not implemented for the PCH strategy");
 	}
 
+	/*
 	public String name() {
 		return "PCH";
-	}
+	}*/
 
 	@Override
 	public void clear() {

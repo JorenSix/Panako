@@ -76,6 +76,7 @@ public class OlafStorageKV implements OlafStorage {
 	private static final Object  mutex = new Object();
 
 	/**
+	 * Using a singleton pattern.
 	 * @return Returns or creates a storage instance. This should be a thread
 	 *         safe operation.
 	 */
@@ -131,7 +132,10 @@ public class OlafStorageKV implements OlafStorage {
 		deleteQueue = new HashMap<>();
 		queryQueue = new HashMap<>();
 	}
-	
+
+	/**
+	 * Close the environment (move this to interface?)
+	 */
 	public void close() {
 		env.close();
 	}
@@ -237,7 +241,8 @@ public class OlafStorageKV implements OlafStorage {
 			e.printStackTrace();
 		}
 	}
-	
+
+	@Override
 	public void clearStoreQueue() {
 		storeQueue.clear();
 	}
@@ -295,10 +300,9 @@ public class OlafStorageKV implements OlafStorage {
 			queryQueue.put(threadID, new ArrayList<Long>());
 		queryQueue.get(threadID).add(queryHash);
 	}
-	
-	public void processQueryQueue(Map<Long,List<OlafHit>> matchAccumulator,int range) {
-		processQueryQueue(matchAccumulator, range, new HashSet<Integer>());
-	}
+
+
+
 	
 	public void processQueryQueue(Map<Long,List<OlafHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid) {
 		
@@ -384,15 +388,16 @@ public class OlafStorageKV implements OlafStorage {
 		}
 		
 	}
-	
-	public long entries(boolean printStats){
+
+	@Override
+	public void printStatistics(boolean printDetailedStats){
 		long entries;
 		final Stat stats;
 	    try (Txn<ByteBuffer> txn = env.txnRead()) {
 	      stats = fingerprints.stat(txn);
 	      entries = stats.entries;
 	      
-	      if(printStats) {
+	      if(printDetailedStats) {
 	    	  
 	    	  String folder = Config.get(Key.OLAF_LMDB_FOLDER);
 	    	  String dbpath = FileUtils.combine(folder,"data.mdb");
@@ -470,9 +475,6 @@ public class OlafStorageKV implements OlafStorage {
 		      c.close();
 		      txn.close();
 	    }
-	    
-	    
-	    return entries;
 	}
 
 	@Override

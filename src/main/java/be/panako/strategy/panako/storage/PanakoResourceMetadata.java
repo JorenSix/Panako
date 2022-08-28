@@ -35,12 +35,36 @@
 
 package be.panako.strategy.panako.storage;
 
+/**
+ * A data class containing meta data for a stored resource.
+ */
 public class PanakoResourceMetadata {
+
+	/**
+	 * Create a new empty meta data instance
+	 */
+	public PanakoResourceMetadata(){}
+
+	/**
+	 * The total amount of fingerprints extracted
+	 */
 	public int numFingerprints;
+
+	/**
+	 * The duration in seconds
+	 */
 	public double duration;
+	/**
+	 *The path of the resource
+	 */
 	public String path;
+
 	int identifier;
-	
+
+	/**
+	 * Calculates the number of fingerprints for each second.
+	 * @return The number of fingerprints per second
+	 */
 	public double printsPerSecond() {
 		return numFingerprints / duration;
 	}

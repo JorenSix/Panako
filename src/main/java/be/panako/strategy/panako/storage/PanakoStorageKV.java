@@ -59,6 +59,9 @@ import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
 
+/**
+ * A storage in a key value store
+ */
 public class PanakoStorageKV implements PanakoStorage{
 	
 	/**
@@ -72,6 +75,7 @@ public class PanakoStorageKV implements PanakoStorage{
 	private static final Object mutex = new Object();
 
 	/**
+	 * Uses a singleton pattern.
 	 * @return Returns or creates a storage instance. This should be a thread
 	 *         safe operation.
 	 */
@@ -94,7 +98,10 @@ public class PanakoStorageKV implements PanakoStorage{
 	final Map<Long,List<long[]>> storeQueue;
 	final Map<Long,List<long[]>> deleteQueue;
 	final Map<Long,List<Long>> queryQueue;
-	
+
+	/**
+	 * Create a new storage instance
+	 */
 	public PanakoStorageKV() {
 		String folder = Config.get(Key.PANAKO_LMDB_FOLDER);
 		folder = FileUtils.expandHomeDir(folder);
@@ -122,7 +129,10 @@ public class PanakoStorageKV implements PanakoStorage{
 		deleteQueue = new HashMap<Long,List<long[]>>();
 		queryQueue = new HashMap<Long,List<Long>>();
 	}
-	
+
+	/**
+	 * Closes the database environment.
+	 */
 	public void close() {
 		env.close();
 	}
@@ -216,11 +226,8 @@ public class PanakoStorageKV implements PanakoStorage{
 		    	e.printStackTrace();
 		    }
 	}
-	
-	public void clearStoreQueue() {
-		storeQueue.clear();
-	}
-	
+
+	@Override
 	public void addToDeleteQueue(long fingerprintHash, int resourceIdentifier, int t1,int f1) {
 		long[] data = {fingerprintHash,resourceIdentifier,t1,f1};
 		long threadID = Thread.currentThread().getId();
@@ -228,7 +235,8 @@ public class PanakoStorageKV implements PanakoStorage{
 			deleteQueue.put(threadID, new ArrayList<long[]>());
 		deleteQueue.get(threadID).add(data);
 	}
-	
+
+	@Override
 	public void processDeleteQueue() {
 		if (storeQueue.isEmpty())
 			return;
@@ -267,18 +275,21 @@ public class PanakoStorageKV implements PanakoStorage{
 		    	e.printStackTrace();
 		    }
 	}
-	
+
+	@Override
 	public void addToQueryQueue(long queryHash) {
 		long threadID = Thread.currentThread().getId();
 		if(!queryQueue.containsKey(threadID))
 			queryQueue.put(threadID, new ArrayList<Long>());
 		queryQueue.get(threadID).add(queryHash);
 	}
-	
+
+	@Override
 	public void processQueryQueue(Map<Long,List<PanakoHit>> matchAccumulator,int range) {
 		processQueryQueue(matchAccumulator, range, new HashSet<Integer>());
 	}
-	
+
+	@Override
 	public void processQueryQueue(Map<Long,List<PanakoHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid) {
 		
 		if (queryQueue.isEmpty())
@@ -366,15 +377,16 @@ public class PanakoStorageKV implements PanakoStorage{
 		}
 		
 	}
-	
-	public long entries(boolean printStats){
+
+	@Override
+	public void printStatistics(boolean detailedStats){
 		long entries = 0;
 		final Stat stats;
 	    try (Txn<ByteBuffer> txn = env.txnRead()) {
 	      stats = fingerprints.stat(txn);
 	      entries = stats.entries;
 	      
-	      if(printStats) {
+	      if(detailedStats) {
 	    	  
 	    	  String folder = Config.get(Key.OLAF_LMDB_FOLDER);
 	    	  String dbpath = FileUtils.combine(folder,"data.mdb");
@@ -452,11 +464,9 @@ public class PanakoStorageKV implements PanakoStorage{
 		      c.close();
 		      txn.close();
 	    }
-	    
-	    
-	    return entries;
 	}
 
+	@Override
 	public void deleteMetadata(long resourceID) {	
 		try (Txn<ByteBuffer> txn = env.txnWrite()) {
 			

@@ -34,10 +34,24 @@
 
 package be.panako.strategy.panako;
 
+/**
+ * A data class representing a match between two fingerprint hashes.
+ */
 public class PanakoMatch {
-	
+
+	/**
+	 * Initialize an empty match
+	 */
+	public PanakoMatch(){}
+
+	/**
+	 * The hash found in the reference database, near the extracted hash
+	 */
 	public long matchedNearHash;
 
+	/**
+	 * The extracted hash
+	 */
 	public long originalHash;
 
 	/**
@@ -64,7 +78,13 @@ public class PanakoMatch {
 	 * Frequency bin the query.
 	 */
 	public int queryF1;
-	
+
+	/**
+	 * Calculates the difference between
+	 * the time of the found matching fingerprint and the extracted
+	 * fingerprint.
+	 * @return The time difference between query and reference
+	 */
 	public int deltaT() {
 		return matchTime - queryTime;
 	}

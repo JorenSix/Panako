@@ -56,7 +56,12 @@ import be.panako.util.TimeUnit;
  */
 public class Delete extends Application {
 	private final static Logger LOG = Logger.getLogger(Delete.class.getName());
-	
+
+	/**
+	 * Default constructor
+	 */
+	public Delete(){}
+
 	@Override
 	public void run(final String... args) {
 		int processors = availableProcessors();

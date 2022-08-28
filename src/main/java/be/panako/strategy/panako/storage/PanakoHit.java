@@ -34,14 +34,45 @@
 
 package be.panako.strategy.panako.storage;
 
+/**
+ * A hit describes a match between a fingerprint and a near match in the reference database.
+ *
+ */
 public class PanakoHit{
+	/**
+	 * The fingerprint hash that was used in the query
+	 */
 	public final long originalHash;
+
+	/**
+	 * The near fingerprint hash found in the reference database
+	 */
 	public final long matchedNearHash;
-	
+
+	/**
+	 * The time index in the
+	 */
 	public final int t;
+
+	/**
+	 * The frequency index at the matching location
+	 */
 	public final int f;
+
+	/**
+	 * The internal resource identifier
+	 */
 	public final int resourceID;
-	
+
+	/**
+	 * Create a new hit between an extracted hash and a matched
+	 * near hash in the reference database
+	 * @param originalHash The original extracted hash from the query
+	 * @param matchedNearHash The matched hash in the reference database.
+	 * @param t The time component of the fingerprint in the ref database.
+	 * @param resourceID The resource identifier connected to the fingerprint in the ref database.
+	 * @param f The frequency component of the fingerprint in the ref database.
+	 */
 	public PanakoHit(long originalHash, long matchedNearHash,long t, long resourceID, long f) {
 		this.originalHash = originalHash;
 		this.matchedNearHash = matchedNearHash;

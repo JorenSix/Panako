@@ -87,7 +87,11 @@ public class OlafEventPointProcessor implements AudioProcessor {
 	private final float[] maxHorizontal;
 	
 	//private final int maxFingerprintsPerEventPoint = 10;
-	
+
+	/**
+	 * Create a new event point processor for this fft size
+	 * @param fftSize The size of the fft
+	 */
 	public OlafEventPointProcessor(final int fftSize){
 		fft = new FFT(fftSize, new HammingWindow());		
 		
@@ -188,7 +192,11 @@ public class OlafEventPointProcessor implements AudioProcessor {
 		
 		return true;
 	}
-	
+
+	/**
+	 * Return the extracted magnitudes
+	 * @return Return the extracted magnitudes
+	 */
 	public float[] getMagnitudes(){
 		return magnitudes[magnitudesIndex];
 	}
@@ -213,11 +221,19 @@ public class OlafEventPointProcessor implements AudioProcessor {
 	public void processingFinished() {
 		packEventPointsIntoFingerprints();
 	}
-	
+
+	/**
+	 * Returns the extracted fingerprints.
+	 * @return Returns the extracted fingerprints.
+	 */
 	public List<OlafFingerprint> getFingerprints(){
 		return fingerprints;
 	}
 
+	/**
+	 * Returns the extracted event points.
+	 * @return Returns the extracted event points.
+	 */
 	public List<OlafEventPoint> getEventPoints() {
 		return eventPoints;
 	}
@@ -268,6 +284,10 @@ public class OlafEventPointProcessor implements AudioProcessor {
 		}
 	}
 
+	/**
+	 * Reset the state of the extractor to the initial state.
+	 * Forgets any information of before.
+	 */
 	public void reset() {
 		eventPoints.clear();
 		fingerprints.clear();

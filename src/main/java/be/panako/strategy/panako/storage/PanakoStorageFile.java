@@ -46,6 +46,9 @@ import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
 
+/**
+ * Stores fingerprints in flat files.
+ */
 public class PanakoStorageFile implements PanakoStorage {
 	
 	/**
@@ -59,6 +62,7 @@ public class PanakoStorageFile implements PanakoStorage {
 	private static final Object mutex = new Object();
 
 	/**
+	 * Uses a singleton pattern.
 	 * @return Returns or creates a storage instance. This should be a thread
 	 *         safe operation.
 	 */
@@ -77,7 +81,9 @@ public class PanakoStorageFile implements PanakoStorage {
 	final Map<Long,List<long[]>> storeQueue;
 	final File storeDir;
 
-	
+	/**
+	 * Create a new file storage
+	 */
 	public PanakoStorageFile() {
 		String folder = Config.get(Key.PANAKO_CACHE_FOLDER);
 		folder = FileUtils.expandHomeDir(folder);
@@ -117,8 +123,19 @@ public class PanakoStorageFile implements PanakoStorage {
 		
 		return metaData;
 	}
-	
-	
+
+	@Override
+	public void printStatistics(boolean detailedStats) {
+
+	}
+
+	@Override
+	public void deleteMetadata(long resourceID) {
+		String path = FileUtils.combine(storeDir.getAbsolutePath(),resourceID + "_meta_data.txt");
+		FileUtils.rm(path);
+	}
+
+
 	public void addToStoreQueue(long fingerprintHash, int resourceIdentifier, int t1,int f1) {
 		long[] data = {fingerprintHash,resourceIdentifier,t1,f1};
 		long threadID = Thread.currentThread().getId();
@@ -126,7 +143,12 @@ public class PanakoStorageFile implements PanakoStorage {
 			storeQueue.put(threadID, new ArrayList<long[]>());
 		storeQueue.get(threadID).add(data);
 	}
-	
+
+	/**
+	 * Takes a list of fingerprint data items and turns it into a string
+	 * @param queue The queue with fingerprint data
+	 * @return A formatted string used in the file
+	 */
 	public String storeQueueToString(List<long[]> queue) {		
 		//sort by hash asc
 		//storeQueue.sort((a, b) -> Long.valueOf(a[0]).compareTo(b[0]));
@@ -143,8 +165,8 @@ public class PanakoStorageFile implements PanakoStorage {
 		
 		return sb.toString();
 	}
-	
-	public String storeQueueToString( ) {
+
+	private String storeQueueToString( ) {
 		if(storeQueue.isEmpty()) return null;
 		long threadID = Thread.currentThread().getId();
 		if(!storeQueue.containsKey(threadID)) return null;
@@ -175,7 +197,12 @@ public class PanakoStorageFile implements PanakoStorage {
 		String path = FileUtils.combine(storeDir.getAbsolutePath(),resourceIdentifier + ".tdb");
 		FileUtils.writeFile(fingerprintsAsString, path);
 	}
-	
+
+	/**
+	 * Parse a line from a file with fingerprints.
+	 * @param line A line from a fingerprint file with "fingerprintHash resourceIdentifier t1 f1" format.
+	 * @return The line parsed as a long array.
+	 */
 	public long[] dataFromLine(String line) {
 		String[] data = line.split(" ");
 		long[] dataArray = {Long.valueOf(data[0]),Long.valueOf(data[1]),Long.valueOf(data[2]),Long.valueOf(data[3])};
@@ -194,6 +221,16 @@ public class PanakoStorageFile implements PanakoStorage {
 	@Override
 	public void processQueryQueue(Map<Long, List<PanakoHit>> matchAccumulator, int range,
 			Set<Integer> resourcesToAvoid) {
+
+	}
+
+	@Override
+	public void addToDeleteQueue(long fingerprintHash, int resourceIdentifier, int t1, int f1) {
+
+	}
+
+	@Override
+	public void processDeleteQueue() {
 
 	}
 

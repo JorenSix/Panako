@@ -35,6 +35,9 @@
 
 package be.panako.strategy.panako;
 
+/**
+ * An event point is a local peak in a spectral representation.
+ */
 public class PanakoEventPoint {
 	
 	/**

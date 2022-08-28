@@ -32,12 +32,6 @@
 *                                                                          *
 ****************************************************************************/
 
-
-
-
-
-
-
 package be.panako.util;
 
 /**
@@ -74,6 +68,9 @@ package be.panako.util;
  * @author Doug Lea
  */
 public enum TimeUnit {
+    /**
+     * ns
+     */
     NANOSECONDS {
         public double toNanos(double d)   { return d; }
         public double toMicros(double d)  { return d/(C1/C0); }
@@ -84,6 +81,9 @@ public enum TimeUnit {
         public double toDays(double d)    { return d/(C6/C0); }
         public double convert(double d, TimeUnit u) { return u.toNanos(d); }
     },
+    /**
+     * micros
+     */
     MICROSECONDS {
         public double toNanos(double d)   { return d * C1/C0; }
         public double toMicros(double d)  { return d; }
@@ -94,6 +94,9 @@ public enum TimeUnit {
         public double toDays(double d)    { return d/(C6/C1); }
         public double convert(double d, TimeUnit u) { return u.toMicros(d); }
     },
+    /**
+     * millis
+     */
     MILLISECONDS {
         public double toNanos(double d)   { return d * C2/C0; }
         public double toMicros(double d)  { return d * C2/C1; }
@@ -104,6 +107,9 @@ public enum TimeUnit {
         public double toDays(double d)    { return d/(C6/C2); }
         public double convert(double d, TimeUnit u) { return u.toMillis(d); }
     },
+    /**
+     * seconds
+     */
     SECONDS {
         public double toNanos(double d)   { return d *  C3/C0; }
         public double toMicros(double d)  { return d *  C3/C1; }
@@ -114,6 +120,9 @@ public enum TimeUnit {
         public double toDays(double d)    { return d/(C6/C3); }
         public double convert(double d, TimeUnit u) { return u.toSeconds(d); }
     },
+    /**
+     * minutes
+     */
     MINUTES {
         public double toNanos(double d)   { return d * C4/C0; }
         public double toMicros(double d)  { return d * C4/C1; }
@@ -124,6 +133,9 @@ public enum TimeUnit {
         public double toDays(double d)    { return d/(C6/C4); }
         public double convert(double d, TimeUnit u) { return u.toMinutes(d); }
     },
+    /**
+     * hours
+     */
     HOURS {
         public double toNanos(double d)   { return d * C5/C0; }
         public double toMicros(double d)  { return d * C5/C1; }
@@ -134,6 +146,9 @@ public enum TimeUnit {
         public double toDays(double d)    { return d/(C6/C5); }
         public double convert(double d, TimeUnit u) { return u.toHours(d); }
     },
+    /**
+     * days
+     */
     DAYS {
         public double toNanos(double d)   { return d * C6/C0; }
         public double toMicros(double d)  { return d * C6/C1; }

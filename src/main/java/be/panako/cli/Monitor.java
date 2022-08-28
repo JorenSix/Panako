@@ -52,7 +52,11 @@ import be.tarsos.dsp.util.AudioResourceUtils;
  */
 public class Monitor extends Application implements QueryResultHandler {
 
-	
+	/**
+	 * Default constructor
+	 */
+	public Monitor(){}
+
 	@Override
 	public void run(String... args) {
 		String inputResource = null;

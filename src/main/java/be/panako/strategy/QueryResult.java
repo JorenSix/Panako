@@ -32,19 +32,13 @@
 *                                                                          *
 ****************************************************************************/
 
-
-
-
-
-
 package be.panako.strategy;
 
 /**
  * A data class representing a query result
  */
 public class QueryResult {
-	
-	//query info
+
 	/**
 	 * The path of the query
 	 */
@@ -99,17 +93,25 @@ public class QueryResult {
 	public final double percentOfSecondsWithMatches;
 	
 	/**
+	 * Create a new query result data class.
+	 *
+	 * @param queryPath
+	 * 			  The path of a query
 	 * @param queryStart
 	 *            The start time offset in the query. The match is found at
 	 *            <code>queryTimeOffsetStart+time</code>.
 	 * @param queryStop
 	 *            The stop time offset of the query.
+	 * @param refPath
+	 *            The path of the reference stored in the database.
 	 * @param refIdentifier
 	 *            The internal identifier of the matched audio
 	 * @param score
 	 *            The score for the match
 	 * @param refStart
 	 *            The starting position in the matched audio, in seconds.
+	 * @param refStop
+	 *            The stopping position in the matched audio, in seconds.
 	 * @param timeFactor
 	 *            The factor (percentage) of change in time. 110 means 10%
 	 *            speedup compared to the reference. 90 means 10% slower than
@@ -149,23 +151,14 @@ public class QueryResult {
 		
 		this.percentOfSecondsWithMatches = percentOfSecondsWithMatches;
 	}
-	
-	
-	
-	public QueryResult(String query, double queryStart, double queryStop, String refIdentifier, String refPath, int score,
-			double refStart, double timeFactor, double frequencyFactor) {
-		this(query,queryStart,queryStop,refPath,refIdentifier,refStart,0,score,timeFactor,frequencyFactor,0);
-	}
 
-
-/*
-	public QueryResult(String queryPath,double queryStart,double queryStop, String refPath, String refIdentifier, double refStart, double refStop, double score,double timeFactor, double frequencyFactor){
-		this( queryPath, queryStart, queryStop,  refPath,  refIdentifier,  refStart,  refStop,  score, timeFactor,  frequencyFactor,0);
-	}
-*/
-
-
-
+	/**
+	 * Create a new query result indicating an empty match.
+	 * @param query The query
+	 * @param queryStart  The start time offset in the query. The match is found at <code>queryTimeOffsetStart+time</code>.
+	 * @param queryStop The stop time offset of the query.
+	 * @return  An empty query result.
+	 */
 	public static QueryResult emptyQueryResult(String query,double queryStart,double queryStop){
 		return new QueryResult(query,queryStart,queryStop,null, null, -1, -1,-1,-1,-1,0);
 	}

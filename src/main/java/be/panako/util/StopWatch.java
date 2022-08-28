@@ -65,6 +65,7 @@ public final class StopWatch {
 	}
 
 	/**
+	 * How many ticks have passed (in milliseconds).
 	 * @return The number of ticks passed between initialization and the call to
 	 *         <code>ticksPassed</code>. In milliseconds or 10^-3 seconds.
 	 */
@@ -73,6 +74,7 @@ public final class StopWatch {
 	}
 
 	/**
+	 * How many ticks have passed (in nanoseconds).
 	 * @return The number of ticks passed between initialization and the call to
 	 *         <code>ticksPassed</code>. In nanoseconds or 10^-9 seconds.
 	 */
@@ -130,6 +132,10 @@ public final class StopWatch {
 		return result;		
 	}
 
+	/**
+	 * Creates a formatted string from the time value that is passed.
+	 * @return a formatted string.
+	 */
 	public String formattedToString() {
 		long ticksPassed = ticksPassed();
 		long nanoTicksPassed = nanoTicksPassed();
@@ -142,7 +148,7 @@ public final class StopWatch {
 			formatString = "%.2f ms";
 			value = ticksPassed;
 		} else if (nanoTicksPassed >= 1000) {
-			formatString = "%.2f µs";
+			formatString = "%.2f micros";
 			value = nanoTicksPassed / 1000.0;
 		} else {
 			formatString = "%.2f ns";
@@ -150,7 +156,12 @@ public final class StopWatch {
 		}
 		return String.format(Locale.US, formatString, value);
 	}
-	
+
+	/**
+	 * Return a formatted string for a time duration in seconds so from 61s => 1m:1s
+	 * @param secondsPassed The duration to format.
+	 * @return A formatted string in h:m:s:ms format
+	 */
 	public static String formattedToString(double secondsPassed){
 		int hours = (int) TimeUnit.HOURS.convert(secondsPassed, TimeUnit.SECONDS);
 		int minutes = (int) TimeUnit.MINUTES.convert(secondsPassed - hours * 3600, TimeUnit.SECONDS);

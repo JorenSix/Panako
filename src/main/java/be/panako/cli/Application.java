@@ -50,6 +50,11 @@ import be.panako.util.Key;
 public abstract class Application {	
 	private final static Logger LOG = Logger.getLogger(Application.class.getName());
 
+	/**
+	 * Default constructor
+	 */
+	public  Application(){}
+
 	 /**
 	  * Run a command line application with a set of arguments
      * @param args

@@ -66,10 +66,20 @@ import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 import be.tarsos.dsp.util.PitchConverter;
 
+/**
+ * The main interface to the Panako implementation
+ */
 public class PanakoStrategy extends Strategy {
 	private static final int MAX_TIME = 5_000_000;
 	
 	private final static Logger LOG = Logger.getLogger(PanakoStrategy.class.getName());
+
+	/**
+	 * Create a new instance
+	 */
+	public PanakoStrategy(){
+
+	}
 	
 	@Override
 	public double store(String resource, String description) {
@@ -488,7 +498,7 @@ public class PanakoStrategy extends Strategy {
 
 	@Override
 	public void printStorageStatistics() {
-		PanakoStorageKV.getInstance().entries(true);
+		PanakoStorageKV.getInstance().printStatistics(true);
 	}
 
 	@Override
@@ -549,10 +559,6 @@ public class PanakoStrategy extends Strategy {
 			sb.append("\n");
 		}
 		System.out.println(sb);
-	}
-	
-	public String name() {
-		return "Panako";
 	}
 
 	@Override

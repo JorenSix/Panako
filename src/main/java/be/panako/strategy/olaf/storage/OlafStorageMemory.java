@@ -58,6 +58,7 @@ public class OlafStorageMemory implements OlafStorage {
 	private static final Object mutex = new Object();
 
 	/**
+	 * Uses a singleton pattern.
 	 * @return Returns or creates a storage instance. This should be a thread
 	 *         safe operation.
 	 */
@@ -77,7 +78,10 @@ public class OlafStorageMemory implements OlafStorage {
 	private final HashMap<Long, OlafResourceMetadata> resourceMap;
 	
 	final Map<Long,List<Long>> queryQueue;
-	
+
+	/**
+	 * Create a new empty memory storage instance
+	 */
 	public OlafStorageMemory() {
 		fingerprints = new TreeMap<>();
 		resourceMap = new HashMap<>();
@@ -115,7 +119,17 @@ public class OlafStorageMemory implements OlafStorage {
 	public void processStoreQueue() {
 		//NOOP
 	}
-	
+
+	@Override
+	public void clearStoreQueue() {
+		//noop
+	}
+
+	@Override
+	public void printStatistics(boolean printDetailedStats) {
+
+	}
+
 	public void addToQueryQueue(long queryHash) {
 		long threadID = Thread.currentThread().getId();
 		if(!queryQueue.containsKey(threadID))

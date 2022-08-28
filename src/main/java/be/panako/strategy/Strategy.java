@@ -47,8 +47,12 @@ import be.panako.util.Key;
  * The main interface to an acoustic fingerprinting strategy or algorithm. The main tasks are to store, query, delete audio files.
  */
 public abstract class Strategy {
-	
-	
+
+	/**
+	 * Default constructor
+	 */
+	public  Strategy(){}
+
 	/**
 	 * Store an audio file in the data store. The name of the resource is used to extract a
 	 * numerical identifier. The description is arbitrary.
@@ -62,6 +66,7 @@ public abstract class Strategy {
 	 * Remove an audio file from the data store. The name of the resource is used to extract a
 	 * numerical identifier.
 	 * @param resource The path name of the audio resource.
+	 * @return The duration of the audio in seconds.
 	 */
 	public abstract double delete(String resource);
 

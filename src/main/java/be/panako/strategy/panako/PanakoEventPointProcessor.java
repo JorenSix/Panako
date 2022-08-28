@@ -49,6 +49,9 @@ import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
 import be.ugent.jgaborator.JGaborator;
 
+/**
+ * A TarsosDSP AudioProcessor to extract event points in a spectral representation.
+ */
 public class PanakoEventPointProcessor implements AudioProcessor {
 
 	private final JGaborator gaborator;
@@ -84,7 +87,11 @@ public class PanakoEventPointProcessor implements AudioProcessor {
 	private final float[] maxHorizontal;
 	
 	//private final int maxFingerprintsPerEventPoint = 10;
-	
+
+	/**
+	 * Create a new event point extractor.
+	 * @param fftSize The size of the fft to use
+	 */
 	public PanakoEventPointProcessor(final int fftSize){
 		
 		int stepSize = Config.getInt(Key.PANAKO_AUDIO_BLOCK_SIZE);
@@ -132,7 +139,11 @@ public class PanakoEventPointProcessor implements AudioProcessor {
 		
 		return true;
 	}
-	
+
+	/**
+	 * Find and return the latest magnitudes
+	 * @return the current magnitudes.
+	 */
 	public float[] getMagnitudes(){
 		return magnitudes[magnitudesIndex];
 	}
@@ -219,11 +230,19 @@ public class PanakoEventPointProcessor implements AudioProcessor {
 		
 		packEventPointsIntoFingerprints();
 	}
-	
+
+	/**
+	 * Get the extracted fingerprints.
+	 * @return The extracted fingerprints
+	 */
 	public List<PanakoFingerprint> getFingerprints(){
 		return fingerprints;
 	}
 
+	/**
+	 * Get the list of extracted event points
+	 * @return the list of event points.
+	 */
 	public List<PanakoEventPoint> getEventPoints() {
 		return eventPoints;
 	}
@@ -274,6 +293,9 @@ public class PanakoEventPointProcessor implements AudioProcessor {
 		}
 	}
 
+	/**
+	 * Reset te state of the extractor to restart extraction.
+	 */
 	public void reset() {
 		eventPoints.clear();
 		fingerprints.clear();
@@ -283,6 +305,10 @@ public class PanakoEventPointProcessor implements AudioProcessor {
 		previousMaxMagnitudes.clear();
 	}
 
+	/**
+	 * The latency of the gabor extraction step in samples.
+	 * @return The latency in samples.
+	 */
 	public int latency() {
 		return gaborator.getLatency();
 	}

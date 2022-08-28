@@ -84,14 +84,10 @@ public class Panako {
 	 * For autocomplete, use a trie;
 	 */
 	private final Trie applicationTrie;
-	
-	public static Application currentApplication;
-	
-	public static Application getCurrentApplication(){
-		return currentApplication;
-	}
-	
 
+	/**
+	 * Create a new Panako application
+	 */
 	public Panako() {
 		//makes sure number formatting is always the same
 		java.util.Locale.setDefault(Locale.US);
@@ -210,7 +206,6 @@ public class Panako {
 				//show help for the application
 				app.printHelp();		
 			}else{
-				Panako.currentApplication = app;
 				if(app.needsStorage()){
 					
 					boolean storageIsAvailable = Strategy.getInstance().isStorageAvailable();
@@ -291,7 +286,13 @@ public class Panako {
 		}
 		return containsVersion;
 	}
-	
+
+	/**
+	 * Print a query result in a standard format to stdout.
+	 * @param r The result
+	 * @param task The task number
+	 * @param taskTotal The total number of tasks.
+	 */
 	public static void printQueryResult(QueryResult r,int task, int taskTotal){
 		String taskInfo = String.format("%d ; %d ; ", task,taskTotal);
 		String queryInfo = String.format("%s ; %.3f ; %.3f ; "     ,r.queryPath,r.queryStart   ,r.queryStop);
@@ -299,11 +300,18 @@ public class Panako {
 		String matchInfo = String.format("%.0f ; %.3f %% ; %.3f %%; %.2f",r.score    , r.timeFactor  ,r.frequencyFactor, r.percentOfSecondsWithMatches);
 		System.out.println(taskInfo + queryInfo+refInfo+matchInfo);
 	}
-	
+
+	/**
+	 * Print a query result
+	 * @param r The query result to print to std out
+	 */
 	public static void printQueryResult(QueryResult r){
 		printQueryResult(r, 0, 0);
 	}
-	
+
+	/**
+	 * The header to interpret a query result print
+	 */
 	public static void printQueryResultHeader(){
 		String header;
 		header = "Index; Total ; Query path;Query start (s);Query stop (s); Match path;Match id; Match start (s); Match stop (s); Match score; Time factor (%); Frequency factor(%); Seconds with match (%)";

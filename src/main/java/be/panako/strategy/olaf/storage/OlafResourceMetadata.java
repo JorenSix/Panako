@@ -41,6 +41,11 @@ package be.panako.strategy.olaf.storage;
 public class OlafResourceMetadata {
 
 	/**
+	 * Create an empty meta-data data-class.
+	 */
+	public OlafResourceMetadata(){}
+
+	/**
 	 * The number of fingerprints extracted for the audio
 	 */
 	public int numFingerprints;

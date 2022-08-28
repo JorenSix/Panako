@@ -42,6 +42,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+/**
+ * Stores fingerprints in memory.
+ */
 public class PanakoStorageMemory implements PanakoStorage {
 
 	/**
@@ -55,6 +58,7 @@ public class PanakoStorageMemory implements PanakoStorage {
 	private static final Object mutex = new Object();
 
 	/**
+	 * Uses a singleton pattern
 	 * @return Returns or creates a storage instance. This should be a thread
 	 *         safe operation.
 	 */
@@ -74,7 +78,10 @@ public class PanakoStorageMemory implements PanakoStorage {
 	private final HashMap<Long, PanakoResourceMetadata> resourceMap;
 	
 	final Map<Long,List<Long>> queryQueue;
-	
+
+	/**
+	 * Initializes a new memory storage instance.
+	 */
 	public PanakoStorageMemory() {
 		fingerprints = new TreeMap<>();
 		resourceMap = new HashMap<>();
@@ -96,7 +103,17 @@ public class PanakoStorageMemory implements PanakoStorage {
 	public PanakoResourceMetadata getMetadata(long identifier) {
 		return resourceMap.get(identifier);
 	}
-	
+
+	@Override
+	public void printStatistics(boolean detailedStats) {
+
+	}
+
+	@Override
+	public void deleteMetadata(long resourceID) {
+
+	}
+
 
 	@Override
 	public void addToStoreQueue(long fingerprintHash, int resourceIdentifier, int t1, int f1) {
@@ -158,5 +175,20 @@ public class PanakoStorageMemory implements PanakoStorage {
 			}
 		}
 		queue.clear();
+	}
+
+	@Override
+	public void addToDeleteQueue(long fingerprintHash, int resourceIdentifier, int t1, int f1) {
+
+	}
+
+	@Override
+	public void processDeleteQueue() {
+
+	}
+
+	@Override
+	public void clear() {
+
 	}
 }

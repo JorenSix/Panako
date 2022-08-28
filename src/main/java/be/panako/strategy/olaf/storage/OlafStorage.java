@@ -44,24 +44,85 @@ import java.util.Set;
  */
 public interface OlafStorage {
 
-
+	/**
+	 * Store meta-data for a resource
+	 * @param resourceID The identifier of the resource
+	 * @param resourcePath The path of the resource
+	 * @param duration The duration in seconds
+	 * @param numberOfFingerprints The number of fingerprints extracted
+	 */
 	void storeMetadata(long resourceID, String resourcePath, float duration, int numberOfFingerprints);
 
+	/**
+	 * Storing fingerprint hashes goes in batches,
+	 * @param fingerprintHash The fingerprint hash
+	 * @param resourceIdentifier The internal identifier of the resource
+	 * @param t1 The time associated with the fingerprint
+	 */
 	void addToStoreQueue(long fingerprintHash, int resourceIdentifier, int t1);
 
+	/**
+	 * Actually store the queued fingerprint hashes
+	 */
 	void processStoreQueue();
 
+	/**
+	 * Clears the currently pending fingerprints to store
+	 */
+	void clearStoreQueue();
+
+	/**
+	 * Print the storage statistics.
+	 * @param printDetailedStats print additional details or not
+	 */
+	void printStatistics(boolean printDetailedStats);
+
+
+	/**
+	 * Return meta-data for an identifier
+	 * @param identifier The internal identifier.
+	 * @return The associated meta-data or null.
+	 */
 	OlafResourceMetadata getMetadata(long identifier);
 
+	/**
+	 * Query operations are done in batches this method adds a fingerprint hash to the query queue
+	 * @param queryHash The hash to add to the queue
+	 */
 	void addToQueryQueue(long queryHash);
-	
+
+	/**
+	 * Actually query the database for the queued fingerprint hashes.
+	 * @param matchAccumulator Add the matches to this list
+	 * @param range The range determines how much the reference hashes might differ from the query hash
+	 * @param resourcesToAvoid For deduplication it might be of interest to filter out some resources.
+	 */
 	void processQueryQueue(Map<Long,List<OlafHit>> matchAccumulator,int range,Set<Integer> resourcesToAvoid);
 
+
+	/**
+	 * Adds a fingerprint hash to the delete queue.
+	 * @param fingerprintHash The hash to delete
+	 * @param resourceIdentifier The associated resource identifier
+	 * @param t1 The associated time index.
+	 */
 	void addToDeleteQueue(long fingerprintHash, int resourceIdentifier, int t1);
 
+	/**
+	 * Actually delete all queued hashes.
+	 */
 	void processDeleteQueue();
 
+	/**
+	 * Delete the meta-data associated with this resource identifier
+	 * @param resourceID The internal resource identifier.
+	 */
 	void deleteMetadata(long resourceID);
 
+	/**
+	 * Trie to delete everything from the database
+	 */
 	void clear();
+
+
 }

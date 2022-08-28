@@ -39,9 +39,19 @@ package be.panako.strategy.olaf;
  */
 public class OlafMatch {
 
+	/**
+	 * Initialize an empty match.
+	 */
+	public OlafMatch(){}
 
+	/**
+	 * The hash in the reference database which should be near to the query hash
+	 */
 	public long matchedNearHash;
 
+	/**
+	 * The query hash
+	 */
 	public long originalHash;
 
 	/**

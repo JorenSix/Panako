@@ -85,16 +85,12 @@ public enum PitchUnit {
 	}
 
 	/**
-	 * 
+	 *  The human name for this unit e.g. Hz to Hertz
 	 * @return A nicer description of the name of the unit.
 	 */
 	public String getHumanName() {
 		return humanName;
 	}
-	
-	
-
-	
 	
 	/**
 	 * Convert the given pitch in the given unit to this unit. E.g. following
@@ -218,7 +214,7 @@ public enum PitchUnit {
 	 * Defines where to start when converting a relative cent [0,1200[ value to
 	 * Hertz. E.g. if the default octave is 5 then 900 relative cents are
 	 * converted to 5 x 1200 + 900 = 6900 = 440Hz with the
-	 * {@link PitchUnit.REF_FREQ} at 8.175Hz.
+	 * PitchUnit.REF at 8.175Hz.
 	 */
 	private static final int DEFAULT_OCTAVE_OFFSET = 5 * 1200;// Absolute Cents
 

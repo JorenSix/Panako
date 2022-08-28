@@ -115,6 +115,7 @@ public final class FileUtils {
 	
 	
 	/**
+	 * Tries to find the runtime path
 	 * @return The path where the program is executed.
 	 */
 	public static String runtimeDirectory() {

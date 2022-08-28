@@ -241,7 +241,7 @@ public class LemireMinMaxFilter {
 		minVal[array.length-windowSize] = array[minFifo.peekFirst()];
 	}
 
-	/**
+	/*
 	 Should be moved to a unit test:
 	public static void main(String... args){
 		float[] data = {1,2,3,7,8,-7,12,13,7};

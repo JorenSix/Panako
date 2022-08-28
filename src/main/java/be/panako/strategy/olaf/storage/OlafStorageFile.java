@@ -62,6 +62,7 @@ public class OlafStorageFile implements OlafStorage {
 	private static final Object  mutex = new Object();
 
 	/**
+	 * Uses the singleton pattern
 	 * @return Returns or creates a storage instance. This should be a thread
 	 *         safe operation.
 	 */
@@ -131,7 +132,13 @@ public class OlafStorageFile implements OlafStorage {
 			storeQueue.put(threadID, new ArrayList<long[]>());
 		storeQueue.get(threadID).add(data);
 	}
-	
+
+	/**
+	 * Iterates all the hashes in the store queue and prints them into
+	 * a formatted string
+	 * @param queue The list of fingerprint information to print
+	 * @return The string representing the hashes.
+	 */
 	public String storeQueueToString(List<long[]> queue ) {		
 		//sort by hash asc
 		//storeQueue.sort((a, b) -> Long.valueOf(a[0]).compareTo(b[0]));
@@ -145,7 +152,12 @@ public class OlafStorageFile implements OlafStorage {
 		
 		return sb.toString();
 	}
-	
+
+	/**
+	 * Iterates all the hashes in the store queue and prints them into
+	 * a formatted string
+	 * @return The string representing the hashes.
+	 */
 	public String storeQueueToString( ) {
 		if(storeQueue.isEmpty()) return null;
 		long threadID = Thread.currentThread().getId();
@@ -175,7 +187,22 @@ public class OlafStorageFile implements OlafStorage {
 		String path = FileUtils.combine(storeDir.getAbsolutePath(),resourceIdentifier + ".tdb");
 		FileUtils.writeFile(fingerprintsAsString, path);
 	}
-	
+
+	@Override
+	public void clearStoreQueue() {
+
+	}
+
+	@Override
+	public void printStatistics(boolean printDetailedStats) {
+
+	}
+
+	/**
+	 * Parse a line stored in the file
+	 * @param line The line in the file
+	 * @return The data parsed as a series of long integers.
+	 */
 	public long[] dataFromLine(String line) {
 		String[] data = line.split(" ");
 		long[] dataArray = {Long.valueOf(data[0]),Long.valueOf(data[1]),Long.valueOf(data[2])};

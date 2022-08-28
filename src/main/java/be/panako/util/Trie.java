@@ -14,10 +14,13 @@ import java.util.Map.Entry;
  */
 public class Trie {
 
-    protected final Map<Character, Trie> children;
-    protected String value;
-    protected boolean terminal = false;
+    final Map<Character, Trie> children;
+    String value;
+    boolean terminal = false;
 
+    /**
+     * Creates an empty constructor
+     */
     public Trie() {
         this(null);
     }
@@ -27,7 +30,7 @@ public class Trie {
         children = new HashMap<Character, Trie>();
     }
 
-    protected void add(char c) {
+    void add(char c) {
         String val;
         if (this.value == null) {
             val = Character.toString(c);
@@ -37,6 +40,10 @@ public class Trie {
         children.put(c, new Trie(val));
     }
 
+    /**
+     * Add a word to the trie
+     * @param word the word or prefix to add
+     */
     public void insert(String word) {
         if (word == null) {
             throw new IllegalArgumentException("Cannot add null to a Trie");
@@ -51,6 +58,11 @@ public class Trie {
         node.terminal = true;
     }
 
+    /**
+     * Tries to find a word in the Trie
+     * @param word The word to search for
+     * @return Either an empty string or the found word.
+     */
     public String find(String word) {
         Trie node = this;
         for (char c : word.toCharArray()) {
@@ -62,6 +74,11 @@ public class Trie {
         return node.value;
     }
 
+    /**
+     * Complete a string with the prefixes from the
+     * @param prefix the prefix to expand.
+     * @return an expanded prefix.
+     */
     public Collection<String> autoComplete(String prefix) {
         Trie node = this;
         for (char c : prefix.toCharArray()) {
@@ -73,7 +90,7 @@ public class Trie {
         return node.allPrefixes();
     }
 
-    protected Collection<String> allPrefixes() {
+    Collection<String> allPrefixes() {
         List<String> results = new ArrayList<String>();
         if (this.terminal) {
             results.add(this.value);

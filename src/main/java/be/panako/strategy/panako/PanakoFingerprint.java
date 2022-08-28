@@ -46,21 +46,68 @@ import be.panako.util.Morton2D;
  * @author Joren Six
  */
 public class PanakoFingerprint {
-	
+
+	/**
+	 * The time component of the first event point
+	 */
 	public final int t1;
+
+	/**
+	 * The time component of the first event point
+	 */
 	public final int f1;
+
+	/**
+	 * The time component of the first event point
+	 */
 	public final float m1;
-	
+
+
+	/**
+	 * The time component of the second event point
+	 */
 	public final int t2;
+
+	/**
+	 * The frequency component of the second event point
+	 */
 	public final int f2;
+
+	/**
+	 * The magnitude component of the second event point
+	 */
 	public final float m2;
-	
+
+
+	/**
+	 * The time component of the third event point
+	 */
 	public final int t3;
+
+	/**
+	 * The frequency component of the third event point
+	 */
 	public final int f3;
+
+	/**
+	 * The magnitude component of the third event point
+	 */
 	public final float m3;
 	
 	private long hash;
-	
+
+	/**
+	 * Create a new fingerprint based on event point information
+	 * @param t1 The time component of the first event point
+	 * @param f1 The frequency component of the first event point
+	 * @param m1 The magnitude component of the first event point
+	 * @param t2 The time component of the second event point
+	 * @param f2 The frequency component of the second event point
+	 * @param m2 The magnitude component of the second event point
+	 * @param t3 The time component of the third event point
+	 * @param f3 The frequency component of the third event point
+	 * @param m3 The magnitude component of the third event point
+	 */
 	public PanakoFingerprint(int t1,int f1,float m1,int t2,int f2,float m2,int t3,int f3,float m3){
 		this.t1 = t1;
 		this.f1 = f1;
@@ -77,7 +124,13 @@ public class PanakoFingerprint {
 		assert t2 > t1;
 		assert t3 > t2;
 	}
-	
+
+	/**
+	 * Create a fingerprint based on the information of a hash
+	 * @param hash The hash (which can be partially decoded)
+	 * @param t1 The time component of the first event point
+	 * @param f1 The frequency component of the first event point
+	 */
 	public PanakoFingerprint(long hash,int t1,int f1){
 		this.hash = hash;
 		
@@ -92,8 +145,14 @@ public class PanakoFingerprint {
 		this.t3 = -1;
 		this.f3 = -1;
 		this.m3 = -1;
-	}	
-	
+	}
+
+	/**
+	 * Creates a new fingerprint based on three event points
+	 * @param e1 The first event point
+	 * @param e2 The second event point
+	 * @param e3 The third event point
+	 */
 	public PanakoFingerprint(PanakoEventPoint e1, PanakoEventPoint e2, PanakoEventPoint e3){
 		this(e1.t,e1.f,e1.m,  e2.t,e2.f,e2.m,  e3.t,e3.f,e3.m);
 	}
@@ -164,7 +223,11 @@ public class PanakoFingerprint {
 		
 		return hash;
 	}
-	
+
+	/**
+	 * Calculate a hash from the fingerprint components
+	 * @return The hash consisting of fingerprint components
+	 */
 	public long hash(){
 		if(hash!=0)
 			return hash;
@@ -234,14 +297,15 @@ public class PanakoFingerprint {
 	
 	/*
 	 * This is not completely consistent with the expected hash code / equals
-	 * behavior: It is very well possible that that two hashes collide, while
+	 * behavior: It is very well possible that two hashes collide, while
 	 * the fingerprints are not equal to each other. Implementing hash code makes
 	 * sure no identical fingerprints are added, but also that no collisions are
 	 * allowed. Take care when using sets.
 	 */
 	public int hashCode(){
+
 		//This is not completely consistent with the expected hash code / equals behavior:
-		//It is very well possible that that two hashes collide, while the fingerprints are not equal to each other.
+		//It is very well possible that two hashes collide, while the fingerprints are not equal to each other.
 		//Implementing hash code makes sure no identical fingerprints are added, but also that no collisions are
 		//allowed. Take care when using sets. 
 		return (int) hash();

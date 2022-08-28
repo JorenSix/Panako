@@ -115,7 +115,12 @@ public class OlafFingerprint {
 		assert t2 > t1;
 		assert t3 > t2;
 	}
-	
+
+	/**
+	 * Create a new fingerprint based on a hash and a time
+	 * @param hash The hash (from the reference database)
+	 * @param t1 The associated time info
+	 */
 	public OlafFingerprint(long hash,int t1){
 		this.hash = hash;
 		
@@ -141,7 +146,11 @@ public class OlafFingerprint {
 	public OlafFingerprint(OlafEventPoint e1, OlafEventPoint e2, OlafEventPoint e3){
 		this(e1.t,e1.f,e1.m,  e2.t,e2.f,e2.m,  e3.t,e3.f,e3.m);
 	}
-	
+
+	/**
+	 * The hash is calculated from fingerprint components.
+	 * @return The calculated hash.
+	 */
 	public long hash(){
 		if(hash!=0)
 			return hash;
@@ -168,7 +177,7 @@ public class OlafFingerprint {
 		//6 bits max
 		long diffT = t3 - t1;
 	    
-		//combine the hash components into a single 64 bit integer
+		//combine the hash components into a single 64-bit integer
 		hash = 
 				((diffT                &  ((1<<6)  -1)   ) << 0 ) +
 		        ((f1LargerThanF2       &  ((1<<1 ) -1)   ) << 6 ) +

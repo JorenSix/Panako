@@ -32,7 +32,6 @@
 *                                                                          *
 ****************************************************************************/
 
-
 package be.panako.strategy.olaf;
 
 import java.io.BufferedReader;
@@ -72,6 +71,11 @@ public class OlafStrategy extends Strategy {
 	private static final int MAX_TIME = 5_000_000;
 	
 	private final static Logger LOG = Logger.getLogger(OlafStrategy.class.getName());
+
+	/**
+	 * Create an instance
+	 */
+	public OlafStrategy(){}
 
 	private OlafStorage getDbInstance(){
 		final OlafStorage db;
@@ -135,24 +139,19 @@ public class OlafStrategy extends Strategy {
 
 	@Override
 	public double delete(String resource) {
-		throw new RuntimeException("Delete is currently not implemented for the OLAF strategy");
-	}
-
-	public double delete(String resource, String description) {
-
 		OlafStorage db = getDbInstance();
-		
+
 		List<OlafFingerprint> prints = toFingerprints(resource);
-		
+
 		int resourceID = FileUtils.getIdentifier(resource);
 		//delete
 		for(OlafFingerprint print : prints) {
-			long hash = print.hash();			
+			long hash = print.hash();
 			int printT1 = print.t1;
 			db.addToDeleteQueue(hash, resourceID, printT1);
 		}
 		db.processDeleteQueue();
-		
+
 		//delete meta-data as well
 		float duration = 0;
 		if(prints.size() != 0) {
@@ -160,17 +159,22 @@ public class OlafStrategy extends Strategy {
 		}else {
 			LOG.warning("Warning: no prints extracted for " + resource);
 		}
-	
-		
+
 		db.deleteMetadata((long) resourceID);
-		
-		//storage is done: 
+
+		//storage is done:
 		//try to clear memory
 		System.gc();
-		
+
 		return duration;
 	}
-	
+
+	/**
+	 * For the resource with a certain path, either use a cached file with fingerprints or
+	 * extract fingerprints.
+	 * @param resource The path to the audio resource
+	 * @return A list of fingerprints
+	 */
 	public List<OlafFingerprint> toFingerprints(String resource){
 		
 		if(Config.getBoolean(Key.OLAF_USE_CACHED_PRINTS)) {
@@ -193,8 +197,9 @@ public class OlafStrategy extends Strategy {
 		
 		return toFingerprints(resource,0,MAX_TIME);
 	}
-	
-	public List<OlafFingerprint> toFingerprints(String resource,double startTimeOffset,double numberOfSeconds){
+
+
+	private List<OlafFingerprint> toFingerprints(String resource,double startTimeOffset,double numberOfSeconds){
 		int samplerate, size, overlap;
 		samplerate = Config.getInt(Key.OLAF_SAMPLE_RATE);
 		size = Config.getInt(Key.OLAF_SIZE);
@@ -246,7 +251,7 @@ public class OlafStrategy extends Strategy {
 	}
 
 
-	public void query(String query, int maxNumberOfResults, Set<Integer> avoid, QueryResultHandler handler, double startTimeOffset,double numberOfSeconds ) {
+	private void query(String query, int maxNumberOfResults, Set<Integer> avoid, QueryResultHandler handler, double startTimeOffset,double numberOfSeconds ) {
 		
 		final String queryPath ;
 		List<OlafFingerprint> prints;
@@ -489,7 +494,13 @@ public class OlafStrategy extends Strategy {
 
 	@Override
 	public void printStorageStatistics() {
-		OlafStorageKV.getInstance().entries(true);
+		final OlafStorage db;
+		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
+			db = OlafStorageKV.getInstance();
+		}else {
+			db = OlafStorageMemory.getInstance();
+		}
+		db.printStatistics(true);
 	}
 
 	@Override
@@ -518,9 +529,12 @@ public class OlafStrategy extends Strategy {
 		return prints;
 	}
 
+	/**
+	 * Load cached fingerprints into the key value store
+	 */
 	public void load() {
-		OlafStorageKV db = OlafStorageKV.getInstance();
-		OlafStorageFile fileDb = OlafStorageFile.getInstance();
+		OlafStorage db = OlafStorageKV.getInstance();
+		OlafStorage fileDb = OlafStorageFile.getInstance();
 		
 		String folder = Config.get(Key.OLAF_CACHE_FOLDER);
 		folder = FileUtils.expandHomeDir(folder);
@@ -531,10 +545,10 @@ public class OlafStrategy extends Strategy {
 		
 		for(String fingerprintFilePath : tdbFiles) {
 			
-			int resourceIdentifer = Integer.valueOf(FileUtils.basename(fingerprintFilePath).replace(".tdb",""));
+			int resourceIdentifier = Integer.valueOf(FileUtils.basename(fingerprintFilePath).replace(".tdb",""));
 			
-			if(null != db.getMetadata(resourceIdentifer)) {
-				System.out.printf("%d/%d SKIPPED %s, db already contains resource %d\n",index,tdbFiles.size(),fingerprintFilePath,resourceIdentifer);
+			if(null != db.getMetadata(resourceIdentifier)) {
+				System.out.printf("%d/%d SKIPPED %s, db already contains resource %d\n",index,tdbFiles.size(),fingerprintFilePath,resourceIdentifier);
 				continue;
 			}
 			
@@ -543,18 +557,18 @@ public class OlafStrategy extends Strategy {
 				db.addToStoreQueue(fingerprintData[0], (int) fingerprintData[1], (int) fingerprintData[2]);
 			}
 			
-			String metaDataFilePath = FileUtils.combine(folder,String.format("%d_meta_data.txt", resourceIdentifer));
+			String metaDataFilePath = FileUtils.combine(folder,String.format("%d_meta_data.txt", resourceIdentifier));
 			if(FileUtils.exists(metaDataFilePath)) {
 				db.processStoreQueue();
 				
-				OlafResourceMetadata metaData = fileDb.getMetadata(resourceIdentifer);
-				db.storeMetadata(resourceIdentifer, metaData.path, (float) metaData.duration, metaData.numFingerprints);
+				OlafResourceMetadata metaData = fileDb.getMetadata(resourceIdentifier);
+				db.storeMetadata(resourceIdentifier, metaData.path, (float) metaData.duration, metaData.numFingerprints);
 				//FileUtils.rm(metaDataFilePath);
 				//FileUtils.rm(fingerprintFilePath);
-				System.out.printf("%d/%d Stored %d fingerprints and meta-data for resource %d \n",index,tdbFiles.size(),fingerprints.size(),resourceIdentifer);
+				System.out.printf("%d/%d Stored %d fingerprints and meta-data for resource %d \n",index,tdbFiles.size(),fingerprints.size(),resourceIdentifier);
 			}else {
 				db.clearStoreQueue();
-				System.out.printf("%d/%d DID NOT STORE FINGEPRINTS: Could not find meta data file for %d, expected a file at: %s\n",index,tdbFiles.size(),resourceIdentifer,metaDataFilePath);
+				System.out.printf("%d/%d DID NOT STORE FINGERPRINTS: Could not find meta data file for %d, expected a file at: %s\n",index,tdbFiles.size(),resourceIdentifier,metaDataFilePath);
 			}
 			
 			index++;
@@ -605,10 +619,6 @@ public class OlafStrategy extends Strategy {
 			System.out.print(printString);
 		}
 		
-	}
-	
-	public String name() {
-		return "Olaf";
 	}
 
 	@Override

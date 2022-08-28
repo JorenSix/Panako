@@ -266,8 +266,17 @@ public enum Key{
 	PANAKO_FP_MAX_TIME_DIST(33),
 	
 	//audio dispatcher config
+	/**
+	 * The block size for the audio processor (in samples)
+	 */
 	PANAKO_AUDIO_BLOCK_SIZE(8192),
+	/**
+	 * The overlap in the audio processor (in samples)
+	 */
 	PANAKO_AUDIO_BLOCK_OVERLAP(0),
+	/**
+	 * The audio sample frequency in Hz
+	 */
 	PANAKO_SAMPLE_RATE(16000),
 	
 	//Spectral tranform configuration
@@ -300,8 +309,14 @@ public enum Key{
 	 */
 	PANAKO_QUERY_RANGE(2),
 
+	/**
+	 * Before filtering hits in the matching step, a true positive match should have at least this amount of hits
+	 */
+	PANAKO_MIN_HITS_UNFILTERED(10),
 
-	PANAKO_MIN_HITS_UNFILTERED(10), 
+	/**
+	 * After filtering hits in the matching step, a true positive  match should have at least this amount of hits
+	 */
 	PANAKO_MIN_HITS_FILTERED(5),
 	/**
 	 * Matching config: This limits the
@@ -359,16 +374,34 @@ public enum Key{
 
 	String defaultValue;
 
+	/**
+	 * Initialize a new key with default value as a string
+	 * @param defaultValue The default value
+	 */
 	Key(String defaultValue){
 		this.defaultValue = defaultValue;
 	}
 
+	/**
+	 * Initialize a new key with default value as an integer
+	 * @param defaultValue The default value
+	 */
 	Key(int defaultValue){
 		this(String.valueOf(defaultValue));
 	}
+
+	/**
+	 * Initialize a new key with default value as a double
+	 * @param defaultValue The default value
+	 */
 	Key(double defaultValue){
 		this(String.valueOf(defaultValue));
 	}
+
+	/**
+	 * Get the default value for this configuration
+	 * @return The default value
+	 */
 	public String getDefaultValue() {
 		return defaultValue;
 	}		
