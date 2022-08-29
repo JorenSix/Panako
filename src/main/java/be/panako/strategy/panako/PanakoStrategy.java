@@ -379,7 +379,7 @@ public class PanakoStrategy extends Strategy {
 			 
 			 //only continue processing when time factor is reasonable
 			 if(timeFactor > Config.getFloat(Key.PANAKO_MIN_TIME_FACTOR) && timeFactor < Config.getFloat(Key.PANAKO_MAX_TIME_FACTOR) && 
-					 frequencyFactor> Config.getFloat(Key.PANAKO_MIN_FREQ_FACTOR) &&  timeFactor < Config.getFloat(Key.PANAKO_MAX_FREQ_FACTOR)	 ) {
+					 frequencyFactor> Config.getFloat(Key.PANAKO_MIN_FREQ_FACTOR) &&  frequencyFactor < Config.getFloat(Key.PANAKO_MAX_FREQ_FACTOR)	 ) {
 				 List<PanakoMatch> filteredHits = new ArrayList<>();
 				 
 				 hitlist.forEach( hit ->{				 
