@@ -1,0 +1,6 @@
+h2(#contribute). Contribute to Panako
+
+There are several ways to contribute to Panako. The first is to use Panako and report issues or feature requests using the "Github Issue tracker":https://github.com/JorenSix/Panako/issues. Bug reports are greatly appreciated, but keep in mind the note below on responsiveness.
+Another way to contribute is to dive into the code, fork and improve Panako yourself. Merge requests with additional documentation, bug fixes or new features will be handled and end up in the main branch if correctness, maintainability and simplicity are kept in check. However, keep in mind the note below:
+
+My time to spend on Panako is limited and goes in __activity bursts__. If an issue is raised it might take a couple of months before I am able to spend time on it during the next burst of activity. A period of relative silence does not mean your feedback is not greatly valued!
