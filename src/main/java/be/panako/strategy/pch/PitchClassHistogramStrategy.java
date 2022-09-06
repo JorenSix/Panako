@@ -264,4 +264,9 @@ public class PitchClassHistogramStrategy extends Strategy {
 		
 	}
 
+	@Override
+	public String metadata(String path) {
+		return null;
+	}
+
 }

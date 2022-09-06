@@ -234,6 +234,21 @@ public enum Key{
 	 */
 	OLAF_QUERY_RANGE(2),
 
+	/**
+	 * The list of hits is divided into a starting and ending part.
+	 * The max length of this list is determined here.
+	 *
+	 * */
+	OLAF_HIT_PART_MAX_SIZE(250),
+
+	/**
+	 * The list of hits is divided into a starting and ending part.
+	 * The start and ending parts are, by default, one fifth of the total length.
+	 * To use the full list divide by 2
+	 * See: https://github.com/JorenSix/Panako/issues/36
+	 * */
+	OLAF_HIT_PART_DIVIDER(5),
+
 
 
 	///////////////////PANAKO config
@@ -315,6 +330,24 @@ public enum Key{
 	PANAKO_MIN_HITS_UNFILTERED(10),
 
 	/**
+	 * While filtering the hit list is divided into a first and last part.
+	 * See FIG 1 of https://archives.ismir.net/ismir2021/latebreaking/000039.pdf
+	 * This List length is max this size for performance reasons.
+	 * Set to Integer.MAX_VALUE and PANAKO_HIT_PART_DIVIDER to 2 to
+	 * potentially increase retrieval rate with a performance cost.
+	 */
+	PANAKO_HIT_PART_MAX_SIZE(250),
+
+	/**
+	 * While filtering the hit list is divided into a first and last part.
+	 * By default the first fifth and last fifth are taken into consideration.
+	 * To use the full list, divide by 2.
+	 * https://github.com/JorenSix/Panako/issues/36
+	 */
+	PANAKO_HIT_PART_DIVIDER(5),
+
+
+	/**
 	 * After filtering hits in the matching step, a true positive  match should have at least this amount of hits
 	 */
 	PANAKO_MIN_HITS_FILTERED(5),
@@ -369,8 +402,7 @@ public enum Key{
 	/**
 	 * Use the cached fingerprints to skip fingerprint extraction if possible
 	 */
-	PANAKO_USE_CACHED_PRINTS("TRUE"),
-	;
+	PANAKO_USE_CACHED_PRINTS("TRUE");
 
 	String defaultValue;
 

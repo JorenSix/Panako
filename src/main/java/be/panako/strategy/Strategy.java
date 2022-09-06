@@ -174,4 +174,8 @@ public abstract class Strategy {
 	 * Clear <b>all</b> information from the key value store
 	 */
 	public abstract void clear();
+
+
+	public abstract String metadata(String path);
+
 }

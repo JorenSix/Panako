@@ -128,7 +128,7 @@ public class OlafStrategy extends Strategy {
 		}
 		int numberOfPrints = prints.size();
 		
-		db.storeMetadata((long) resourceID,resource,duration,numberOfPrints);
+		db.storeMetadata(resourceID,resource,duration,numberOfPrints);
 		
 		//storage is done: 
 		//try to clear memory
@@ -334,9 +334,12 @@ public class OlafStrategy extends Strategy {
 			 Collections.sort(hitlist, (Comparator<? super OlafMatch>) (OlafMatch a, OlafMatch b) -> Integer.valueOf(a.queryTime).compareTo(Integer.valueOf(b.queryTime)));
 			
 			 //view the first and last hits (max 250)
-			 int maxListSize = 250;
-			 List<OlafMatch> firstHits = hitlist.subList(0, Math.min(maxListSize,Math.max(minimumUnfilteredHits,hitlist.size()/5)));
-			 List<OlafMatch> lastHits  = hitlist.subList(hitlist.size()-Math.min(maxListSize, Math.max(minimumUnfilteredHits,hitlist.size()/5)), hitlist.size());
+			 int maxPartListSize = Config.getInt(Key.OLAF_HIT_PART_MAX_SIZE);
+			 int partDivider = Config.getInt(Key.OLAF_HIT_PART_DIVIDER);
+			 int partListLength = Math.min(maxPartListSize,Math.max(minimumUnfilteredHits,hitlist.size()/partDivider));
+
+			 List<OlafMatch> firstHits = hitlist.subList(0, partListLength);
+			 List<OlafMatch> lastHits  = hitlist.subList(hitlist.size()-partListLength, hitlist.size());
 			 
 			//find the first x1 where delta t is equals to the median delta t
 			 float y1 = mostCommonDeltaTforHitList(firstHits);
@@ -492,14 +495,19 @@ public class OlafStrategy extends Strategy {
 		return true;
 	}
 
-	@Override
-	public void printStorageStatistics() {
+	private OlafStorage storageInstance(){
 		final OlafStorage db;
 		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
 			db = OlafStorageKV.getInstance();
 		}else {
 			db = OlafStorageMemory.getInstance();
 		}
+		return db;
+	}
+
+	@Override
+	public void printStorageStatistics() {
+		final OlafStorage db = storageInstance();
 		db.printStatistics(true);
 	}
 
@@ -634,5 +642,14 @@ public class OlafStrategy extends Strategy {
 			OlafStorageMemory.getInstance().clear();
 		}
 		
+	}
+
+	@Override
+	public String metadata(String path) {
+		final OlafStorage db = storageInstance();
+		long identifier = FileUtils.getIdentifier(path);
+		OlafResourceMetadata metaData = db.getMetadata(identifier);
+
+		return String.format("%d ; %s ; %.3f (s) ; %d (#) ; %.3f (#/s)",metaData.identifier,metaData.path,metaData.duration,metaData.numFingerprints,metaData.printsPerSecond());
 	}
 }

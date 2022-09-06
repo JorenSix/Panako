@@ -52,6 +52,8 @@ import java.util.logging.Logger;
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
+import be.panako.strategy.olaf.storage.OlafResourceMetadata;
+import be.panako.strategy.olaf.storage.OlafStorage;
 import be.panako.strategy.panako.storage.PanakoHit;
 import be.panako.strategy.panako.storage.PanakoResourceMetadata;
 import be.panako.strategy.panako.storage.PanakoStorage;
@@ -338,9 +340,11 @@ public class PanakoStrategy extends Strategy {
 			 Collections.sort(hitlist, (Comparator<? super PanakoMatch>) (PanakoMatch a, PanakoMatch b) -> Integer.valueOf(a.queryTime).compareTo(Integer.valueOf(b.queryTime)));
 			
 			 //view the first and last hits (max 250)
-			 int maxListSize = 250;
-			 List<PanakoMatch> firstHits = hitlist.subList(0, Math.min(maxListSize,Math.max(minimumUnfilteredHits,hitlist.size()/5)));
-			 List<PanakoMatch> lastHits  = hitlist.subList(hitlist.size()-Math.min(maxListSize, Math.max(minimumUnfilteredHits,hitlist.size()/5)), hitlist.size());
+			 int maxPartListSize = Config.getInt(Key.PANAKO_HIT_PART_MAX_SIZE);
+			 int partDivider = Config.getInt(Key.PANAKO_HIT_PART_DIVIDER);
+			 int partListLength = Math.min(maxPartListSize,Math.max(minimumUnfilteredHits,hitlist.size()/partDivider));
+			 List<PanakoMatch> firstHits = hitlist.subList(0, partListLength);
+			 List<PanakoMatch> lastHits  = hitlist.subList(hitlist.size() - partListLength, hitlist.size());
 			 
 			//find the first x1 where delta t is equals to the median delta t
 			 float y1 = mostCommonDeltaTforHitList(firstHits);
@@ -569,5 +573,13 @@ public class PanakoStrategy extends Strategy {
 		if (Config.get(Key.PANAKO_STORAGE).equalsIgnoreCase("LMDB")) {
 			PanakoStorageKV.getInstance().clear();
 		}
+	}
+
+	public String metadata(String path) {
+		final PanakoStorage db = PanakoStorageKV.getInstance();
+		long identifier = FileUtils.getIdentifier(path);
+		PanakoResourceMetadata metaData = db.getMetadata(identifier);
+
+		return String.format("%d ; %s ; %.3f (s) ; %d (#) ; %.3f (#/s)",metaData.identifier,metaData.path,metaData.duration,metaData.numFingerprints,metaData.printsPerSecond());
 	}
 }

@@ -45,6 +45,8 @@ public class PanakoResourceMetadata {
 	 */
 	public PanakoResourceMetadata(){}
 
+
+
 	/**
 	 * The total amount of fingerprints extracted
 	 */
@@ -59,7 +61,10 @@ public class PanakoResourceMetadata {
 	 */
 	public String path;
 
-	int identifier;
+	/**
+	 * The internal resource identifier
+	 */
+	public long identifier;
 
 	/**
 	 * Calculates the number of fingerprints for each second.
