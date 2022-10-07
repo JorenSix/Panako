@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class PanakoStrategyTest {
 
-    String DATASET_URL = "http://panako.be/releases/Panako-test-dataset/";
+    String DATASET_URL = "https://panako.be/releases/Panako-test-dataset/";
 
     private boolean downloadFile(String url,String targetLocation){
 
@@ -56,8 +56,8 @@ class PanakoStrategyTest {
             System.err.println("Failed to download " + url);
             return false;
         }
-
-        System.out.println("Downloaded " + url + " to " + targetLocation);
+        long fileSize = new File(targetLocation).length()/1024/1024;
+        System.out.println("Downloaded " + url + " to " + targetLocation + " size " + fileSize + "MB" );
         return true;
     }
 
@@ -74,7 +74,12 @@ class PanakoStrategyTest {
         List<File> files = new ArrayList<>();
         for(String f : filenames) {
             String path = FileUtils.combine(FileUtils.temporaryDirectory(),f);
-            cacheDownloadedFile(DATASET_URL + foldername + "/" + f , path);
+
+            if(cacheDownloadedFile(DATASET_URL + foldername + "/" + f , path))
+                System.out.println("Successfully download " + f);
+            else
+                System.err.println("Failed to download " + f);
+
             files.add(new File(path));
         }
 
