@@ -156,7 +156,7 @@ public class OlafFingerprint {
 			return hash;
 		//else
 		
-		long f1LargerThanF2 = f2 > f3 ? 1 : 0;
+		long f1LargerThanF2 = f1 > f2 ? 1 : 0;
 		long f2LargerThanF3 = f2 > f3 ? 1 : 0;
 		long f3LargerThanF1 = f3 > f1 ? 1 : 0;
 
