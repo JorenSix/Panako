@@ -18,7 +18,7 @@ bibliography: paper.bib
 
 # Summary
 
-Panako solves the problem of finding short audio fragments in large digital audio archives. The content based audio search algorithm implemented in Panako is able to identify a short audio query in large database of thousands of hours of audio using an acoustic fingerprinting technique. 
+Panako solves the problem of finding short audio fragments in large digital audio archives. The content based audio search algorithm implemented in Panako is able to identify a short audio query in a large database of thousands of hours of audio using an acoustic fingerprinting technique.
 
 ![A general acoustic fingerprinting system. Features are extracted from audio and combined into fingerprints. The fingerprints are matched with fingerprints in a reference database. Finally a match is reported.\label{fig:general}](resources/media/general_acoustic_fingerprinting_schema.png){width=90%}
 
@@ -35,7 +35,7 @@ Accidental audio speed changes are often the result of varying or uncalibrated r
 
 Audio search algorithms have been described for decades [@Wang2003a;@sonnleitner2014quad_based_fingerprinter;@haitsma2002fingerprinter;@herre2002scalable;@fenet2011pitch_shift_fingerprinting;@cano2005fingerprinting_overview] but have not been accessible for researchers due to the lack of proper, scalable, freely available implementations. Panako solves this problem by providing an acoustic fingerprinting system which can be used by researchers for DJ-set analysis, digital music archive management and audio-to-audio alignment.
 
-In DJ-set analysis the aim is to automatically identify music in sets and how that music was modifided and mixed [@black2018unmixdb;@kim2020djset;@sonnleitner2016landmark]. With its robustness for time-stretch/pitch-shift and speed-up Panako is ideally suited to gather large scale insights in DJ performance practice.
+In DJ-set analysis the aim is to automatically identify music in sets and how that music was modified and mixed [@black2018unmixdb;@kim2020djset;@sonnleitner2016landmark]. With its robustness for time-stretch/pitch-shift and speed-up Panako is ideally suited to gather large scale insights in DJ performance practice.
 
 @six2018dupapps describes the applications of acoustic fingerprints for digital music archive management. These range from meta-data quality verification - through the identification of duplicates - to merging archives with potential duplicate material.
 
@@ -47,7 +47,7 @@ Alternative systems with available implementations are by @neuralfp and audfprin
 
 Simplicity and maintainability are two keywords in the design of Panako. The code aims to be as readable and simple as possible. The second version of Panako is a complete rewrite to ensure this simplicity while still keeping query and computational performance in check.
 
-Relying on conservative platforms with a long history of backwards compatibility should allow Panako to stand the test of time. Panako is developed in Java and targets the long term support release Java SE 11. Panako also relies on software in C and C++. Java, C and C++ have been around for decades and it is reasonable to assume that these platforms will be supported for decades to come. Boring technoloy enables longevity. 
+Relying on conservative platforms with a long history of backwards compatibility should allow Panako to stand the test of time. Panako is developed in Java and targets the long term support release Java SE 11. Panako also relies on software in C and C++. Java, C and C++ have been around for decades and it is reasonable to assume that these platforms will be supported for decades to come. Boring technology enables longevity. 
 
 Next to Java 11, Panako depends on three libraries: a DSP library, a key-value store and a spectral transform library. The first is a pure Java DSP library called TarsosDSP[^1] [@six2014tarsosdsp]. LMDB[^2] is used as a high performance key-value store. It is a C library and accessible through lmdbjava. The third and final dependency is JGaborator[^3]: a wrapper around the Gaborator[^4] library which implements a constant-Q non-stationary Gabor transform in C++11 [@velasco2011constructing]. The last two have native compiled parts and need to be ported to new or exotic platforms if the need arises. The transition to aarch64 (Apple M1), for example consisted of a straightforward compilation step and repackaging of this native library. Panako can be containerized and the Docker file supports both ARM and x86 platforms and always compiles these native dependencies.
 
