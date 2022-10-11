@@ -94,6 +94,14 @@ public enum Key{
 	 * The log file for the pipe decoder.
 	 */
 	DECODER_PIPE_LOG_FILE("decoder_log.txt"),
+
+	/**
+	 * By default ffprobe is used to determine the duration - in seconds -
+	 * of an audio file.
+	 *
+	 * Alternatively any command which returns the duration in seconds can be used.
+	 */
+	AUDIO_DURATION_COMMAND("ffprobe -i \"%resource%\" -v quiet -show_entries format=duration -hide_banner -of default=noprint_wrappers=1:nokey=1"),
 	
 	
 	/**

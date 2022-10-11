@@ -38,24 +38,14 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.logging.Logger;
 
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
 import be.panako.strategy.olaf.storage.*;
-import be.panako.util.Config;
-import be.panako.util.FileUtils;
-import be.panako.util.Key;
-import be.panako.util.StopWatch;
+import be.panako.util.*;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 
@@ -72,32 +62,37 @@ public class OlafStrategy extends Strategy {
 	
 	private final static Logger LOG = Logger.getLogger(OlafStrategy.class.getName());
 
+	private final OlafStorage db;
+
 	/**
 	 * Create an instance
 	 */
-	public OlafStrategy(){}
-
-	private OlafStorage getDbInstance(){
-		final OlafStorage db;
-
-		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("MEM")) {
-			db = OlafStorageMemory.getInstance();
-		} else {
-			//By default use the LMDB storage 
+	public OlafStrategy(){
+		OlafStorage db;
+		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
 			db = OlafStorageKV.getInstance();
+		}else if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("FILE")) {
+			db = OlafStorageFile.getInstance();
+		}else {
+			db = OlafStorageMemory.getInstance();
 		}
+		if(Config.getBoolean(Key.OLAF_CACHE_TO_FILE) && db != OlafStorageFile.getInstance()) {
+			LOG.info("Using "+ db.getClass().getSimpleName() + " storage with caching front.");
+			db = new OlafCachingStorage(OlafStorageFile.getInstance(),db);
+		}else {
+			LOG.info("Using " + db.getClass().getSimpleName() + " as storage.");
+		}
+		this.db = db;
+	}
+
+	private OlafStorage getStorage(){
 		return db;
 	}
 	
 	@Override
 	public double store(String resource, String description) {
 
-		OlafStorage db = getDbInstance();
-		
-		OlafStorage fileCache = null;
-		if(Config.getBoolean(Key.OLAF_CACHE_TO_FILE)) {
-			fileCache = OlafStorageFile.getInstance();
-		}
+		OlafStorage db = getStorage();
 		
 		List<OlafFingerprint> prints = toFingerprints(resource);
 		
@@ -107,15 +102,8 @@ public class OlafStrategy extends Strategy {
 			long hash = print.hash();			
 			int printT1 = print.t1;
 			db.addToStoreQueue(hash, resourceID, printT1);
-			if(fileCache!=null) {
-				fileCache.addToStoreQueue(hash, resourceID, printT1);
-			}
 		}
 		db.processStoreQueue();
-		
-		if(fileCache!=null) {
-			fileCache.processStoreQueue();
-		}
 		
 		//store meta-data as well
 		float duration = 0;
@@ -139,7 +127,7 @@ public class OlafStrategy extends Strategy {
 
 	@Override
 	public double delete(String resource) {
-		OlafStorage db = getDbInstance();
+		OlafStorage db = getStorage();
 
 		List<OlafFingerprint> prints = toFingerprints(resource);
 
@@ -176,30 +164,37 @@ public class OlafStrategy extends Strategy {
 	 * @return A list of fingerprints
 	 */
 	public List<OlafFingerprint> toFingerprints(String resource){
-		
+		return toFingerprints(resource,0,MAX_TIME);
+	}
+
+	private List<OlafFingerprint> toFingerprints(String resource,double startTimeOffset,double numberOfSeconds){
 		if(Config.getBoolean(Key.OLAF_USE_CACHED_PRINTS)) {
 			String folder = Config.get(Key.OLAF_CACHE_FOLDER);
 			folder = FileUtils.expandHomeDir(folder);
 			String tdbPath =  FileUtils.combine(folder,resolve(resource) + ".tdb");
+
 			if(FileUtils.exists(tdbPath)) {
-				
 				List<OlafFingerprint> prints = new ArrayList<>();
 				List<long[]> printData = readFingerprintFile(tdbPath);
 				for(long[] data : printData) {
 					long fingerprintHash = data[0];
 					int t1 = (int) data[2];
-					prints.add(new OlafFingerprint(fingerprintHash,t1));
+					float t1InSeconds = blocksToSeconds(t1);
+
+					//skip all fingerprints after stop time
+					if(t1InSeconds > startTimeOffset + numberOfSeconds)
+						break;
+					//only add prints if they are after the start time offset
+					if(t1InSeconds >= startTimeOffset)
+						prints.add(new OlafFingerprint(fingerprintHash,t1));
 				}
+				LOG.info(String.format("Read %d cached fingerprints from file '%s' (start: %.3f sec, stop: %.3f sec) for '%s'", prints.size(),tdbPath,startTimeOffset,startTimeOffset+numberOfSeconds,resource));
 				return prints;
-				
+			}else{
+				LOG.info(String.format("Could not read cached fingerprints from file '%s' for '%s'",tdbPath,resource));
 			}
-		}
-		
-		return toFingerprints(resource,0,MAX_TIME);
-	}
+		} //else no cached prints are found
 
-
-	private List<OlafFingerprint> toFingerprints(String resource,double startTimeOffset,double numberOfSeconds){
 		int samplerate, size, overlap;
 		samplerate = Config.getInt(Key.OLAF_SAMPLE_RATE);
 		size = Config.getInt(Key.OLAF_SIZE);
@@ -218,7 +213,6 @@ public class OlafStrategy extends Strategy {
 		
 		return eventPointProcessor.getFingerprints();	
 	}
-	
 	
 	private float blocksToSeconds(int t) {		
 		return t * (Config.getInt(Key.OLAF_STEP_SIZE)/(float) Config.getInt(Key.OLAF_SAMPLE_RATE));
@@ -465,11 +459,9 @@ public class OlafStrategy extends Strategy {
 	public void monitor(String query, int maxNumberOfReqults, Set<Integer> avoid, QueryResultHandler handler) {
 		int overlapInSeconds = Config.getInt(Key.MONITOR_OVERLAP); // 5
 		int stepSizeInSeconds = Config.getInt(Key.MONITOR_STEP_SIZE); //25
-		
-		// Get the total duration
-		AudioDispatcher d = AudioDispatcherFactory.fromPipe(query, 8000, 2048, 0);
-		d.run();
-		double totalDuration = d.secondsProcessed();
+
+		// Get the total duration efficiently
+		double totalDuration = AudioFileUtils.audioFileDurationInSeconds(new File(query));
 		
 		//Steps: 0-25s ; 20-45s ; 40-65s ...
 		int actualStep = stepSizeInSeconds - overlapInSeconds;//20s
@@ -631,17 +623,7 @@ public class OlafStrategy extends Strategy {
 
 	@Override
 	public void clear() {
-		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
-			OlafStorageKV.getInstance().clear();
-			
-			if(Config.getBoolean(Key.OLAF_CACHE_TO_FILE)) {
-				OlafStorageFile.getInstance().clear();
-			}
-			
-		} else if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("MEM")) {
-			OlafStorageMemory.getInstance().clear();
-		}
-		
+		getStorage().clear();
 	}
 
 	@Override
@@ -649,7 +631,6 @@ public class OlafStrategy extends Strategy {
 		final OlafStorage db = storageInstance();
 		long identifier = FileUtils.getIdentifier(path);
 		OlafResourceMetadata metaData = db.getMetadata(identifier);
-
 		return String.format("%d ; %s ; %.3f (s) ; %d (#) ; %.3f (#/s)",metaData.identifier,metaData.path,metaData.duration,metaData.numFingerprints,metaData.printsPerSecond());
 	}
 }

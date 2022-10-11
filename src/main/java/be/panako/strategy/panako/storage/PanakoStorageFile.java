@@ -41,6 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
@@ -50,6 +51,7 @@ import be.panako.util.Key;
  * Stores fingerprints in flat files.
  */
 public class PanakoStorageFile implements PanakoStorage {
+	private final static Logger LOG = Logger.getLogger(PanakoStorageFile.class.getName());
 	
 	/**
 	 * The single instance of the storage.
@@ -105,7 +107,8 @@ public class PanakoStorageFile implements PanakoStorage {
 		String path = FileUtils.combine(storeDir.getAbsolutePath(),resourceID + "_meta_data.txt");		
 		StringBuilder sb = new StringBuilder();		
 		sb.append(resourceID).append("\n").append(duration).append("\n").append(fingerprints).append("\n").append(resourcePath).append("\n");	
-		FileUtils.writeFile(sb.toString(), path);		
+		FileUtils.writeFile(sb.toString(), path);
+		LOG.info(String.format("Stored metadata file '%s'.",path));
 	}
 	
 	@Override
@@ -133,6 +136,7 @@ public class PanakoStorageFile implements PanakoStorage {
 	public void deleteMetadata(long resourceID) {
 		String path = FileUtils.combine(storeDir.getAbsolutePath(),resourceID + "_meta_data.txt");
 		FileUtils.rm(path);
+		LOG.info(String.format("Deleted metadata file '%s'.",path));
 	}
 
 
@@ -160,22 +164,7 @@ public class PanakoStorageFile implements PanakoStorage {
 			sb.append("\n");
 		}
 		
-		// Clears the store queue
-		queue.clear();
-		
 		return sb.toString();
-	}
-
-	private String storeQueueToString( ) {
-		if(storeQueue.isEmpty()) return null;
-		long threadID = Thread.currentThread().getId();
-		if(!storeQueue.containsKey(threadID)) return null;
-		
-		List<long[]> queue = storeQueue.get(threadID);
-		
-		if (queue.isEmpty()) return null;
-		
-		return storeQueueToString(queue);
 	}
 
 	
@@ -196,6 +185,11 @@ public class PanakoStorageFile implements PanakoStorage {
 		String fingerprintsAsString = storeQueueToString(queue);
 		String path = FileUtils.combine(storeDir.getAbsolutePath(),resourceIdentifier + ".tdb");
 		FileUtils.writeFile(fingerprintsAsString, path);
+
+		LOG.info(String.format("Stored %d fingerprints in file %s",queue.size(),path));
+
+		// Clears the store queue
+		queue.clear();
 	}
 
 	/**
@@ -236,14 +230,16 @@ public class PanakoStorageFile implements PanakoStorage {
 
 	public void clear() {
 		FileUtils.rm(storeDir.getAbsolutePath());
-		
+
 		if(!FileUtils.exists(storeDir.getAbsolutePath()))
 			return;
-		
-		for(File f : storeDir.listFiles()) {
+		File[] filesToDelete = storeDir.listFiles();
+		for(File f : filesToDelete) {
 			FileUtils.rm(f.getAbsolutePath());
 		}
-		System.out.println("Removed cached files from " + storeDir.getAbsolutePath());
+		String message = String.format("Removed %d files from file storage",filesToDelete.length);
+		LOG.info(message);
+		System.out.println(message);
 	}
 }
 

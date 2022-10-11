@@ -47,11 +47,11 @@ class Resolve extends Application {
 
 	@Override
 	public void run(String... args) {
-		Strategy strat = Strategy.getInstance();
+		Strategy strategy = Strategy.getInstance();
 		List<File> files = getFilesFromArguments(args);
 		
 		for(File f : files) {
-			System.out.println(strat.resolve(f.getPath()));
+			System.out.println(strategy.resolve(f.getAbsolutePath()));
 		}
 	}
 

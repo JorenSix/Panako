@@ -42,10 +42,7 @@ import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 import be.panako.strategy.Strategy;
-import be.panako.util.Config;
-import be.panako.util.Key;
-import be.panako.util.StopWatch;
-import be.panako.util.TimeUnit;
+import be.panako.util.*;
 
 /**
  * Store audio fingerptings in the storage. 
@@ -116,49 +113,31 @@ class Store extends Application {
 
 		@Override
 		public void run() {
-			
 			StopWatch w = new StopWatch();
-			if(checkFile(file)){
-				
-				Strategy strategy = Strategy.getInstance();
-				
-				boolean isDouble = false;				
-				if(Config.getBoolean(Key.CHECK_DUPLICATE_FILE_NAMES) ){
-					isDouble =  strategy.hasResource(file.getAbsolutePath());
-				}
+			Strategy strategy = Strategy.getInstance();
 
-				String message=null;
-				if(isDouble){
-					message = String.format("%d/%d;%s;%s",taskID,totalTasks,file.getName(),"Skipped: resource already stored;");
-				}else{
-					double durationInSeconds = strategy.store(file.getAbsolutePath(), file.getName());
-					double cpuSecondsPassed = w.timePassed(TimeUnit.SECONDS);
-					String audioDuration = StopWatch.toTime("", (int) Math.round(durationInSeconds));
-					String cpuTimeDuration = w.formattedToString();
-					double timeRatio = durationInSeconds/cpuSecondsPassed;
-					message = String.format("%d/%d;%s;%s;%s;%.2f",taskID,totalTasks,file.getName(),audioDuration,cpuTimeDuration,timeRatio);			
-				}
-				LOG.info(message);
-				System.out.println(message);
+			boolean isDouble = false;
+			if(Config.getBoolean(Key.CHECK_DUPLICATE_FILE_NAMES) ){
+				isDouble =  strategy.hasResource(file.getAbsolutePath());
 			}
+
+			String message=null;
+			if(isDouble){
+				message = String.format("%d/%d;%s;%s",taskID,totalTasks,file.getName(),"Skipped: resource already stored;");
+			}else{
+				double durationInSeconds = strategy.store(file.getAbsolutePath(), file.getName());
+				double cpuSecondsPassed = w.timePassed(TimeUnit.SECONDS);
+				String audioDuration = StopWatch.toTime("", (int) Math.round(durationInSeconds));
+				String cpuTimeDuration = w.formattedToString();
+				double timeRatio = durationInSeconds/cpuSecondsPassed;
+				message = String.format("%d/%d;%s;%s;%s;%.2f",taskID,totalTasks,file.getName(),audioDuration,cpuTimeDuration,timeRatio);
+			}
+			LOG.info(message);
+			System.out.println(message);
+
 		}
 		
-		private boolean checkFile(File file){
-			boolean fileOk = false;
-	
-			//file must be smaller than a configured number of bytes
-			long maxFileSize =  Config.getInt(Key.MAX_FILE_SIZE);
-			//from megabytes to bytes
-			maxFileSize = maxFileSize * 1024 * 1024;
-			if(file.length() != 0 && file.length() < maxFileSize ){
-				fileOk = true;
-			}else{
-				String message = "Could not process " + file.getName() + " it has an unacceptable file size.\n\tFile is " + file.length() + " bytes. \n\tShould be more than zero and smaller than " + Config.getInt(Key.MAX_FILE_SIZE) + " bytes ).";
-				LOG.warning(message);
-				System.out.println(message);
-			}
-			return fileOk;
-		}
+
 	}
 	
 	

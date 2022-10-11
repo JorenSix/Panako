@@ -45,10 +45,7 @@ import java.util.logging.Logger;
 
 import be.panako.strategy.Strategy;
 import be.panako.strategy.olaf.OlafStrategy;
-import be.panako.util.Config;
-import be.panako.util.Key;
-import be.panako.util.StopWatch;
-import be.panako.util.TimeUnit;
+import be.panako.util.*;
 
 /**
  * Delete fingerptings from the index.
@@ -121,42 +118,29 @@ public class Delete extends Application {
 		public void run() {
 			
 			StopWatch w = new StopWatch();
-			if(checkFile(file)){
+			Strategy strategy =  Strategy.getInstance();
 
-				Strategy strategy =  Strategy.getInstance();
-				
-				boolean hasResource = false;
-				hasResource =  strategy.hasResource(file.getAbsolutePath());
-				
-				String message=null;
-				if(hasResource){
-					message = String.format("%d/%d;%s;%s;%s",taskID,totalTasks,file.getName(),StopWatch.toTime("", 0),"Deletion skipped: resource not in the key value store;");
-				}else{
-					double durationInSeconds = strategy.delete(file.getAbsolutePath());
-					
-					double cpuSecondsPassed = w.timePassed(TimeUnit.SECONDS);
-					String audioDuration = StopWatch.toTime("", (int) Math.round(durationInSeconds));
-					String cpuTimeDuration = w.formattedToString();
-					double timeRatio = durationInSeconds/cpuSecondsPassed;
-					message = String.format("%d/%d;%s;%s;%s;%.2f",taskID,totalTasks,file.getName(),audioDuration,cpuTimeDuration,timeRatio);			
-				}
-				LOG.info(message);
-				System.out.println(message);
+			boolean hasResource = false;
+			hasResource =  strategy.hasResource(file.getAbsolutePath());
+
+			String message=null;
+			if(hasResource){
+				message = String.format("%d/%d;%s;%s;%s",taskID,totalTasks,file.getName(),StopWatch.toTime("", 0),"Deletion skipped: resource not in the key value store;");
+			}else{
+				double durationInSeconds = strategy.delete(file.getAbsolutePath());
+
+				double cpuSecondsPassed = w.timePassed(TimeUnit.SECONDS);
+				String audioDuration = StopWatch.toTime("", (int) Math.round(durationInSeconds));
+				String cpuTimeDuration = w.formattedToString();
+				double timeRatio = durationInSeconds/cpuSecondsPassed;
+				message = String.format("%d/%d;%s;%s;%s;%.2f",taskID,totalTasks,file.getName(),audioDuration,cpuTimeDuration,timeRatio);
 			}
+			LOG.info(message);
+			System.out.println(message);
+
 		}
 		
-		private boolean checkFile(File file){
-			boolean fileOk = false;
-			//file must be smaller than a configured number of bytes
-			if(file.length() != 0 && file.length() < Config.getInt(Key.MAX_FILE_SIZE)){
-				fileOk = true;
-			}else{
-				String message = "Could not process " + file.getName() + " it has an unacceptable file size: zero or larger than " + Config.getInt(Key.MAX_FILE_SIZE) + "bytes ).";
-				LOG.warning(message);
-				System.out.println(message);
-			}
-			return fileOk;
-		}
+
 	}
 	
 	

@@ -140,9 +140,9 @@ public abstract class Application {
 		File f = new File(file);
 		boolean fileOk = false;
 		if(f.exists() && f.canRead()){
-			fileOk = true;
+			fileOk = FileUtils.checkFileSize(f,Config.getInt(Key.MAX_FILE_SIZE));
 		}else{
-			String message = "Could not read " + f.getAbsolutePath() + " it does not exist or is not accesible at the moment.)";
+			String message = "Could not read " + f.getAbsolutePath() + " it does not exist or is not accessible at the moment.)";
 			LOG.warning(message);
 			System.out.println(message);
 		}

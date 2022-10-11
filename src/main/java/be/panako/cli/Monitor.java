@@ -83,14 +83,14 @@ public class Monitor extends Application implements QueryResultHandler {
 		if(hasArgument("debug", args) || processors==1){
 			int taskNumber = 1;
 			for(File file: files){
-				new Monitor.MonitorTask(file.getPath(),taskNumber,files.size()).run();
+				new Monitor.MonitorTask(file.getAbsolutePath(),taskNumber,files.size()).run();
 				taskNumber++;
 			}
 		}else{
 			ExecutorService executor = Executors.newFixedThreadPool(processors);
 			int taskNumber = 1;
 			for(File file: files){
-				executor.submit(new Monitor.MonitorTask(file.getPath(),taskNumber,files.size()));
+				executor.submit(new Monitor.MonitorTask(file.getAbsolutePath(),taskNumber,files.size()));
 				taskNumber++;
 			}
 			executor.shutdown();

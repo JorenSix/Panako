@@ -36,19 +36,7 @@
 package be.panako.util;
 
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.FileChannel;
@@ -470,11 +458,79 @@ public final class FileUtils {
 		if (tokens.length == 2 && tokens[0].matches("\\d+")) {
 			identifier = Integer.valueOf(tokens[0]);
 		} else {
-			int hashCode = Math.abs(resource.hashCode());
+			int hash = getFileHash(new File(resource));
+			if(hash == 0 ) {
+				hash = Math.abs(resource.hashCode());
+			}
+			//reserve the lower half of ints for sequential identifiers
 			int minValue = Integer.MAX_VALUE / 2;
-			identifier = minValue + hashCode / 2;
+			identifier = minValue + hash / 2;
 		}
 		return identifier;
+	}
+
+	/**
+	 * A content based file hash.
+	 * 8 * 8K bytes are read in the middle of the file and a hash is calculated
+	 * with murmurhash3.
+	 *
+	 * The method fails silently and returns zero if the file is not accessible.
+	 *
+	 * @param file The file to calculate a hash for.
+	 * @return The murmurhash3 hash of 8 * 8K bytes in the middle of the file. Zero is returned
+	 * if the file is not accessible.
+	 */
+	public static int getFileHash(File file){
+		final long blockSizeInBytes = 8 * 1024;
+		final long numberOfBlocksUsedInHash = 8;
+
+		long fileSizeInBytes = file.length();
+		long offsetInBytes = fileSizeInBytes / 2;
+		long offsetInBlocks = offsetInBytes / blockSizeInBytes;
+		int numberOfBytesToRead = (int) (blockSizeInBytes*numberOfBlocksUsedInHash);
+
+		int fileHash = 0;
+		byte[] data = new byte[numberOfBytesToRead];
+		boolean fallback = false;
+		try {
+			RandomAccessFile f = null;
+			f = new RandomAccessFile(file,"r");
+			f.seek(offsetInBlocks * blockSizeInBytes);
+			int bytesRead = f.read(data);
+			if(bytesRead != numberOfBytesToRead){
+				LOG.warning(String.format("Will only use %d bytes for hash, expected %d bytes",bytesRead,numberOfBytesToRead));
+			}
+			fileHash = MurmurHash3.murmurhash3_x86_32(data,0,bytesRead,0);
+		} catch (FileNotFoundException e) {
+			LOG.warning(String.format("Could not determine file hash for '%s': %s",file.getAbsolutePath(),e.getMessage()));
+		} catch (IOException e) {
+			LOG.warning(String.format("Could not determine file hash for '%s': %s", file.getAbsolutePath(), e.getMessage()));
+		}
+		return fileHash;
+	}
+
+	/**
+	 * Checks the size of a file.
+	 * @param file the file to check.
+	 * @param maxFileSizeInMB the maximum file size in MB.
+	 * @return Returns true if the file is not zero bytes and smaller than the given maximum file size in MB.
+	 */
+	public static boolean checkFileSize(File file,long maxFileSizeInMB){
+		boolean fileOk = false;
+		//from megabytes to bytes
+		long fileSizeInBytes = file.length();
+		long fileSizeInMB = fileSizeInBytes/(1024*1024);
+
+		//file must be smaller than a configured number of bytes
+		if(fileSizeInBytes != 0 && fileSizeInMB < maxFileSizeInMB ){
+			fileOk = true;
+		}else{
+			String message = String.format("Could not process %s it has an unacceptable file size of %l MB  (zero or larger than  %d MB ).", file.getName(), fileSizeInMB, maxFileSizeInMB );
+			LOG.warning(message);
+			System.err.println(message);
+		}
+		return fileOk;
+
 	}
 
 }

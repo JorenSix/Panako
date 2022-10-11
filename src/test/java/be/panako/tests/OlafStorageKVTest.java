@@ -1,9 +1,14 @@
 package be.panako.tests;
 
+import be.panako.strategy.QueryResult;
+import be.panako.strategy.QueryResultHandler;
+import be.panako.strategy.Strategy;
+import be.panako.strategy.olaf.OlafStrategy;
 import be.panako.strategy.olaf.storage.OlafHit;
 import be.panako.strategy.olaf.storage.OlafResourceMetadata;
 import be.panako.strategy.olaf.storage.OlafStorage;
 import be.panako.strategy.olaf.storage.OlafStorageKV;
+import be.panako.strategy.panako.PanakoStrategy;
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
@@ -11,14 +16,20 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class OlafStorageKVTest {
 
+    List<File> references;
+    List<File> queries;
+
     @BeforeEach
     void setUp() {
+        references = TestData.referenceFiles();
+        queries = TestData.queryFiles();
         Config config = Config.getInstance();
         String tempStoragePath = FileUtils.combine(FileUtils.temporaryDirectory(),"olaf_test");
         config.set(Key.OLAF_LMDB_FOLDER,tempStoragePath);
@@ -57,5 +68,26 @@ class OlafStorageKVTest {
         Map<Long, List<OlafHit>> matchAccumulator = new TreeMap<>();
         s.processQueryQueue(matchAccumulator,2,new HashSet<>());
         assertEquals(1 ,matchAccumulator.size(),"Expected only one match");
+    }
+
+    @Test
+    void testMatching(){
+        Strategy s = new OlafStrategy();
+        for(File ref : references){
+            s.store(ref.getAbsolutePath(),ref.getName());
+        }
+
+        s.query(queries.get(1).getAbsolutePath(), 1, new HashSet<>(), new QueryResultHandler() {
+            @Override
+            public void handleQueryResult(QueryResult result) {
+                assertTrue(result.refIdentifier.equalsIgnoreCase(1051039 + ""));
+                assertEquals(34,result.refStart,3.5,"Expect start to be close to 34s");
+            }
+
+            @Override
+            public void handleEmptyResult(QueryResult result) {
+                assertTrue(false);
+            }
+        });
     }
 }

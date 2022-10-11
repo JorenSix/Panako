@@ -70,14 +70,14 @@ class Query extends Application{
 		if(hasArgument("debug", args) || processors==1){
 			int taskNumber = 1;
 			for(File file: files){
-				new QueryTask(file.getPath(),taskNumber,files.size()).run();
+				new QueryTask(file.getAbsolutePath(),taskNumber,files.size()).run();
 				taskNumber++;
 			}
 		}else{
 			ExecutorService executor = Executors.newFixedThreadPool(processors);
 			int taskNumber = 1;
 			for(File file: files){
-				executor.submit(new QueryTask(file.getPath(),taskNumber,files.size()));
+				executor.submit(new QueryTask(file.getAbsolutePath(),taskNumber,files.size()));
 				taskNumber++;
 			}
 			executor.shutdown();

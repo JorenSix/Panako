@@ -54,16 +54,8 @@ import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
 import be.panako.strategy.olaf.storage.OlafResourceMetadata;
 import be.panako.strategy.olaf.storage.OlafStorage;
-import be.panako.strategy.panako.storage.PanakoHit;
-import be.panako.strategy.panako.storage.PanakoResourceMetadata;
-import be.panako.strategy.panako.storage.PanakoStorage;
-import be.panako.strategy.panako.storage.PanakoStorageFile;
-import be.panako.strategy.panako.storage.PanakoStorageKV;
-import be.panako.strategy.panako.storage.PanakoStorageMemory;
-import be.panako.util.Config;
-import be.panako.util.FileUtils;
-import be.panako.util.Key;
-import be.panako.util.StopWatch;
+import be.panako.strategy.panako.storage.*;
+import be.panako.util.*;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 import be.tarsos.dsp.util.PitchConverter;
@@ -76,29 +68,46 @@ public class PanakoStrategy extends Strategy {
 	
 	private final static Logger LOG = Logger.getLogger(PanakoStrategy.class.getName());
 
+	private final int latency;
+
+	private final PanakoStorage db;
+
 	/**
 	 * Create a new instance
 	 */
 	public PanakoStrategy(){
+		//determine the Gaborator latency to make sure the block time to seconds
+		//conversion is always correct!
+		int size = Config.getInt(Key.PANAKO_AUDIO_BLOCK_SIZE);
+		PanakoEventPointProcessor eventPointProcessor = new PanakoEventPointProcessor(size);
+		latency = eventPointProcessor.latency();
+		LOG.info(String.format("Gaborator latency is %d samples",latency));
+		eventPointProcessor.processingFinished();
 
+		PanakoStorage db;
+		if (Config.get(Key.PANAKO_STORAGE).equalsIgnoreCase("LMDB")) {
+			db = PanakoStorageKV.getInstance();
+		}else if (Config.get(Key.PANAKO_STORAGE).equalsIgnoreCase("FILE")) {
+			db = PanakoStorageFile.getInstance();
+		}else {
+			db = PanakoStorageMemory.getInstance();
+		}
+		if(Config.getBoolean(Key.PANAKO_CACHE_TO_FILE) && db != PanakoStorageFile.getInstance()) {
+			LOG.info("Using "+ db.getClass().getSimpleName() + " storage with caching front.");
+			db = new PanakoCachingStorage(PanakoStorageFile.getInstance(),db);
+		}else {
+			LOG.info("Using " + db.getClass().getSimpleName() + " as storage.");
+		}
+		this.db = db;
+	}
+
+	private PanakoStorage getStorage(){
+		return db;
 	}
 	
 	@Override
 	public double store(String resource, String description) {
-
-		PanakoStorage db;
-		
-		if (Config.get(Key.PANAKO_STORAGE).equalsIgnoreCase("LMDB")) {
-			db = PanakoStorageKV.getInstance();
-		}else {
-			db = PanakoStorageMemory.getInstance();
-		}
-		
-		PanakoStorage fileCache = null;
-		if(Config.getBoolean(Key.PANAKO_CACHE_TO_FILE)) {
-			fileCache = PanakoStorageFile.getInstance();
-		}
-		
+		PanakoStorage db = getStorage();
 		List<PanakoFingerprint> prints = toFingerprints(resource);
 		
 		int resourceID = FileUtils.getIdentifier(resource);
@@ -106,16 +115,9 @@ public class PanakoStrategy extends Strategy {
 		for(PanakoFingerprint print : prints) {
 			long hash = print.hash();
 			db.addToStoreQueue(hash, resourceID, print.t1,print.f1);
-			if(fileCache!=null) {
-				fileCache.addToStoreQueue(hash, resourceID, print.t1, print.f1);
-			}
 		}
 		db.processStoreQueue();
-		
-		if(fileCache!=null) {
-			fileCache.processStoreQueue();
-		}
-		
+
 		//store meta-data as well
 		float duration = 0;
 		if(prints.size() != 0) {
@@ -138,7 +140,7 @@ public class PanakoStrategy extends Strategy {
 	@Override
 	public double delete(String resource) {
 
-		PanakoStorageKV db = PanakoStorageKV.getInstance();
+		PanakoStorage db = getStorage();
 		
 		List<PanakoFingerprint> prints = toFingerprints(resource);
 		
@@ -168,30 +170,39 @@ public class PanakoStrategy extends Strategy {
 	}
 	
 	private List<PanakoFingerprint> toFingerprints(String resource){
+		return toFingerprints(resource,0,MAX_TIME);
+	}
+	
+	private List<PanakoFingerprint> toFingerprints(String resource,double startTimeOffset,double numberOfSeconds){
+
 		if(Config.getBoolean(Key.PANAKO_USE_CACHED_PRINTS)) {
 			String folder = Config.get(Key.PANAKO_CACHE_FOLDER);
 			folder = FileUtils.expandHomeDir(folder);
 			String tdbPath =  FileUtils.combine(folder,resolve(resource) + ".tdb");
+
 			if(FileUtils.exists(tdbPath)) {
-				
 				List<PanakoFingerprint> prints = new ArrayList<>();
 				List<long[]> printData = readFingerprintFile(tdbPath);
 				for(long[] data : printData) {
 					long fingerprintHash = data[0];
 					int t1 = (int) data[2];
 					int f1 = (int) data[3];
-					prints.add(new PanakoFingerprint(fingerprintHash,t1,f1));
+					float t1InSeconds = blocksToSeconds(t1);
+
+					//skip all fingerprints after stop time
+					if(t1InSeconds > startTimeOffset + numberOfSeconds)
+						break;
+					//only add prints if they are after the start time offset
+					if(t1InSeconds >= startTimeOffset)
+						prints.add(new PanakoFingerprint(fingerprintHash,t1,f1));
 				}
-				
-				LOG.info(String.format("Read %d cached fingerprints from file %s for %s", prints.size(),tdbPath,resource));
+				LOG.info(String.format("Read %d cached fingerprints from file '%s' (start: %.3f sec, stop: %.3f sec) for '%s'", prints.size(),tdbPath,startTimeOffset,startTimeOffset+numberOfSeconds,resource));
 				return prints;
+			}else{
+				LOG.info(String.format("Could not read cached fingerprints from file '%s' for '%s'",tdbPath,resource));
 			}
-		}
-		
-		return toFingerprints(resource,0,MAX_TIME);
-	}
-	
-	private List<PanakoFingerprint> toFingerprints(String resource,double startTimeOffset,double numberOfSeconds){
+		} //else no cached prints are found
+
 		int samplerate, size, overlap;
 		samplerate = Config.getInt(Key.PANAKO_SAMPLE_RATE);
 		size = Config.getInt(Key.PANAKO_AUDIO_BLOCK_SIZE);
@@ -205,15 +216,12 @@ public class PanakoStrategy extends Strategy {
 			d = AudioDispatcherFactory.fromPipe(resource, samplerate, size, overlap,startTimeOffset,numberOfSeconds);
 		
 		PanakoEventPointProcessor eventPointProcessor = new PanakoEventPointProcessor(size);
-		latency = eventPointProcessor.latency();
 		d.addAudioProcessor(eventPointProcessor);
 		d.run();
 		
 		return eventPointProcessor.getFingerprints();	
 	}
-	
-	
-	int latency;
+
 	private float blocksToSeconds(int t) {
 		float timeResolution = Config.getFloat(Key.PANAKO_TRANSF_TIME_RESOLUTION);
 		float sampleRate = Config.getFloat(Key.PANAKO_SAMPLE_RATE);
@@ -271,7 +279,7 @@ public class PanakoStrategy extends Strategy {
 			prints = toFingerprints(query);
 		}
 		
-		PanakoStorageKV db = PanakoStorageKV.getInstance();
+		PanakoStorage db = getStorage();
 		
 		Map<Long,PanakoFingerprint> printMap = new HashMap<>();
 		
@@ -289,14 +297,13 @@ public class PanakoStrategy extends Strategy {
 		int queryRange = Config.getInt(Key.PANAKO_QUERY_RANGE);
 		db.processQueryQueue(matchAccumulator,queryRange , avoid);
 		
-		LOG.info(String.format("Query for %d prints, %d matches in %s \n", printMap.size(),matchAccumulator.size(), w.formattedToString()));
-		
+
 		 HashMap<Integer,List<PanakoMatch>> hitsPerIdentifer = new HashMap<>();
 		 
 		 final List<QueryResult> queryResults = new ArrayList<>();
-		 
+
 		 matchAccumulator.forEach((fingerprintHash, dbHits) -> {
-			 
+
 			 dbHits.forEach((dbHit)->{
 				//long matchingHash  = data[0];
 				 int identifier = dbHit.resourceID;
@@ -317,7 +324,9 @@ public class PanakoStrategy extends Strategy {
 				 hitsPerIdentifer.get(identifier).add(hit);
 			 });
 		 });
-		 
+
+		 LOG.info(String.format("Query for %d prints, %d matches in %s \n", printMap.size(),matchAccumulator.size(), w.formattedToString()));
+
 		 int minimumUnfilteredHits = Config.getInt(Key.PANAKO_MIN_HITS_UNFILTERED);
 		 int minimumFilteredHits = Config.getInt(Key.PANAKO_MIN_HITS_FILTERED);
 		 
@@ -330,11 +339,9 @@ public class PanakoStrategy extends Strategy {
 		 
 		 matchesToDelete.forEach( identifier ->{
 			 hitsPerIdentifer.remove(identifier);
-			 //System.out.println("Removed " + identifier);
 		 });
 		 
 		 hitsPerIdentifer.forEach((identifier, hitlist) -> {
-			 //System.out.println("Matches " + identifier + " matches " + hitlist.size());
 			 
 			 //sort by query time
 			 Collections.sort(hitlist, (Comparator<? super PanakoMatch>) (PanakoMatch a, PanakoMatch b) -> Integer.valueOf(a.queryTime).compareTo(Integer.valueOf(b.queryTime)));
@@ -474,10 +481,7 @@ public class PanakoStrategy extends Strategy {
 		int overlapInSeconds = Config.getInt(Key.MONITOR_OVERLAP); // 5
 		int stepSizeInSeconds = Config.getInt(Key.MONITOR_STEP_SIZE); //25
 		
-		// Get the total duration
-		AudioDispatcher d = AudioDispatcherFactory.fromPipe(query, 8000, 2048, 0);
-		d.run();
-		double totalDuration = d.secondsProcessed();
+		float totalDuration = AudioFileUtils.audioFileDurationInSeconds(new File(query));
 		
 		//Steps: 0-25s ; 20-45s ; 40-65s ...
 		int actualStep = stepSizeInSeconds - overlapInSeconds;//20s
@@ -489,9 +493,8 @@ public class PanakoStrategy extends Strategy {
 	@Override
 	public boolean hasResource(String resource) {
 		int identifier = FileUtils.getIdentifier(resource);
-		PanakoStorageKV db;
-		db = PanakoStorageKV.getInstance();
-		
+		PanakoStorage db = getStorage();
+
 		return db.getMetadata(identifier) != null;
 	}
 
@@ -502,7 +505,7 @@ public class PanakoStrategy extends Strategy {
 
 	@Override
 	public void printStorageStatistics() {
-		PanakoStorageKV.getInstance().printStatistics(true);
+		getStorage().printStatistics(true);
 	}
 
 	@Override
@@ -567,16 +570,11 @@ public class PanakoStrategy extends Strategy {
 
 	@Override
 	public void clear() {
-		if(Config.getBoolean(Key.PANAKO_CACHE_TO_FILE)) {
-			PanakoStorageFile.getInstance().clear();
-		}
-		if (Config.get(Key.PANAKO_STORAGE).equalsIgnoreCase("LMDB")) {
-			PanakoStorageKV.getInstance().clear();
-		}
+		getStorage().clear();
 	}
 
 	public String metadata(String path) {
-		final PanakoStorage db = PanakoStorageKV.getInstance();
+		final PanakoStorage db = getStorage();
 		long identifier = FileUtils.getIdentifier(path);
 		PanakoResourceMetadata metaData = db.getMetadata(identifier);
 

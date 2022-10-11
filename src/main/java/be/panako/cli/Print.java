@@ -59,7 +59,7 @@ class Print extends Application{
 		Strategy strategy = Strategy.getInstance();
 		
 		for(File file: files){
-			strategy.print(file.getPath(),sonicVisualizerOutput);
+			strategy.print(file.getAbsolutePath(),sonicVisualizerOutput);
 		}
 		
 	}

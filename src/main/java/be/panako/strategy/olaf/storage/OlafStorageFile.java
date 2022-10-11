@@ -41,6 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
@@ -50,6 +51,7 @@ import be.panako.util.Key;
  * Stores fingerprints to a file. It is mainly used to cache fingerprint extraction results.
  */
 public class OlafStorageFile implements OlafStorage {
+	private final static Logger LOG = Logger.getLogger(OlafStorageFile.class.getName());
 	
 	/**
 	 * The single instance of the storage.
@@ -239,10 +241,11 @@ public class OlafStorageFile implements OlafStorage {
 	public void clear() {
 		if(!FileUtils.exists(storeDir.getAbsolutePath()))
 			return;
-		
-		for(File f : storeDir.listFiles()) {
+		File[] filesToDelete = storeDir.listFiles();
+		for(File f : filesToDelete) {
 			FileUtils.rm(f.getAbsolutePath());
 		}
+		LOG.info(String.format("Removed %d files from file storage",filesToDelete.length));
 	}
 }
 
