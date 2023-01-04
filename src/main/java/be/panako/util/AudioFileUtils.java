@@ -10,12 +10,20 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.logging.Logger;
 
+/**
+ * Utilities to work with audio files: e.g. to efficiently get the duration of an audio file.
+ */
 public class AudioFileUtils {
     private final static Logger LOG = Logger.getLogger(AudioFileUtils.class.getName());
 
     private static final String NEWLINE = System.getProperty("line.separator");
 
-    public static String run(String... command) throws IOException, InterruptedException {
+    /**
+     * Hide default constructor
+     */
+    private AudioFileUtils(){}
+
+    private static String run(String... command) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder(command).redirectErrorStream(true);
         Process process = pb.start();
         StringBuilder result = new StringBuilder(80);
@@ -31,6 +39,12 @@ public class AudioFileUtils {
         return result.toString();
     }
 
+    /**
+     * Determine the duration of an audio file efficiently. If efficient method fails,
+     * falls back to inefficient (decoding) method.
+     * @param audioFile The audio file to determine the duration off
+     * @return The duration of the audio in seconds.
+     */
     public static float audioFileDurationInSeconds(File audioFile){
         String command = Config.get(Key.AUDIO_DURATION_COMMAND);
         String path = audioFile.getAbsolutePath();

@@ -49,6 +49,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
+import be.panako.cli.Panako;
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
@@ -76,13 +77,18 @@ public class PanakoStrategy extends Strategy {
 	 * Create a new instance
 	 */
 	public PanakoStrategy(){
-		//determine the Gaborator latency to make sure the block time to seconds
-		//conversion is always correct!
-		int size = Config.getInt(Key.PANAKO_AUDIO_BLOCK_SIZE);
-		PanakoEventPointProcessor eventPointProcessor = new PanakoEventPointProcessor(size);
-		latency = eventPointProcessor.latency();
-		LOG.info(String.format("Gaborator latency is %d samples",latency));
-		eventPointProcessor.processingFinished();
+
+		if(!Config.getBoolean(Key.PANAKO_USE_GPU_EP_EXTRACTOR)) {
+			//determine the Gaborator latency to make sure the block time to seconds
+			//conversion is always correct!
+			int size = Config.getInt(Key.PANAKO_AUDIO_BLOCK_SIZE);
+			PanakoEventPointProcessor eventPointProcessor = new PanakoEventPointProcessor(size);
+			latency = eventPointProcessor.latency();
+			LOG.info(String.format("Gaborator latency is %d samples", latency));
+			eventPointProcessor.processingFinished();
+		}else{
+			latency=0;
+		}
 
 		PanakoStorage db;
 		if (Config.get(Key.PANAKO_STORAGE).equalsIgnoreCase("LMDB")) {
@@ -203,23 +209,39 @@ public class PanakoStrategy extends Strategy {
 			}
 		} //else no cached prints are found
 
-		int samplerate, size, overlap;
-		samplerate = Config.getInt(Key.PANAKO_SAMPLE_RATE);
-		size = Config.getInt(Key.PANAKO_AUDIO_BLOCK_SIZE);
-		overlap = Config.getInt(Key.PANAKO_AUDIO_BLOCK_OVERLAP);
-		
-		AudioDispatcher d;
-		
-		if(numberOfSeconds==MAX_TIME)
-			d = AudioDispatcherFactory.fromPipe(resource, samplerate, size, overlap,startTimeOffset);
-		else
-			d = AudioDispatcherFactory.fromPipe(resource, samplerate, size, overlap,startTimeOffset,numberOfSeconds);
-		
-		PanakoEventPointProcessor eventPointProcessor = new PanakoEventPointProcessor(size);
-		d.addAudioProcessor(eventPointProcessor);
-		d.run();
-		
-		return eventPointProcessor.getFingerprints();	
+		if(Config.getBoolean(Key.PANAKO_USE_GPU_EP_EXTRACTOR)){
+			List<PanakoFingerprint> prints = new PanakoGPUEventPointProcessor().extractFingerprints(resource);
+			List<PanakoFingerprint> filteredPrints = new ArrayList<>();
+			for(PanakoFingerprint print : prints) {
+				float t1InSeconds = blocksToSeconds(print.t1);
+				//skip all fingerprints after stop time
+				if(t1InSeconds > startTimeOffset + numberOfSeconds)
+					break;
+				//only add prints if they are after the start time offset
+				if(t1InSeconds >= startTimeOffset)
+					filteredPrints.add(print);
+			}
+			return filteredPrints;
+		}else{
+			int samplerate, size, overlap;
+			samplerate = Config.getInt(Key.PANAKO_SAMPLE_RATE);
+			size = Config.getInt(Key.PANAKO_AUDIO_BLOCK_SIZE);
+			overlap = Config.getInt(Key.PANAKO_AUDIO_BLOCK_OVERLAP);
+
+			AudioDispatcher d;
+
+			if(numberOfSeconds==MAX_TIME)
+				d = AudioDispatcherFactory.fromPipe(resource, samplerate, size, overlap,startTimeOffset);
+			else
+				d = AudioDispatcherFactory.fromPipe(resource, samplerate, size, overlap,startTimeOffset,numberOfSeconds);
+
+			PanakoEventPointProcessor eventPointProcessor = new PanakoEventPointProcessor(size);
+			d.addAudioProcessor(eventPointProcessor);
+			d.run();
+
+			return eventPointProcessor.getFingerprints();
+		}
+
 	}
 
 	private float blocksToSeconds(int t) {

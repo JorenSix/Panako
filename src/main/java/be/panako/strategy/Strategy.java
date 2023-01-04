@@ -175,7 +175,11 @@ public abstract class Strategy {
 	 */
 	public abstract void clear();
 
-
+	/**
+	 * Return the meta-data for a stored resource
+	 * @param path The path of the resource
+	 * @return The meta-data string
+	 */
 	public abstract String metadata(String path);
 
 }

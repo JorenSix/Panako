@@ -19,22 +19,25 @@ package be.panako.util;
  */
 public final class MurmurHash3 {
 
+    /**
+     * Hide default constructor.
+     */
+    private MurmurHash3(){}
+
     /** 128 bits of state */
     public static final class LongPair {
+        private LongPair(){}
+        /**
+         * First 64 bits of the 128-bit hash
+         */
         public long val1;
+        /**
+         * Second 64 bits of 128-bit hash
+         */
         public long val2;
     }
 
-    public static final int fmix32(int h) {
-        h ^= h >>> 16;
-        h *= 0x85ebca6b;
-        h ^= h >>> 13;
-        h *= 0xc2b2ae35;
-        h ^= h >>> 16;
-        return h;
-    }
-
-    public static final long fmix64(long k) {
+    private static long fmix64(long k) {
         k ^= k >>> 33;
         k *= 0xff51afd7ed558ccdL;
         k ^= k >>> 33;
@@ -43,8 +46,13 @@ public final class MurmurHash3 {
         return k;
     }
 
-    /** Gets a long from a byte buffer in little endian byte order. */
-    public static final long getLongLittleEndian(byte[] buf, int offset) {
+    /**
+     * Gets a long from a byte buffer in little endian byte order
+     * @param buf The byte buffer
+     * @param offset The offset in the buffer
+     * @return the long
+     */
+    public static long getLongLittleEndian(byte[] buf, int offset) {
         return     ((long)buf[offset+7]    << 56)   // no mask needed
                 | ((buf[offset+6] & 0xffL) << 48)
                 | ((buf[offset+5] & 0xffL) << 40)
@@ -56,8 +64,14 @@ public final class MurmurHash3 {
     }
 
 
-    /** Returns the MurmurHash3_x86_32 hash. */
-    @SuppressWarnings("fallthrough")
+    /**
+     * Returns the MurmurHash3_x86_32 hash.
+     * @param data the data to hash
+     * @param offset the offset in the data
+     * @param len the length
+     * @param seed the seed used
+     * @return the MurmurHash3_x86_32 hash.
+     */
     public static int murmurhash3_x86_32(byte[] data, int offset, int len, int seed) {
 
         final int c1 = 0xcc9e2d51;
@@ -110,9 +124,15 @@ public final class MurmurHash3 {
     }
 
 
-    /** Returns the MurmurHash3_x86_32 hash of the UTF-8 bytes of the String without actually encoding
-     * the string to a temporary buffer.  This is more than 2x faster than hashing the result
-     * of String.getBytes().
+    /**
+     * Returns the MurmurHash3_x86_32 hash of the UTF-8 bytes of the String without actually encoding
+     *  the string to a temporary buffer.  This is more than 2x faster than hashing the result
+     *  of String.getBytes().
+     * @param data the data to hash
+     * @param offset the offset in the data
+     * @param len the length
+     * @param seed the seed used
+     * @return the MurmurHash3_x86_32 hash of the UTF-8 bytes of the String.
      */
     public static int murmurhash3_x86_32(CharSequence data, int offset, int len, int seed) {
 
@@ -235,9 +255,15 @@ public final class MurmurHash3 {
         return h1;
     }
 
-
-    /** Returns the MurmurHash3_x64_128 hash, placing the result in "out". */
-    @SuppressWarnings("fallthrough")
+    
+    /**
+     * Returns the MurmurHash3_x64_128 hash, placing the result in "out".
+     * @param key the data to hash
+     * @param offset the offset in the data
+     * @param len the length of bytes to hash
+     * @param seed the initial seed
+     * @param out the pair of longs to place the result in
+     */
     public static void murmurhash3_x64_128(byte[] key, int offset, int len, int seed, LongPair out) {
         // The original algorithm does have a 32 bit unsigned seed.
         // We have to mask to match the behavior of the unsigned types and prevent sign extension.

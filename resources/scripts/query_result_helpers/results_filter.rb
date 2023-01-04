@@ -2,12 +2,12 @@
 # panako query list_of_mps3.txt > query_results.csv
 # ruby results_filter.rb query_results.csv > filtered_results.csv
 
-require 'result_line'
+require_relative 'result_line'
 
 match_result_file = ARGV[0]
 
 #filter configuration
-MIN_DURATION = 15
+MIN_DURATION = 3
 MAX_DURATION = 500000
 MIN_MATCHES_PER_SECOND = 5
 MAX_EMPTY_SECONDS = 0.7 #70% of the matching seconds are allowed to have no matching prints, more is not allowed

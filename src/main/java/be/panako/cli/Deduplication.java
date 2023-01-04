@@ -38,12 +38,15 @@
 package be.panako.cli;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
+import be.panako.util.FileUtils;
 
 
 /**
@@ -52,17 +55,50 @@ import be.panako.strategy.Strategy;
 class Deduplication extends Application implements QueryResultHandler  {
 	@Override
 	public void run(String... args) {
+
+		if(this.hasArgument("-file_hash",args) || this.hasArgument("--file_hash",args)){
+			deduplicateWithFileHashing(args);
+		}else{
+			deduplicateWithFingerprinting(args);
+		}
+	}
+
+	private void deduplicateWithFileHashing(String... args){
+		final HashMap<Integer,List<String>> list = new HashMap<>();
+		final Strategy strategy = Strategy.getInstance();
+		List<File> files = getFilesFromArguments(args);
+		for(int i = 0 ; i < files.size() ; i++){
+			File f = files.get(i);
+			Integer fileHash = FileUtils.getFileHash(f);
+			if(!list.containsKey(fileHash)){
+				list.put(fileHash,new ArrayList<>());
+			}
+			list.get(fileHash).add(f.getAbsolutePath());
+			System.out.println(String.format("%d,%d,%d,%s",i,files.size(),fileHash,f.getAbsolutePath()));
+		}
+		list.forEach((key,l) -> {
+			if(l.size() >= 2){
+				System.out.print(key);
+				l.forEach( e -> {
+					System.out.print(";" + e);
+				});
+				System.out.println();
+			}
+		});
+	}
+
+	private void deduplicateWithFingerprinting(String... args){
 		String[] storeArgs = new String[args.length+1];
 		storeArgs[0] = "store";
 		for(int i = 1 ; i < storeArgs.length ; i++){
 			storeArgs[i] = args[i-1];
 		}
 		Panako.main(storeArgs);
-		
+
 		List<File> files = super.getFilesFromArguments(args);
 		//monitor
 		Strategy strategy = Strategy.getInstance();
-		
+
 		for(File f: files){
 			HashSet<Integer> identifiersToAvoid = new HashSet<Integer>();
 			Integer identifierToAvoid = Integer.valueOf(strategy.resolve(f.getName()));
@@ -73,12 +109,13 @@ class Deduplication extends Application implements QueryResultHandler  {
 
 	@Override
 	public String description() {
-		return "Deduplication tries to find duplicates in a set of files. Basically a store operation and monitor step for all files.";
+		return "Deduplication tries to find duplicates in a set of files. Basically a store operation and monitor step for all files." +
+				"if --file_hash is provided no acoustic fingerprinting is done but the files are compared using a file hash";
 	}
 
 	@Override
 	public String synopsis() {
-		return "deduplication [audiofilelist.txt... audio_files...]";
+		return "deduplication [--file_hash] [audiofilelist.txt... audio_files...]";
 	}
 
 	@Override

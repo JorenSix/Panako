@@ -116,22 +116,6 @@ public class PanakoEventPointProcessor implements AudioProcessor {
 		maxHorizontal = new float[fftSize/2];
 	}
 	
-	void naive_max_filter(float[] data, float[]  max, int  half_filter_size , boolean clamp){
-
-		for(int i = 0 ; i < data.length ; i++){
-			int startIndex = Math.max(i - half_filter_size,0);
-			int  stopIndex = Math.min(data.length-1, i + half_filter_size);
-			float maxValue = -1000000;
-			for(int j = startIndex ; j <= stopIndex; j++){
-				if(maxValue < data[j]){
-	                maxValue = data[j];
-	            }
-			}
-	        max[i] = maxValue;
-		}
-	   
-	}
-	
 	@Override	
 	public boolean process(AudioEvent audioEvent) {
 		
@@ -228,7 +212,7 @@ public class PanakoEventPointProcessor implements AudioProcessor {
 			analysisFrameIndex++;
 		}
 		
-		packEventPointsIntoFingerprints();
+		packEventPointsIntoFingerprints(eventPoints,fingerprints);
 	}
 
 	/**
@@ -246,8 +230,13 @@ public class PanakoEventPointProcessor implements AudioProcessor {
 	public List<PanakoEventPoint> getEventPoints() {
 		return eventPoints;
 	}
-	
-	private void packEventPointsIntoFingerprints(){
+
+	/**
+	 * Packs event points into fingerprints
+	 * @param eventPoints The list of event points to process.
+	 * @param fingerprints The list of fingerprints to add new fingerprints to.
+	 */
+	public static void packEventPointsIntoFingerprints(List<PanakoEventPoint> eventPoints,List<PanakoFingerprint> fingerprints){
 		
 		int minFreqDistance = Config.getInt(Key.PANAKO_FP_MIN_FREQ_DIST);
 		int maxFreqDistance = Config.getInt(Key.PANAKO_FP_MAX_FREQ_DIST);

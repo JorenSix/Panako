@@ -1,4 +1,6 @@
 !https://github.com/JorenSix/Panako/actions/workflows/gradle.yml/badge.svg(Panako build status)!
+"!https://joss.theoj.org/papers/10.21105/joss.04554/status.svg(Panako JOSS DOI badge)!":https://doi.org/10.21105/joss.04554
+
 
 h1. Panako - Acoustic Fingerprinting
 

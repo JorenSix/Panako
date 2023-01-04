@@ -158,7 +158,7 @@ public final class StopWatch {
 	}
 
 	/**
-	 * Return a formatted string for a time duration in seconds so from 61s => 1m:1s
+	 * Return a formatted string for a time duration in seconds so from 61s to 1m:1s
 	 * @param secondsPassed The duration to format.
 	 * @return A formatted string in h:m:s:ms format
 	 */

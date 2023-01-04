@@ -118,7 +118,7 @@ public enum Key{
 	/**
 	 * Maximum number of items returned for a query
 	 * Normally only a handful of matches are expected
-	 * So use a large number (> 50) to return all results
+	 * So use a large number (more than 50) to return all results
 	 * Use 1 if you only want the best ranked result
 	 */
 	NUMBER_OF_QUERY_RESULTS(1000),
@@ -410,7 +410,12 @@ public enum Key{
 	/**
 	 * Use the cached fingerprints to skip fingerprint extraction if possible
 	 */
-	PANAKO_USE_CACHED_PRINTS("TRUE");
+	PANAKO_USE_CACHED_PRINTS("TRUE"),
+	/**
+	 * Use the default (CPU based JGaborator) Event point extractor or use CUDA/MPS for event point
+	 * extraction. The python server needs to be running if set to true.
+	 */
+	PANAKO_USE_GPU_EP_EXTRACTOR("FALSE");
 
 	String defaultValue;
 

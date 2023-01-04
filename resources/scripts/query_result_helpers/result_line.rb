@@ -76,6 +76,10 @@ class ResultLine
     @empty_seconds <= MAX_EMPTY_SECONDS
   end
 
+  def set_symetric
+    @symmetric=true
+  end
+
   def store_and_play_files(duration_in_seconds)
     ref_basename = File.basename(@ref,File.extname(@ref))
     q_basename = File.basename(@query,File.extname(@query))

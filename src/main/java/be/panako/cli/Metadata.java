@@ -35,6 +35,7 @@
 package be.panako.cli;
 
 import be.panako.strategy.Strategy;
+import jnr.ffi.annotations.Meta;
 
 import java.io.File;
 import java.util.List;
@@ -43,6 +44,13 @@ import java.util.List;
  * A command line application to show the stored meta-data for a media file.
  */
 public class Metadata extends Application{
+
+    /**
+     * Create a new meta-data application.
+     */
+    public Metadata(){
+        super();
+    }
 
     @Override
     public void run(String... args) {
