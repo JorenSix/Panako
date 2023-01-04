@@ -255,7 +255,7 @@ public final class MurmurHash3 {
         return h1;
     }
 
-    
+
     /**
      * Returns the MurmurHash3_x64_128 hash, placing the result in "out".
      * @param key the data to hash
