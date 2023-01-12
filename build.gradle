@@ -16,6 +16,10 @@ targetCompatibility = 1.11
 repositories {
     mavenCentral()
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+    maven {
+        name = "TarsosDSP repository"
+        url = "https://mvn.0110.be/releases"
+    }
 }
 
 dependencies {
@@ -24,7 +28,10 @@ dependencies {
     implementation group: 'org.lmdbjava', name: 'lmdbjava', version: '0.8.3-SNAPSHOT'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
 
-    ConfigurableFileCollection dependencies =  files("lib/JGaborator-0.6.jar","lib/TarsosDSP-2.4.jar")
+    implementation 'be.tarsos.dsp:core:2.5'
+    implementation 'be.tarsos.dsp:jvm:2.5'
+
+    ConfigurableFileCollection dependencies =  files("lib/JGaborator-0.6.jar")
     implementation(dependencies)
 }
 
