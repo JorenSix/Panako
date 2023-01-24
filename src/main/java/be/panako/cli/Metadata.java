@@ -35,7 +35,6 @@
 package be.panako.cli;
 
 import be.panako.strategy.Strategy;
-import jnr.ffi.annotations.Meta;
 
 import java.io.File;
 import java.util.List;

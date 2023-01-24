@@ -54,7 +54,6 @@ import be.tarsos.dsp.pitch.PitchDetectionResult;
 import be.tarsos.dsp.pitch.PitchProcessor;
 import be.tarsos.dsp.pitch.PitchProcessor.PitchEstimationAlgorithm;
 import be.tarsos.dsp.util.PitchConverter;
-import jdk.jshell.spi.ExecutionControl;
 
 /**
  * Implementation of the strategy described in 
