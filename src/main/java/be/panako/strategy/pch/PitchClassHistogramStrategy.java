@@ -249,7 +249,7 @@ public class PitchClassHistogramStrategy extends Strategy {
 	}
 
 	@Override
-	public void print(String path, boolean sonicVisualizerOutput) {
+	public void print(String path, boolean sonicVisualizerOutput, boolean printOnlyEPs) {
 		throw new RuntimeException("Print is currently not implemented for the PCH strategy");
 	}
 

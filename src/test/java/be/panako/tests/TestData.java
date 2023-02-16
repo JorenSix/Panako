@@ -13,6 +13,8 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TestData {
 
@@ -59,6 +61,52 @@ public class TestData {
                 "852601_43s-63s.mp3",
                 "96644_84s-104s.mp3"};
         return downloadDataset(queries,"queries");
+    }
+
+
+    public static Integer getIdFromFileName(String fileName){
+        String regex = "(\\d+).*mp3";
+        Matcher m = Pattern.compile(regex).matcher(new File(fileName).getName());
+        m.find();
+        String id = m.group(1);
+        return  Integer.valueOf(id);
+    }
+
+    public static int[] getStartAndStop(String fileName){
+        String regex = "(\\d+)_(\\d+)s-(\\d+)s.*mp3";
+        Matcher m = Pattern.compile(regex).matcher(new File(fileName).getName());
+        m.find();
+        return new int[]{Integer.valueOf(m.group(2)), Integer.valueOf(m.group(3))};
+    }
+
+
+    public static List<File> overTheAirQueryFiles(){
+        String[] queries = {"1024035_55s-75s_ota.mp3",
+                "1051039_34s-54s_ota.mp3",
+                "1071559_60s-80s_ota.mp3",
+                "1075784_78s-98s_ota.mp3",
+                "11266_69s-89s_ota.mp3",
+                "132755_137s-157s_ota.mp3",
+                "147199_115s-135s_ota.mp3",
+                "173050_86s-106s_ota.mp3",
+                "189211_60s-80s_ota.mp3",
+                "295781_88s-108s_ota.mp3",
+                "297888_45s-65s_ota.mp3",
+                "361430_180s-200s_ota.mp3",
+                "371009_187s-207s_ota.mp3",
+                "378501_59s-79s_ota.mp3",
+                "384991_294s-314s_ota.mp3",
+                "432279_81s-101s_ota.mp3",
+                "43383_224s-244s_ota.mp3",
+                "478466_24s-44s_ota.mp3",
+                "602848_242s-262s_ota.mp3",
+                "604705_154s-174s_ota.mp3",
+                "612409_73s-93s_ota.mp3",
+                "824093_182s-202s_ota.mp3",
+                "84302_232s-252s_ota.mp3",
+                "852601_43s-63s_ota.mp3",
+                "96644_84s-104s_ota.mp3"};
+        return downloadDataset(queries,"queries_ota");
     }
 
     private static List<File> downloadDataset(String filenames[] , String foldername){

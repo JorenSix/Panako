@@ -49,12 +49,9 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
-import be.panako.cli.Panako;
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
-import be.panako.strategy.olaf.storage.OlafResourceMetadata;
-import be.panako.strategy.olaf.storage.OlafStorage;
 import be.panako.strategy.panako.storage.*;
 import be.panako.util.*;
 import be.tarsos.dsp.AudioDispatcher;
@@ -565,7 +562,7 @@ public class PanakoStrategy extends Strategy {
 	}
 
 	@Override
-	public void print(String path, boolean sonicVisualizerOutput) {
+	public void print(String path, boolean sonicVisualizerOutput, boolean printOnlyEPs) {
 		List<PanakoFingerprint> prints = toFingerprints(path);
 
 		TreeMap<Integer,float[]> timeIndexedSpectralPeaks = new TreeMap<>();

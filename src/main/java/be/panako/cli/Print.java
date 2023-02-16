@@ -55,11 +55,12 @@ class Print extends Application{
 		List<File> files = this.getFilesFromArguments(args);
 		
 		boolean sonicVisualizerOutput = hasArgument("-sv", args);
+		boolean printOnlyEPs = hasArgument("-ep", args);
 		
 		Strategy strategy = Strategy.getInstance();
 		
 		for(File file: files){
-			strategy.print(file.getAbsolutePath(),sonicVisualizerOutput);
+			strategy.print(file.getAbsolutePath(),sonicVisualizerOutput,printOnlyEPs);
 		}
 		
 	}

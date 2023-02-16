@@ -1,5 +1,6 @@
 package be.panako.tests;
 
+import be.panako.cli.Panako;
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
@@ -8,7 +9,7 @@ import be.panako.strategy.olaf.storage.OlafHit;
 import be.panako.strategy.olaf.storage.OlafResourceMetadata;
 import be.panako.strategy.olaf.storage.OlafStorage;
 import be.panako.strategy.olaf.storage.OlafStorageKV;
-import be.panako.strategy.panako.PanakoStrategy;
+
 import be.panako.util.Config;
 import be.panako.util.FileUtils;
 import be.panako.util.Key;
@@ -26,20 +27,21 @@ class OlafStorageKVTest {
     List<File> references;
     List<File> queries;
 
+    List<File> queries_ota;
+
     @BeforeEach
     void setUp() {
         references = TestData.referenceFiles();
         queries = TestData.queryFiles();
+        queries_ota = TestData.overTheAirQueryFiles();
         Config config = Config.getInstance();
         String tempStoragePath = FileUtils.combine(FileUtils.temporaryDirectory(),"olaf_test");
         config.set(Key.OLAF_LMDB_FOLDER,tempStoragePath);
+        config.set(Key.OLAF_STORAGE,"LMDB");
+        config.set(Key.OLAF_CACHE_TO_FILE,"FALSE");
+        config.set(Key.OLAF_USE_CACHED_PRINTS,"FALSE");
     }
 
-    @AfterEach
-    void tearDown() {
-        Config config = Config.getInstance();
-        System.out.println( config.get(Key.OLAF_LMDB_FOLDER));
-    }
 
     @Test
     void storeMetadata() {
@@ -70,24 +72,67 @@ class OlafStorageKVTest {
         assertEquals(1 ,matchAccumulator.size(),"Expected only one match");
     }
 
-    @Test
-    void testMatching(){
+
+    private void testMatching(List<File> queries){
+        float maxStartDelta = 3.5f;
         Strategy s = new OlafStrategy();
-        for(File ref : references){
-            s.store(ref.getAbsolutePath(),ref.getName());
+        List<Integer> refIds = new ArrayList<>();
+        for(File ref : references) {
+            s.store(ref.getAbsolutePath(), ref.getName());
+            refIds.add(TestData.getIdFromFileName(ref.getName()));
         }
+        Random r = new Random(0L);
+        Collections.shuffle(queries,r);
 
-        s.query(queries.get(1).getAbsolutePath(), 1, new HashSet<>(), new QueryResultHandler() {
-            @Override
-            public void handleQueryResult(QueryResult result) {
-                assertTrue(result.refIdentifier.equalsIgnoreCase(1051039 + ""));
-                assertEquals(34,result.refStart,3.5,"Expect start to be close to 34s");
-            }
+        for(File query : queries){
 
-            @Override
-            public void handleEmptyResult(QueryResult result) {
-                assertTrue(false);
-            }
-        });
+            String path = query.getAbsolutePath();
+            String baseName = query.getName();
+
+            Integer expectedId = TestData.getIdFromFileName(query.getName());
+            boolean matchExpected = refIds.contains(expectedId);
+            int expectedStart = TestData.getStartAndStop(query.getName())[0];
+
+            s.query(path, 1, new HashSet<>(), new QueryResultHandler() {
+                @Override
+                public void handleQueryResult(QueryResult result) {
+                    Panako.printQueryResult(result);
+                    assertTrue(result.refIdentifier.equalsIgnoreCase(expectedId +""));
+                    //1071559 is electronic music with exact repetition so it is impossible to determine start offset
+                    if(1071559 != Integer.valueOf(result.refIdentifier) ) {
+                        assertEquals(expectedStart, result.refStart, maxStartDelta, "Returned start should be close to actual start.");
+                    }
+                }
+
+                @Override
+                public void handleEmptyResult(QueryResult result) {
+                    Panako.printQueryResult(result);
+                    //1071559 is electronic music with exact repetition so it is impossible to determine start offset
+                    if(1071559 != TestData.getIdFromFileName(baseName) ) {
+                        assertTrue(!matchExpected,"Unexpected empty match for " + baseName);
+                    }
+
+                }
+            });
+
+            System.out.println("Correctly matched to index: " + baseName);
+        }
+    }
+
+    @Test
+    void testMatchingPlain(){
+        testMatching(queries);
+    }
+
+    @Test
+    void testMatchingOTA(){
+        //Only use two event points for a fingerprint
+        Config.set(Key.OLAF_EPS_PER_FP,"2");
+        //Use simple histogram matching for noisy queries
+        Config.set(Key.OLAF_MATCH_FALLBACK_TO_HIST,"TRUE");
+        //TO avoid false positives: allow fewer seconds without matches.
+        Config.set(Key.OLAF_MIN_SEC_WITH_MATCH,"0.30");
+
+        testMatching(queries_ota);
     }
 }

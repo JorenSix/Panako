@@ -46,6 +46,7 @@ import be.panako.util.Key;
 import be.panako.util.LemireMinMaxFilter;
 import be.tarsos.dsp.AudioEvent;
 import be.tarsos.dsp.AudioProcessor;
+import be.tarsos.dsp.util.PitchConverter;
 import be.tarsos.dsp.util.fft.FFT;
 import be.tarsos.dsp.util.fft.HammingWindow;
 
@@ -85,6 +86,9 @@ public class OlafEventPointProcessor implements AudioProcessor {
 	private final int maxFilterWindowSizeTime = Config.getInt(Key.OLAF_TIME_MAX_FILTER_SIZE);
 	
 	private final float[] maxHorizontal;
+
+	private final int[] frequencyFilterMinIndexes;
+	private final int[] frequencyFilterMaxIndexes;
 	
 	//private final int maxFingerprintsPerEventPoint = 10;
 
@@ -102,11 +106,46 @@ public class OlafEventPointProcessor implements AudioProcessor {
 		previousMaxMagnitudes = new HashMap<>();
 		previousMagnitudes = new HashMap<>();
 
-		maxFilterVertical = new LemireMinMaxFilter(maxFilterWindowSizeFrequency, fftSize/2,true);
+		maxFilterVertical = new LemireMinMaxFilter(maxFilterWindowSizeFrequency+1, fftSize/2,true);
 		
 		maxHorizontal = new float[fftSize/2];
+
+		int startFrequencyBinIndex = Config.getInt(Key.OLAF_EP_MIN_FREQ_BIN);
+		frequencyFilterMinIndexes = new int[fftSize/2];
+		frequencyFilterMaxIndexes = new int[fftSize/2];
+
+		int frequencyMidi[] = new int[fftSize/2];
+		for(int f = startFrequencyBinIndex ; f < fftSize/2 ; f++){
+			frequencyMidi[f] = PitchConverter.hertzToMidiKey(Double.valueOf(binToHz(f)));
+		}
+
+		for(int f = startFrequencyBinIndex ; f < fftSize/2 ; f++){
+			int centerBinMidiKey = frequencyMidi[f];
+			int startBinMidiKey = centerBinMidiKey - Config.getInt(Key.OLAF_FREQ_MAX_FILTER_SIZE) / 2;
+			int stopBinMidiKey = centerBinMidiKey + Config.getInt(Key.OLAF_FREQ_MAX_FILTER_SIZE) / 2;
+			int startIndex = Arrays.binarySearch(frequencyMidi,startBinMidiKey);
+			startIndex = startIndex >= 0 ? startIndex : Math.abs(startIndex + 1);
+			int stopIndex = Math.abs(Arrays.binarySearch(frequencyMidi,stopBinMidiKey));
+			stopIndex = stopIndex >= 0 ? stopIndex : Math.abs(stopIndex + 1);
+			frequencyFilterMinIndexes[f] = Math.max(startFrequencyBinIndex,startIndex);
+			frequencyFilterMaxIndexes[f] = Math.min(stopIndex,frequencyFilterMaxIndexes.length);
+		}
 	}
-	
+
+	void verticalFilter(float[] data, float[]  max){
+		int startFrequencyBinIndex = Config.getInt(Key.OLAF_EP_MIN_FREQ_BIN);
+		for(int f = startFrequencyBinIndex ; f < data.length ; f++){
+			int startIndex = frequencyFilterMinIndexes[f];
+			int  stopIndex = frequencyFilterMaxIndexes[f];
+			float maxValue = -1000000;
+			for(int j = startIndex ; j < stopIndex; j++){
+				if(maxValue < data[j]){
+					maxValue = data[j];
+				}
+			}
+			max[f] = maxValue;
+		}
+	}
 	void naive_max_filter(float[] data, float[]  max, int  half_filter_size , boolean clamp){
 
 		for(int i = 0 ; i < data.length ; i++){
@@ -130,19 +169,23 @@ public class OlafEventPointProcessor implements AudioProcessor {
 		
 		//calculate the fft
 		fft.forwardTransform(buffer);
-		
+
+		//
+		int startFrequencyBinIndex = Config.getInt(Key.OLAF_EP_MIN_FREQ_BIN);
+
 		//calculate the magnitudes		
-		for (int i = 1; i < magnitudes[magnitudesIndex].length; i++) {
+		for (int i = startFrequencyBinIndex; i < magnitudes[magnitudesIndex].length; i++) {
 			int realIndex = 2 * i;
 			int imgIndex  = 2 * i + 1;
-			magnitudes[magnitudesIndex][i] = (float) (buffer[realIndex] * buffer[realIndex] + buffer[imgIndex] * buffer[imgIndex]);
+			magnitudes[magnitudesIndex][i] =  buffer[realIndex] * buffer[realIndex] + buffer[imgIndex] * buffer[imgIndex];
 		}
 		
 		//store the frame magnitudes
 		previousMagnitudes.put(analysisFrameIndex, magnitudes[magnitudesIndex]);
 		
 		//run a max filter over frequency bins
-		maxFilterVertical.maxFilter(magnitudes[magnitudesIndex],maxMagnitudes[magnitudesIndex]);
+		verticalFilter(magnitudes[magnitudesIndex],maxMagnitudes[magnitudesIndex]);
+
 		//store the max filtered frequency bins
 		previousMaxMagnitudes.put(analysisFrameIndex,maxMagnitudes[magnitudesIndex]);
 		
@@ -154,7 +197,7 @@ public class OlafEventPointProcessor implements AudioProcessor {
 			float[] maxFrame = previousMaxMagnitudes.get(t);
 			float[] frameMagnitudes = previousMagnitudes.get(t);
 			
-			for(int f = 2 ; f < frameMagnitudes.length - 1 ; f++){
+			for(int f = startFrequencyBinIndex ; f < frameMagnitudes.length - 1 ; f++){
 				float maxVal = maxFrame[f];
 				float currentVal = frameMagnitudes[f];
 				
@@ -237,8 +280,50 @@ public class OlafEventPointProcessor implements AudioProcessor {
 	public List<OlafEventPoint> getEventPoints() {
 		return eventPoints;
 	}
-	
+
+	private void packEventPointsIntoFingerprintsTwo(){
+
+		int minFreqDistance = Config.getInt(Key.OLAF_FP_MIN_FREQ_DIST);
+		int maxFreqDistance = Config.getInt(Key.OLAF_FP_MAX_FREQ_DIST);
+
+		int minTimeDistance = Config.getInt(Key.OLAF_FP_MIN_TIME_DIST);
+		int maxTimeDistance = Config.getInt(Key.OLAF_FP_MAX_TIME_DIST);
+
+		for(int i = 0; i < eventPoints.size();i++){
+			int t1 = eventPoints.get(i).t;
+			int f1 = eventPoints.get(i).f;
+
+			for(int j = i + 1; j < eventPoints.size() ;j++){
+				int t2 = eventPoints.get(j).t;
+				int f2 = eventPoints.get(j).f;
+
+				int fDiff = Math.abs(f1 - f2);
+				int tDiff = t2-t1;
+
+				if(tDiff > maxTimeDistance) break;
+				if(tDiff < minTimeDistance) continue;
+
+				if(fDiff < minFreqDistance) continue;
+				if(fDiff > maxFreqDistance ) continue;
+
+				OlafFingerprint fingerprint;
+				fingerprint = new OlafFingerprint(eventPoints.get(i),eventPoints.get(j),eventPoints.get(j));
+				fingerprints.add(fingerprint);
+			}
+		}
+	}
+
 	private void packEventPointsIntoFingerprints(){
+		if(Config.getInt(Key.OLAF_EPS_PER_FP) == 2){
+			packEventPointsIntoFingerprintsTwo();
+		}else if(Config.getInt(Key.OLAF_EPS_PER_FP) == 3){
+			packEventPointsIntoFingerprintsThree();
+		}else {
+			throw new RuntimeException("Key.OLAF_EPS_PER_FP should be either 2 or 3");
+		}
+	}
+
+	private void packEventPointsIntoFingerprintsThree(){
 		
 		int minFreqDistance = Config.getInt(Key.OLAF_FP_MIN_FREQ_DIST);
 		int maxFreqDistance = Config.getInt(Key.OLAF_FP_MAX_FREQ_DIST);
@@ -282,6 +367,14 @@ public class OlafEventPointProcessor implements AudioProcessor {
 				}
 			}
 		}
+	}
+
+	private float binToHz(int f) {
+		double sampleRate = Config.getFloat(Key.OLAF_SAMPLE_RATE);
+		double fftSize = Config.getFloat(Key.OLAF_SIZE);
+		double binSizeInHz = sampleRate / fftSize;
+		double centerBinFrequencyInHz = f * binSizeInHz + binSizeInHz / 2.0;
+		return (float) centerBinFrequencyInHz;
 	}
 
 	/**

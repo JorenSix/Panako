@@ -165,10 +165,12 @@ public abstract class Strategy {
 	/**
 	 * Print the fingerprints to a human readable format or to an output compatible with
 	 * Sonic Visualizer. Mainly used for caching or debugging.
-	 * @param path the name of the file to resolve.
+	 *
+	 * @param path                  the name of the file to resolve.
 	 * @param sonicVisualizerOutput True if the output needs to be compatible with sonic visualizer
+	 * @param printOnlyEPs
 	 */
-	public abstract void print(String path, boolean sonicVisualizerOutput);
+	public abstract void print(String path, boolean sonicVisualizerOutput, boolean printOnlyEPs);
 
 	/**
 	 * Clear <b>all</b> information from the key value store

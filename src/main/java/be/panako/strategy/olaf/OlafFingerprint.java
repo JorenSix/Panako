@@ -113,7 +113,7 @@ public class OlafFingerprint {
 		this.m3 = m3;
 				
 		assert t2 > t1;
-		assert t3 > t2;
+		assert t3 >= t2;
 	}
 
 	/**

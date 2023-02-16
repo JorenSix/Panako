@@ -63,7 +63,7 @@ class Store extends Application {
 			String msg = "Processing " + files.size() + " files on " + processors + " seperate threads.";
 			LOG.info("Store task started. " +  msg);
 		}
-		System.out.println("Audiofile;Audio duration;Fingerprinting duration;ratio");
+		System.out.println("index; length; audiofile; audio duration; fingerprinting duration; ratio");
 		for(File file: files){
 			counter++;
 			
@@ -123,24 +123,20 @@ class Store extends Application {
 
 			String message=null;
 			if(isDouble){
-				message = String.format("%d/%d;%s;%s",taskID,totalTasks,file.getName(),"Skipped: resource already stored;");
+				message = String.format("%d; %d; %s; %s; 0; 0",taskID,totalTasks,file.getName(),"Skipped: resource already stored;");
 			}else{
 				double durationInSeconds = strategy.store(file.getAbsolutePath(), file.getName());
 				double cpuSecondsPassed = w.timePassed(TimeUnit.SECONDS);
 				String audioDuration = StopWatch.toTime("", (int) Math.round(durationInSeconds));
 				String cpuTimeDuration = w.formattedToString();
 				double timeRatio = durationInSeconds/cpuSecondsPassed;
-				message = String.format("%d/%d;%s;%s;%s;%.2f",taskID,totalTasks,file.getName(),audioDuration,cpuTimeDuration,timeRatio);
+				message = String.format("%d; %d; %s; %s; %s; %.2f",taskID,totalTasks,file.getName(),audioDuration,cpuTimeDuration,timeRatio);
 			}
 			LOG.info(message);
 			System.out.println(message);
-
 		}
-		
-
 	}
-	
-	
+
 	@Override
 	public boolean needsStorage() {
 		return true;

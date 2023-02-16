@@ -32,13 +32,19 @@ dependencies {
     implementation 'org.reflections:reflections:0.10.2'
     implementation 'org.slf4j:slf4j-simple:1.7.36'
 
+//    implementation 'org.ow2.asm:asm:9.2'
+//    implementation 'org.ow2.asm:asm-commons:9.2'
+//    implementation 'org.ow2.asm:asm-analysis:9.2'
+//    implementation 'org.ow2.asm:asm-tree:9.2'
+//    implementation 'org.ow2.asm:asm-util:9.2'
+//    implementation 'com.github.jnr:jnr-ffi:2.2.13'
+
     implementation "org.mlmdbjava:lmdbjava:0.9.1"
-
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
-
     implementation 'be.tarsos.dsp:core:2.5'
     implementation 'be.tarsos.dsp:jvm:2.5'
     implementation 'be.ugent.jgaborator:jgaborator:0.7'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
 }
 
 jar {

@@ -48,6 +48,7 @@ import be.panako.strategy.olaf.storage.*;
 import be.panako.util.*;
 import be.tarsos.dsp.AudioDispatcher;
 import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
+import be.tarsos.dsp.util.PitchConverter;
 
 /**
  * The algorithm implemented here is inspired by the 'shazam' algorithm but does differ in a few crucial elements.
@@ -62,30 +63,34 @@ public class OlafStrategy extends Strategy {
 	
 	private final static Logger LOG = Logger.getLogger(OlafStrategy.class.getName());
 
-	private final OlafStorage db;
+	private OlafStorage db;
 
 	/**
 	 * Create an instance
 	 */
 	public OlafStrategy(){
-		OlafStorage db;
-		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
-			db = OlafStorageKV.getInstance();
-		}else if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("FILE")) {
-			db = OlafStorageFile.getInstance();
-		}else {
-			db = OlafStorageMemory.getInstance();
-		}
-		if(Config.getBoolean(Key.OLAF_CACHE_TO_FILE) && db != OlafStorageFile.getInstance()) {
-			LOG.info("Using "+ db.getClass().getSimpleName() + " storage with caching front.");
-			db = new OlafCachingStorage(OlafStorageFile.getInstance(),db);
-		}else {
-			LOG.info("Using " + db.getClass().getSimpleName() + " as storage.");
-		}
-		this.db = db;
+
 	}
 
 	private OlafStorage getStorage(){
+		if (db ==null){
+			OlafStorage db;
+			if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
+				db = OlafStorageKV.getInstance();
+			}else if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("FILE")) {
+				db = OlafStorageFile.getInstance();
+			}else {
+				db = OlafStorageMemory.getInstance();
+			}
+
+			if(Config.getBoolean(Key.OLAF_CACHE_TO_FILE) && db != OlafStorageFile.getInstance()) {
+				LOG.info("Using "+ db.getClass().getSimpleName() + " storage with caching front.");
+				db = new OlafCachingStorage(OlafStorageFile.getInstance(),db);
+			}else {
+				LOG.info("Using " + db.getClass().getSimpleName() + " as storage.");
+			}
+			this.db = db;
+		}
 		return db;
 	}
 	
@@ -211,11 +216,34 @@ public class OlafStrategy extends Strategy {
 		d.addAudioProcessor(eventPointProcessor);
 		d.run();
 		
-		return eventPointProcessor.getFingerprints();	
+		return eventPointProcessor.getFingerprints();
+	}
+
+	private List<OlafEventPoint> toEventpoints(String resource){
+		int samplerate, size, overlap;
+		samplerate = Config.getInt(Key.OLAF_SAMPLE_RATE);
+		size = Config.getInt(Key.OLAF_SIZE);
+		overlap = size - Config.getInt(Key.OLAF_STEP_SIZE);
+
+		AudioDispatcher d;
+		d = AudioDispatcherFactory.fromPipe(resource, samplerate, size, overlap,0);
+		OlafEventPointProcessor eventPointProcessor = new OlafEventPointProcessor(size);
+		d.addAudioProcessor(eventPointProcessor);
+		d.run();
+
+		return eventPointProcessor.getEventPoints();
 	}
 	
 	private float blocksToSeconds(int t) {		
 		return t * (Config.getInt(Key.OLAF_STEP_SIZE)/(float) Config.getInt(Key.OLAF_SAMPLE_RATE));
+	}
+
+	private float binToHz(int f) {
+		double sampleRate = Config.getFloat(Key.OLAF_SAMPLE_RATE);
+		double fftSize = Config.getFloat(Key.OLAF_SIZE);
+		double binSizeInHz = sampleRate / fftSize;
+		double centerBinFrequencyInHz = f * binSizeInHz + binSizeInHz /2.0;
+		return (float) centerBinFrequencyInHz;
 	}
 
 	private int mostCommonDeltaTforHitList(List<OlafMatch> hitList) {
@@ -257,13 +285,7 @@ public class OlafStrategy extends Strategy {
 			prints = toFingerprints(query);
 		}
 		
-		final OlafStorage db;
-		
-		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
-			db = OlafStorageKV.getInstance();
-		}else {
-			db = OlafStorageMemory.getInstance();
-		}
+		final OlafStorage db = getStorage();;
 		
 		Map<Long,OlafFingerprint> printMap = new HashMap<>();
 		
@@ -362,8 +384,8 @@ public class OlafStrategy extends Strategy {
 			 float slope = (y2-y1)/(x2-x1);
 			 float offset = -x1 * slope + y1;
 			 float timeFactor = 1-slope;
-			 
-			 //System.out.printf("slope %f offset %f  timefactor %f \n",slope,offset,timeFactor);
+
+			 //System.out.printf("slope %f  offset %f (blocks) time factor %f (percentage) hit list size %d , last hit list size %d, first hit list size %d, id %d\n",slope,offset,timeFactor, hitlist.size(), lastHits.size(), firstHits.size() , identifier);
 			 
 			 //threshold in time bins
 			 double threshold = Config.getFloat(Key.OLAF_QUERY_RANGE);
@@ -390,13 +412,12 @@ public class OlafStrategy extends Strategy {
 				 
 				 //ignore resources with too few filtered hits remaining
 				 if(filteredHits.size() > minimumFilteredHits) {
-					 //System.out.println("Matches " + identifier + " matches filtered hits: " + filteredHits.size());
-					 
 					 float minDuration = Config.getFloat(Key.OLAF_MIN_MATCH_DURATION);
 					 float queryStart = blocksToSeconds(filteredHits.get(0).queryTime);
 					 float queryStop = blocksToSeconds(filteredHits.get(filteredHits.size()-1).queryTime);
 					 float duration = queryStop - queryStart;
-					 
+					 System.out.printf("Matches %d (id) Filtered hits: %d (#) query start %.2f (s) , query stop %.2f (s) \n",identifier, filteredHits.size(),queryStart,queryStop);
+
 					 if(duration >= minDuration) {
 						 int score = filteredHits.size();
 						 float frequencyFactor = 1.0f;
@@ -437,6 +458,87 @@ public class OlafStrategy extends Strategy {
 				 }
 			 }
 		 });
+
+		 //fallback to simple histogram method
+		if (queryResults.isEmpty() && Config.getBoolean(Key.OLAF_MATCH_FALLBACK_TO_HIST)) {
+			int histogramBinSize = 5;
+			hitsPerIdentifer.forEach((identifier, hitlist) -> {
+				Map<Integer,Integer> countPerDiff = new HashMap<>();
+				hitlist.forEach((hit)->{
+					//Histogram per 5 time bins to allow some variation in tdiff
+					int deltaT = hit.deltaT() / histogramBinSize;
+					if(!countPerDiff.containsKey(deltaT)) countPerDiff.put(deltaT, 0);
+					countPerDiff.put(deltaT, countPerDiff.get(deltaT)+1);
+				});
+
+				int maxCount = 0;
+				int mostCommonDeltaT = 0;
+				for(Map.Entry<Integer,Integer> entry : countPerDiff.entrySet()) {
+					int count = entry.getValue();
+					if(count > maxCount) {
+						maxCount = count;
+						mostCommonDeltaT = entry.getKey();
+					}
+				}
+
+				final int mostDeltaT = mostCommonDeltaT * histogramBinSize;
+				List<OlafMatch> filteredHits = new ArrayList<>();
+				if(maxCount > minimumUnfilteredHits){
+					hitlist.forEach( hit ->{
+						if( Math.abs(mostDeltaT - hit.deltaT() ) <= histogramBinSize)
+							filteredHits.add(hit);
+					});
+				}
+
+
+
+				if(filteredHits.size() > minimumFilteredHits) {
+					float minDuration = Config.getFloat(Key.OLAF_MIN_MATCH_DURATION);
+					float queryStart = blocksToSeconds(filteredHits.get(0).queryTime);
+					float queryStop = blocksToSeconds(filteredHits.get(filteredHits.size() - 1).queryTime);
+					float duration = queryStop - queryStart;
+					System.out.printf("Matches %d (id) Filtered hits: %d (#) query start %.2f (s) , query stop %.2f (s) \n", identifier, filteredHits.size(), queryStart, queryStop);
+
+					if (duration >= minDuration) {
+						int score = filteredHits.size();
+						float frequencyFactor = 1.0f;
+
+						float refStart = blocksToSeconds(filteredHits.get(0).matchTime);
+						float refStop = blocksToSeconds(filteredHits.get(filteredHits.size() - 1).matchTime);
+
+						//retrieve meta-data
+						OlafResourceMetadata metadata = db.getMetadata((long) identifier);
+						String refPath = "metadata unavailable!";
+						if (metadata != null)
+							refPath = metadata.path;
+
+						//Construct a histogram with the number of matches for each second
+						//Ideally there is a more or less equal number of matches each second
+						// note that the last second might not be a full second
+						TreeMap<Integer, Integer> matchesPerSecondHistogram = new TreeMap<>();
+						for (OlafMatch hit : filteredHits) {
+							//if(hit.identifier!= FileUtils.getIdentifier(queryPath))
+							//System.out.printf("%d %d %d %d %d\n", hit.identifier, hit.matchTime, hit.queryTime, hit.originalHash, hit.matchedNearHash);
+							float offsetInSec = blocksToSeconds(hit.matchTime) - refStart;
+							int secondBin = (int) offsetInSec;
+							if (!matchesPerSecondHistogram.containsKey(secondBin))
+								matchesPerSecondHistogram.put(secondBin, 0);
+							matchesPerSecondHistogram.put(secondBin, matchesPerSecondHistogram.get(secondBin) + 1);
+						}
+
+						//number of seconds bins
+						float numberOfMatchingSeconds = (float) Math.ceil(refStop - refStart);
+						float emptySeconds = numberOfMatchingSeconds - matchesPerSecondHistogram.size();
+						float percentOfSecondsWithMatches = 1 - (emptySeconds / numberOfMatchingSeconds);
+
+						if (percentOfSecondsWithMatches >= Config.getFloat(Key.OLAF_MIN_SEC_WITH_MATCH) ) {
+							QueryResult r = new QueryResult(queryPath, queryStart, queryStop, refPath, "" + identifier, refStart, refStop, score, 1.0f, frequencyFactor, percentOfSecondsWithMatches);
+							queryResults.add(r);
+						}
+					}
+				}
+			});
+		}
 		 
 		 if (queryResults.isEmpty()) {
 			 handler.handleEmptyResult(QueryResult.emptyQueryResult(queryPath,0,0));
@@ -456,7 +558,7 @@ public class OlafStrategy extends Strategy {
 	}
 
 	@Override
-	public void monitor(String query, int maxNumberOfReqults, Set<Integer> avoid, QueryResultHandler handler) {
+	public void monitor(String query, int maxNumberOfResults, Set<Integer> avoid, QueryResultHandler handler) {
 		int overlapInSeconds = Config.getInt(Key.MONITOR_OVERLAP); // 5
 		int stepSizeInSeconds = Config.getInt(Key.MONITOR_STEP_SIZE); //25
 
@@ -466,19 +568,14 @@ public class OlafStrategy extends Strategy {
 		//Steps: 0-25s ; 20-45s ; 40-65s ...
 		int actualStep = stepSizeInSeconds - overlapInSeconds;//20s
 		for(int t = 0 ; t + stepSizeInSeconds < totalDuration; t += actualStep ) {			
-			query(query,maxNumberOfReqults,avoid,handler,t,stepSizeInSeconds);
+			query(query,maxNumberOfResults,avoid,handler,t,stepSizeInSeconds);
 		}
 	}
 
 	@Override
 	public boolean hasResource(String resource) {
 		int identifier = FileUtils.getIdentifier(resource);
-		final OlafStorage db;
-		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
-			db = OlafStorageKV.getInstance();
-		}else {
-			db = OlafStorageMemory.getInstance();
-		}
+		final OlafStorage db = getStorage();
 		return db.getMetadata(identifier) != null;
 	}
 
@@ -487,19 +584,10 @@ public class OlafStrategy extends Strategy {
 		return true;
 	}
 
-	private OlafStorage storageInstance(){
-		final OlafStorage db;
-		if (Config.get(Key.OLAF_STORAGE).equalsIgnoreCase("LMDB")) {
-			db = OlafStorageKV.getInstance();
-		}else {
-			db = OlafStorageMemory.getInstance();
-		}
-		return db;
-	}
 
 	@Override
 	public void printStorageStatistics() {
-		final OlafStorage db = storageInstance();
+		final OlafStorage db = getStorage();
 		db.printStatistics(true);
 	}
 
@@ -582,10 +670,16 @@ public class OlafStrategy extends Strategy {
 		map.get(t)[f]=m;
 	}
 
-	public void print(String path, boolean sonicVisualizerOutput) {
-		List<OlafFingerprint> prints = toFingerprints(path);
-		
-		if(sonicVisualizerOutput) {
+	public void print(String path, boolean sonicVisualizerOutput, boolean printOnlyEPs) {
+		if(printOnlyEPs) {
+			List<OlafEventPoint> eventPoints = toEventpoints(path);
+
+			System.out.println("Time (step), Frequency (bin), Magnitude, Time (s), Frequency (Hz)");
+			for(OlafEventPoint ep : eventPoints){
+				System.out.printf("%d, %d, %.6f, %.6f, %.3f\n",ep.t, ep.f, ep.m,blocksToSeconds(ep.t),binToHz(ep.f));
+			}
+		} else if(sonicVisualizerOutput) {
+			List<OlafFingerprint> prints = toFingerprints(path);
 			TreeMap<Integer,float[]> timeIndexedSpectralPeaks = new TreeMap<>();
 			for(OlafFingerprint print : prints) {
 				addToMap(timeIndexedSpectralPeaks,print.t1,print.f1,print.m1);
@@ -610,6 +704,7 @@ public class OlafStrategy extends Strategy {
 		}else {
 			OlafStorageFile db = OlafStorageFile.getInstance();
 			int resourceID = FileUtils.getIdentifier(path);
+			List<OlafFingerprint> prints = toFingerprints(path);
 			for(OlafFingerprint print : prints) {
 				long hash = print.hash();			
 				int printT1 = print.t1;
@@ -628,7 +723,7 @@ public class OlafStrategy extends Strategy {
 
 	@Override
 	public String metadata(String path) {
-		final OlafStorage db = storageInstance();
+		final OlafStorage db = getStorage();
 		long identifier = FileUtils.getIdentifier(path);
 		OlafResourceMetadata metaData = db.getMetadata(identifier);
 		return String.format("%d ; %s ; %.3f (s) ; %d (#) ; %.3f (#/s)",metaData.identifier,metaData.path,metaData.duration,metaData.numFingerprints,metaData.printsPerSecond());

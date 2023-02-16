@@ -209,11 +209,30 @@ public enum Key{
 	OLAF_MIN_MATCH_DURATION(5),
 
 	/**
-	 * Event point extraction configuration: a max filter of x is used vertically (frequency)
+	 * Use an alternative histogram based matching strategy. This is advised for more noisy queries and
+	 * when more random hits are expected (OLAF_EPS_PER_FP = 2). It can cause false positives.
 	 */
-	OLAF_FREQ_MAX_FILTER_SIZE(103),
+	OLAF_MATCH_FALLBACK_TO_HIST("FALSE"),
+
 	/**
-	 * Event point extraction configuration: a max filter of x is used horizontally (time)
+	 * Event point extraction configuration: minimum frequency bin index
+	 */
+	OLAF_EP_MIN_FREQ_BIN(9),
+
+	/**
+	 * The number of event points to use for each fingerprint. Use 3 for 'clean' queries and
+	 * large indexes. Use 2 for smaller indexes and more noisy queries (for example over the air
+	 * queries).
+	 */
+	OLAF_EPS_PER_FP(3),
+
+	/**
+	 * Event point extraction configuration: a max filter of x cents is used vertically (frequency)
+	 * The max filter is not linearly applied: it is following a log curve inspired by human hearing.
+	 */
+	OLAF_FREQ_MAX_FILTER_SIZE(20),
+	/**
+	 * Event point extraction configuration: a max filter of x bins is used horizontally (time)
 	 */
 	OLAF_TIME_MAX_FILTER_SIZE(25),
 	/**
@@ -256,6 +275,8 @@ public enum Key{
 	 * See: https://github.com/JorenSix/Panako/issues/36
 	 * */
 	OLAF_HIT_PART_DIVIDER(5),
+
+
 
 
 
@@ -417,7 +438,8 @@ public enum Key{
 	 */
 	PANAKO_USE_GPU_EP_EXTRACTOR("FALSE");
 
-	String defaultValue;
+
+    String defaultValue;
 
 	/**
 	 * Initialize a new key with default value as a string
