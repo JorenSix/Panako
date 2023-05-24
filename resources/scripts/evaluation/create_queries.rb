@@ -45,7 +45,7 @@ def create_pitch_shifted_file(input_file,target_file,cents)
 end
 
 def execute_unless_exists(command,target_file)
-  if File.exists? target_file
+  if File.exist? target_file
     puts "\tSkipping #{target_file}"
   else
     puts "\tCreating #{target_file}"

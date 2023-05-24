@@ -45,7 +45,7 @@ FileUtils.rm("true_positive_part.txt")
 def create_queries(target_dir_prefix,input_files)
   QUERY_LENGTHS.each do |query_length|
     target_dir = "#{target_dir_prefix}_#{query_length}s"
-    FileUtils.mkdir_p(target_dir) unless File.exists?(target_dir)
+    FileUtils.mkdir_p(target_dir) unless File.exist?(target_dir)
 
     input_files.each_with_index do |f, index|
       puts "#{index+1}/#{input_files.size} #{File.basename(f)} #{query_length}s query length"
@@ -70,7 +70,7 @@ QUERY_LENGTHS.each do |query_length|
     File.write(queries_list_file ,queries.join("\n"))
 
     queries_results_file = "#{DATA_FOLDER}/#{type}_queries_#{query_length}s_results.csv"
-    if(OVERWRITE_RESULTS or ! File.exists? queries_results_file)
+    if(OVERWRITE_RESULTS or ! File.exist? queries_results_file)
       system("panako #{config} query #{queries_list_file} | tee #{queries_results_file}")
     end
     FileUtils.rm(queries_list_file)
@@ -79,7 +79,7 @@ end
 
 #parse results
 
-FileUtils.mkdir_p("#{DATA_FOLDER}/results/") unless File.exists?("#{DATA_FOLDER}/results/")
+FileUtils.mkdir_p("#{DATA_FOLDER}/results/") unless File.exist?("#{DATA_FOLDER}/results/")
 QUERY_LENGTHS.each do |query_length|
   ["tp","tn"].each do |type|
     queries_results_file = "#{DATA_FOLDER}/#{type}_queries_#{query_length}s_results.csv"

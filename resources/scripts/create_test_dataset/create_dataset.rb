@@ -66,7 +66,7 @@ def download_audio_files(id_file,number_of_files,dataset_folder)
 	  output_file = File.join(dataset_folder,"#{id}.mp3")
     output_wav_file = File.join(dataset_folder,"#{id}.wav")
     
-    if File.exists?(output_wav_file)
+    if File.exist?(output_wav_file)
       puts "Skipping download: #{output_file}"
     else
       download_command = "wget -nv --no-check-certificate \"#{url}\" -O \"#{output_file}\""
@@ -76,8 +76,8 @@ def download_audio_files(id_file,number_of_files,dataset_folder)
   end
 end
 
-FileUtils.mkdir_p(QUERY_FOLDER) unless File.exists? QUERY_FOLDER
-FileUtils.mkdir_p(DATASET_FOLDER) unless File.exists? DATASET_FOLDER
+FileUtils.mkdir_p(QUERY_FOLDER) unless File.exist? QUERY_FOLDER
+FileUtils.mkdir_p(DATASET_FOLDER) unless File.exist? DATASET_FOLDER
 #Download the audio files
 download_audio_files("jamendo_track_ids.csv",NUMBER_OF_FILES,DATASET_FOLDER)
 
@@ -95,7 +95,7 @@ dataset_files.each_with_index do |input_file,index|
 
   output_file = File.join(QUERY_FOLDER,File.basename(input_file,".*") + '_' + start.to_s + '_' + speed.to_s + '.wav' )
 
-  unless File.exists? output_file
+  unless File.exist? output_file
 
     #modifications
     if speed == 100
