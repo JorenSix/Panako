@@ -10,7 +10,7 @@
 
 RANDOM_SEED=0
 AUDIO_EXT = "mp3"
-ITERATIONS = 14
+ITERATIONS = 15
 NUM_RANDOM_QUERIES=10
 RANDOM = Random.new(RANDOM_SEED)
 BENCHMARK_AUDIO_FOLDER=ARGV[0]
@@ -44,6 +44,7 @@ CONFIGS_TO_BENCHMARK.each do |config|
   total_stored_duration = 0
   puts
   puts config
+  puts "Found a total of #{all_audio_files.size} audio files"
   puts "Files (#), Audio (s), Fingerprints (#), Query speed (s/s) , Store speed (s/s)"
 
   ITERATIONS.times do |i|
