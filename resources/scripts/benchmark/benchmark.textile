@@ -16,7 +16,7 @@ The absolute values might differ significantly from one machine to another and a
 
 <div align="center">
 !./olaf_benchmark_results.svg(Benchmark results for Olaf)!
-<small>Fig. Benchmark results for the FFT based algorithm. This algorithm, internally refered to as Olaf, finds peaks the FFT and is not robust to pitch, speed or tempo changes.</small>
+<small>Fig. Benchmark results for the FFT based algorithm. This algorithm, internally refered to as Olaf, finds peaks in the FFT and is not robust to pitch, speed or tempo changes.</small>
 </div>
 
 
