@@ -23,8 +23,8 @@ WORKDIR /
 RUN git clone --depth 1 https://github.com/JorenSix/JGaborator
 WORKDIR /JGaborator/gaborator/
 ENV JAVA_HOME=/usr/lib/jvm/default-java
-RUN make
-RUN cp ../build/precompiled/libjgaborator.so /lib/
+RUN make plain
+RUN cp ../src/main/resources/jni/libjgaborator.so /lib/
 
 #Now install Panako
 WORKDIR /
