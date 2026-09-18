@@ -717,6 +717,60 @@ public class OlafStrategy extends Strategy {
 	}
 
 	@Override
+	public String toJson(String path) {
+		List<OlafFingerprint> prints = toFingerprints(path);
+		List<OlafEventPoint> eventPoints = toEventpoints(path);
+		
+		StringBuilder json = new StringBuilder();
+		json.append("{\n");
+		json.append("  \"path\": \"").append(path.replace("\\", "\\\\").replace("\"", "\\\"")).append("\",\n");
+		json.append("  \"eventPoints\": [\n");
+		
+		boolean first = true;
+		for(OlafEventPoint ep : eventPoints) {
+			if (!first) {
+				json.append(",\n");
+			}
+			first = false;
+			
+			json.append("    {\n");
+			json.append("      \"t\": ").append(ep.t).append(",\n");
+			json.append("      \"f\": ").append(ep.f).append(",\n");
+			json.append("      \"m\": ").append(ep.m).append(",\n");
+			json.append("      \"timeSeconds\": ").append(blocksToSeconds(ep.t)).append(",\n");
+			json.append("      \"frequencyHz\": ").append(binToHz(ep.f)).append("\n");
+			json.append("    }");
+		}
+		
+		json.append("\n  ],\n");
+		json.append("  \"fingerprints\": [\n");
+		
+		first = true;
+		for(OlafFingerprint print : prints) {
+			if (!first) {
+				json.append(",\n");
+			}
+			first = false;
+			
+			json.append("    {\n");
+			json.append("      \"t1\": ").append(print.t1).append(",\n");
+			json.append("      \"f1\": ").append(print.f1).append(",\n");
+			json.append("      \"m1\": ").append(print.m1).append(",\n");
+			json.append("      \"t2\": ").append(print.t2).append(",\n");
+			json.append("      \"f2\": ").append(print.f2).append(",\n");
+			json.append("      \"m2\": ").append(print.m2).append(",\n");
+			json.append("      \"m3\": ").append(print.m3).append(",\n");
+			json.append("      \"hash\": ").append(print.hash()).append("\n");
+			json.append("    }");
+		}
+		
+		json.append("\n  ]\n");
+		json.append("}\n");
+		
+		return json.toString();
+	}
+
+	@Override
 	public void clear() {
 		getStorage().clear();
 	}

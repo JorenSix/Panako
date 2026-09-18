@@ -253,6 +253,11 @@ public class PitchClassHistogramStrategy extends Strategy {
 		throw new RuntimeException("Print is currently not implemented for the PCH strategy");
 	}
 
+	@Override
+	public String toJson(String path) {
+		throw new RuntimeException("toJson is currently not implemented for the PCH strategy");
+	}
+
 	/*
 	public String name() {
 		return "PCH";

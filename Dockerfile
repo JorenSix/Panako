@@ -28,7 +28,7 @@ RUN cp ../src/main/resources/jni/libjgaborator.so /lib/
 
 #Now install Panako
 WORKDIR /
-RUN git clone --depth 1 https://github.com/JorenSix/Panako.git
+COPY . /Panako
 ENV JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
 WORKDIR /Panako
 RUN ./gradlew shadowJar

@@ -588,6 +588,40 @@ public class PanakoStrategy extends Strategy {
 	}
 
 	@Override
+	public String toJson(String path) {
+		List<PanakoFingerprint> prints = toFingerprints(path);
+		
+		StringBuilder json = new StringBuilder();
+		json.append("{\n");
+		json.append("  \"path\": \"").append(path.replace("\\", "\\\\").replace("\"", "\\\"")).append("\",\n");
+		json.append("  \"fingerprints\": [\n");
+		
+		boolean first = true;
+		for(PanakoFingerprint print : prints) {
+			if (!first) {
+				json.append(",\n");
+			}
+			first = false;
+			
+			json.append("    {\n");
+			json.append("      \"t1\": ").append(print.t1).append(",\n");
+			json.append("      \"f1\": ").append(print.f1).append(",\n");
+			json.append("      \"m1\": ").append(print.m1).append(",\n");
+			json.append("      \"t2\": ").append(print.t2).append(",\n");
+			json.append("      \"f2\": ").append(print.f2).append(",\n");
+			json.append("      \"m2\": ").append(print.m2).append(",\n");
+			json.append("      \"m3\": ").append(print.m3).append(",\n");
+			json.append("      \"hash\": ").append(print.hash()).append("\n");
+			json.append("    }");
+		}
+		
+		json.append("\n  ]\n");
+		json.append("}\n");
+		
+		return json.toString();
+	}
+
+	@Override
 	public void clear() {
 		getStorage().clear();
 	}

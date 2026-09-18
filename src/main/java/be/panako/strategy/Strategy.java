@@ -173,6 +173,15 @@ public abstract class Strategy {
 	public abstract void print(String path, boolean sonicVisualizerOutput, boolean printOnlyEPs);
 
 	/**
+	 * Generate a JSON representation of the fingerprints for a given audio file.
+	 * Similar to print but returns structured JSON data instead of printing to stdout.
+	 *
+	 * @param path the name of the file to process.
+	 * @return A JSON string representation of the fingerprints
+	 */
+	public abstract String toJson(String path);
+
+	/**
 	 * Clear <b>all</b> information from the key value store
 	 */
 	public abstract void clear();
